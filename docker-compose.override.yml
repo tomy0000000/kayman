@@ -1,11 +1,17 @@
 services:
-  kayman:
+  frontend:
+    build: "./frontend"
+    ports:
+      - "3000:3000"
+
+  backend:
     build: .
     command: "--reload --log-level trace"
     ports:
       - "8000:8000"
     volumes:
       - "./backend:/usr/src/kayman"
+
   db:
     ports:
       - "5432:5432"

@@ -1,6 +1,13 @@
 services:
-  kayman:
-    container_name: "kayman-app"
+  frontend:
+    container_name: "kayman-frontend"
+    depends_on:
+      - "backend"
+    image: "tomy0000000/kayman-frontend"
+    restart: "always"
+
+  backend:
+    container_name: "kayman-backend"
     depends_on:
       - "db"
     env_file:
