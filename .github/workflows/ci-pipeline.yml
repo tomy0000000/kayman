@@ -17,9 +17,12 @@ defaults:
     working-directory: "./backend"
 
 jobs:
-  test:
-    name: "🧪 Testing"
+  backend-test:
+    name: "🧪 Backend Testing"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "./backend"
     steps:
       - name: "🛒 Checkout"
         uses: actions/checkout@v4
@@ -40,9 +43,12 @@ jobs:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  lint:
-    name: "🔍 Linting"
+  backend-lint:
+    name: "🔍 Backend Linting"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "./backend"
     steps:
       - name: "🛒 Checkout"
         uses: actions/checkout@v4
@@ -57,6 +63,33 @@ jobs:
         run: |
           poetry run scripts/lint.sh
 
+  frontend-lint:
+    name: "🔍 Frontend Linting"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "./frontend"
+    steps:
+      - name: "🛒 Checkout"
+        uses: actions/checkout@v4
+
+      - name: "⚙️ Setup pnpm"
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: "⚙️ Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: "./frontend/package.json"
+          cache: "pnpm"
+
+      - name: "📦 Install dependencies"
+        run: pnpm install --frozen-lockfile
+
+      - name: "🔍 Linting"
+        run: pnpm lint
+
   license:
     name: "🪪 License Scan"
     runs-on: ubuntu-latest
@@ -70,10 +103,13 @@ jobs:
         with:
           api-key: 2d7865a44aa575d857521faaee1a57f8
 
-  build:
+  build-backend:
     name: "🏗️ Build Backend Image"
     runs-on: ubuntu-latest
-    needs: [test, lint, license]
+    defaults:
+      run:
+        working-directory: "./backend"
+    needs: [backend-test, backend-lint, license]
     if: success() && github.ref == 'refs/heads/develop'
     steps:
       - name: "🛒 Checkout"
@@ -100,3 +136,37 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           context: "./backend"
+
+  build-frontend:
+    name: "🏗️ Build Frontend Image"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "./frontend"
+    needs: [license]
+    if: success() && github.ref == 'refs/heads/develop'
+    steps:
+      - name: "🛒 Checkout"
+        uses: actions/checkout@v4
+
+      - name: "⚙️ Setup Docker Meta"
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ github.repository }}
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=edge
+          labels: |
+            org.opencontainers.image.title=kayman-frontend
+            org.opencontainers.image.documentation=${{ github.repository }}/wiki
+            org.opencontainers.image.authors=tomy0000000
+
+      - name: "🏗 Build and Push Image"
+        uses: tomy0000000/actions/build-push-image@main
+        with:
+          docker_password: ${{ secrets.DOCKER_PASSWORD }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          context: "./frontend"
