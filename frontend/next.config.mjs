@@ -6,7 +6,6 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "img.tomy.me",
-        port: "",
       },
     ],
   },

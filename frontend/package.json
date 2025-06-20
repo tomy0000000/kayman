@@ -1,7 +1,16 @@
 {
   "name": "kayman",
   "version": "0.10.0",
-  "private": true,
+  "description": "🏝🏦 The one-stop solution for personal finance",
+  "homepage": "https://github.com/tomy0000000/kayman",
+  "bugs": {
+    "url": "https://github.com/tomy0000000/kayman/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Tomy Hsieh (tomy0000000)",
+    "url": "https://github.com/tomy0000000"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,8 +18,19 @@
     "lint": "next lint",
     "generate-client": "openapi-ts"
   },
+  "packageManager": "pnpm@10.12.1",
   "engines": {
     "node": ">=22"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "onFail": "error"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "onFail": "error"
+    }
   },
   "dependencies": {
     "@hey-api/client-axios": "^0.5.2",
@@ -30,7 +50,7 @@
     "date-fns": "^4.1.0",
     "framer-motion": "^11.17.0",
     "lucide-react": "^0.471.0",
-    "next": "14.2.16",
+    "next": "15.3.4",
     "react": "^18",
     "react-day-picker": "8.10.1",
     "react-dom": "^18",
@@ -41,17 +61,21 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/eslintrc": "^3.3.1",
     "@hey-api/openapi-ts": "^0.63.0",
     "@types/eslint": "^9.6.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "15.1.6",
+    "eslint": "^9.29.0",
+    "eslint-config-next": "15.3.4",
     "postcss": "^8",
     "prettier": "^3.4.2",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
+  },
+  "volta": {
+    "node": "22.16.0",
+    "pnpm": "10.12.1"
   }
 }
