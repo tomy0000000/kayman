@@ -12,7 +12,7 @@ services:
       - "db"
     env_file:
       - "instance/.env"
-    image: "tomy0000000/kayman"
+    image: "tomy0000000/kayman-backend"
     restart: "always"
     volumes:
       - "./instance:/usr/src/kayman/instance"

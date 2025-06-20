@@ -1,8 +1,6 @@
+# syntax=docker.io/docker/dockerfile:1
+
 FROM python:3.12
-
-LABEL tech.tomy.docker.kayman="0.10.0"
-LABEL maintainer="Tomy Hsieh @tomy0000000"
-
 WORKDIR /usr/src/kayman
 EXPOSE 8000
 
@@ -10,14 +8,14 @@ EXPOSE 8000
 RUN pip install --upgrade pip poetry
 
 # Copy dependencies
-COPY backend/pyproject.toml backend/poetry.lock /usr/src/kayman/
+COPY pyproject.toml poetry.lock ./
 
-# Install Dependencies
+# Install dependencies
 RUN poetry config virtualenvs.create false && \
     poetry install --no-interaction --no-ansi
 
-# Copy Application
-COPY backend/ /usr/src/kayman
+# Copy application
+COPY . .
 
-# Run Application
+# Run application
 ENTRYPOINT [ "uvicorn", "kayman.main:app", "--host", "0.0.0.0", "--port", "8000" ]

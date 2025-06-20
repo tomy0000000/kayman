@@ -5,7 +5,7 @@ services:
       - "3000:3000"
 
   backend:
-    build: .
+    build: "./backend"
     command: "--reload --log-level trace"
     ports:
       - "8000:8000"
