@@ -92,15 +92,12 @@
       }
     },
     {
-      "label": "🤖 Create client",
+      "label": "🤖 Build client",
       "type": "shell",
       "command": "bash",
       "args": [
-        "scripts/built_client.sh",
+        "scripts/build_client.sh",
       ],
-      "options": {
-        "cwd": "${workspaceFolder}/backend"
-      },
       "problemMatcher": [],
       "group": {
         "kind": "build",
