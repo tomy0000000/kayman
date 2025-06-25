@@ -1,11 +1,13 @@
 services:
   frontend:
-    build: "./frontend"
+    build:
+      dockerfile: "frontend/Dockerfile"
     ports:
       - "3000:3000"
 
   backend:
-    build: "./backend"
+    build:
+      dockerfile: "backend/Dockerfile"
     command: "--reload --log-level trace"
     ports:
       - "8000:8000"

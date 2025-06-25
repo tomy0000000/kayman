@@ -133,15 +133,12 @@ jobs:
           docker_password: ${{ secrets.DOCKER_PASSWORD }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          context: "backend"
+          dockerfile: "backend/Dockerfile"
 
   build-frontend:
     name: "🏗️ Build Frontend Image"
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: "frontend"
-    needs: [frontend-lint, license]
+    needs: [backend-test, backend-lint, frontend-lint, license]
     if: success() && github.ref == 'refs/heads/develop'
     steps:
       - name: "🛒 Checkout"
@@ -167,4 +164,4 @@ jobs:
           docker_password: ${{ secrets.DOCKER_PASSWORD }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          context: "frontend"
+          dockerfile: "frontend/Dockerfile"

@@ -5,10 +5,10 @@ WORKDIR /usr/src/kayman
 EXPOSE 8000
 
 # Install pip & poetry
-RUN pip install --upgrade pip poetry
+RUN pip install --no-cache-dir --upgrade pip==25 poetry==2
 
 # Copy dependencies
-COPY pyproject.toml poetry.lock ./
+COPY backend/pyproject.toml backend/poetry.lock ./
 
 # Install dependencies
 RUN poetry config virtualenvs.create false && \
