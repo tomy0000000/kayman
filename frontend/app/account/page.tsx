@@ -2,22 +2,13 @@
 import DatePickerWithRange from "@/components/date-range-picker"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { useToast } from "@/hooks/use-toast"
+import { readAccounts } from "@/lib/client"
+import { useAuth } from "@/lib/context/AuthContext"
+import { useQuery } from "@tanstack/react-query"
 import { subDays } from "date-fns"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
-
-const accounts = [
-  {
-    id: 1,
-    name: "Wallet",
-    balance: 100,
-  },
-  {
-    id: 2,
-    name: "Credit Card",
-    balance: -200,
-  },
-]
 
 const transations = [
   {
@@ -33,25 +24,59 @@ const transations = [
 ]
 
 export default function AccountApp() {
+  const { client } = useAuth()
+  const { toast } = useToast()
   const [date, setDate] = useState<DateRange | undefined>({
     from: subDays(new Date(), 30),
     to: new Date(),
   })
 
+  const {
+    isPending,
+    isError,
+    data: accounts,
+    error,
+  } = useQuery({
+    queryKey: ["accounts"],
+    queryFn: async () => {
+      if (!client) {
+        throw new Error("Not login yet")
+      }
+      const response = await readAccounts({ client })
+      if (response.error) {
+        throw new Error("Failed to fetch accounts")
+      }
+      if (!response.data) {
+        throw new Error("No data returned")
+      }
+      return response.data
+    },
+  })
+
+  useEffect(() => {
+    if (isError) {
+      console.error(error)
+      toast({
+        title: "Failed to fetch accounts",
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      })
+    }
+  }, [isError, error, toast])
+
   return (
     <div className="flex h-full">
       {/* Accounts */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 overflow-auto">
         <h1 className="text-lg font-semibold">Accounts</h1>
         <ul>
           <Separator className="my-2" />
-          {accounts.map((account) => (
+          {accounts?.map((account) => (
             <>
               <li key={account.id} className="text-sm">
                 <div className="font-semibold">{account.name}</div>
-                <div className="text-sm">
-                  {account.balance > 0 ? "+" : "-"}${Math.abs(account.balance)}
-                </div>
+                <div className="text-sm">{account.balance}</div>
               </li>
               <Separator className="my-2" />
             </>
