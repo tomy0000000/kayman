@@ -1,88 +1,68 @@
 /* Modifed from https://github.com/shadcn-ui/ui/issues/355#issuecomment-2405553102 */
-"use client";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { TreeItem } from "@/lib/types";
-import { Icon } from "@iconify-icon/react";
+"use client"
+import { TreeItem } from "@/lib/types"
+import { TreeView } from "@primer/react"
+import { useEffect, useState } from "react"
 
 interface TreeNodeProps {
-  item: TreeItem;
-  parentId?: string | null;
-  openId: string | null;
-  setOpenId: (openId: string | null) => void;
+  item: TreeItem
+  currentId: string | null
+  setCurrentId: (currentId: string | null) => void
 }
 
-function TreeNode({ item, parentId = null, openId, setOpenId }: TreeNodeProps) {
-  const open = !!(openId && openId.startsWith(item.id));
-  const hasChildren = item.children && item.children.length > 0;
+function TreeNode({ item, currentId, setCurrentId }: TreeNodeProps) {
+  const [expanded, setExpanded] = useState(false)
+  const hasChildren = item.children && item.children.length > 0
+
+  useEffect(() => {
+    if (!!(currentId && currentId.startsWith(item.id))) {
+      setExpanded(true)
+    }
+  }, [currentId, item])
 
   return (
-    <Collapsible
-      open={open}
-      onOpenChange={() => {
-        if (open) {
-          setOpenId(parentId);
-        } else {
-          setOpenId(item.id);
-        }
+    <TreeView.Item
+      id={item.id}
+      expanded={expanded}
+      current={currentId === item.id}
+      onExpandedChange={setExpanded}
+      onSelect={() => {
+        setCurrentId(item.id)
       }}
     >
-      <CollapsibleTrigger asChild>
-        <Button
-          variant="ghost"
-          className={`w-full justify-start px-2 py-1 text-left ${
-            parentId === null ? "font-semibold" : ""
-          }`}
-        >
-          {hasChildren && (
-            <Icon
-              icon="mdi:chevron-down"
-              className={`mr-2 h-4 w-4 shrink-0 transition-transform ${
-                open ? "rotate-0" : "-rotate-90"
-              }`}
-            />
-          )}
-          {item.label}
-        </Button>
-      </CollapsibleTrigger>
+      {item.label}
       {hasChildren && (
-        <CollapsibleContent className="ml-4">
+        <TreeView.SubTree>
           {item.children!.map((child) => (
             <TreeNode
               key={child.id}
               item={child}
-              parentId={item.id}
-              openId={openId}
-              setOpenId={setOpenId}
+              currentId={currentId}
+              setCurrentId={setCurrentId}
             />
           ))}
-        </CollapsibleContent>
+        </TreeView.SubTree>
       )}
-    </Collapsible>
-  );
+    </TreeView.Item>
+  )
 }
 
 interface TreeProps {
-  treeData: TreeItem[];
+  treeData: TreeItem[]
 }
 
 export default function Tree({ treeData }: TreeProps) {
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [currentId, setCurrentId] = useState<string | null>(null)
   return (
-    <>
+    <TreeView aria-label="Files changed">
       {treeData.map((item) => (
         <TreeNode
           key={item.id}
           item={item}
-          openId={openId}
-          setOpenId={setOpenId}
+          currentId={currentId}
+          setCurrentId={setCurrentId}
         />
       ))}
-    </>
-  );
+    </TreeView>
+  )
 }
