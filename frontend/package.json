@@ -16,6 +16,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "prettier": "prettier -w .",
     "generate-client": "openapi-ts"
   },
   "packageManager": "pnpm@10.12.1",

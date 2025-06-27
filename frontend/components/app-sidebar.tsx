@@ -1,8 +1,8 @@
-import Logo from "@/components/logo";
-import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import Image from "next/image";
-import { useState } from "react";
-import { Icon } from "@iconify-icon/react";
+import Logo from "@/components/logo"
+import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar"
+import { Icon } from "@iconify-icon/react"
+import Image from "next/image"
+import { useState } from "react"
 
 const links = [
   {
@@ -20,9 +20,9 @@ const links = [
     href: "/category",
     icon: <Icon icon="mdi:category" />,
   },
-];
+]
 export default function AppSidebar() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
   return (
     <Sidebar open={open} setOpen={setOpen} animate={false}>
       <SidebarBody className="justify-between gap-10">
@@ -55,5 +55,5 @@ export default function AppSidebar() {
         </div>
       </SidebarBody>
     </Sidebar>
-  );
+  )
 }

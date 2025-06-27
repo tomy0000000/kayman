@@ -1,12 +1,12 @@
-"use client";
-import DatePickerWithRange from "@/components/date-range-picker";
-import Tree from "@/components/tree";
-import { TreeItem } from "@/lib/types";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { subDays } from "date-fns";
-import { useState } from "react";
-import { DateRange } from "react-day-picker";
+"use client"
+import DatePickerWithRange from "@/components/date-range-picker"
+import Tree from "@/components/tree"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { TreeItem } from "@/lib/types"
+import { subDays } from "date-fns"
+import { useState } from "react"
+import { DateRange } from "react-day-picker"
 
 const categories: TreeItem[] = [
   {
@@ -33,7 +33,7 @@ const categories: TreeItem[] = [
       { id: "2.2", label: "Bus" },
     ],
   },
-];
+]
 
 const transations = [
   {
@@ -46,13 +46,13 @@ const transations = [
     date: new Date("2025-01-02"),
     amount: -200,
   },
-];
+]
 
 export default function CategoryApp() {
   const [date, setDate] = useState<DateRange | undefined>({
     from: subDays(new Date(), 30),
     to: new Date(),
-  });
+  })
 
   return (
     <div className="flex h-full">
@@ -85,5 +85,5 @@ export default function CategoryApp() {
         </ScrollArea>
       </div>
     </div>
-  );
+  )
 }

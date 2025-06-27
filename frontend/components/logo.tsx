@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import Link from "next/link";
+import { motion } from "framer-motion"
+import Link from "next/link"
 
 export default function Logo() {
   return (
@@ -16,5 +16,5 @@ export default function Logo() {
         K
       </motion.span>
     </Link>
-  );
+  )
 }

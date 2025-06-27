@@ -1,10 +1,10 @@
-"use client";
-import DatePickerWithRange from "@/components/date-range-picker";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { subDays } from "date-fns";
-import { useState } from "react";
-import { DateRange } from "react-day-picker";
+"use client"
+import DatePickerWithRange from "@/components/date-range-picker"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { subDays } from "date-fns"
+import { useState } from "react"
+import { DateRange } from "react-day-picker"
 
 const accounts = [
   {
@@ -17,7 +17,7 @@ const accounts = [
     name: "Credit Card",
     balance: -200,
   },
-];
+]
 
 const transations = [
   {
@@ -30,13 +30,13 @@ const transations = [
     date: new Date("2025-01-02"),
     amount: -200,
   },
-];
+]
 
 export default function AccountApp() {
   const [date, setDate] = useState<DateRange | undefined>({
     from: subDays(new Date(), 30),
     to: new Date(),
-  });
+  })
 
   return (
     <div className="flex h-full">
@@ -83,5 +83,5 @@ export default function AccountApp() {
         </ScrollArea>
       </div>
     </div>
-  );
+  )
 }
