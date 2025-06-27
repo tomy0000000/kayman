@@ -1,5 +1,10 @@
 "use client"
 import DatePickerWithRange from "@/components/date-range-picker"
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
@@ -66,47 +71,53 @@ export default function AccountApp() {
   }, [isError, error, toast])
 
   return (
-    <div className="flex h-full">
+    <ResizablePanelGroup direction="horizontal">
       {/* Accounts */}
-      <div className="flex-1 p-4 overflow-auto">
-        <h1 className="text-lg font-semibold">Accounts</h1>
-        <ul>
-          <Separator className="my-2" />
-          {accounts?.map((account) => (
-            <>
-              <li key={account.id} className="text-sm">
-                <div className="font-semibold">{account.name}</div>
-                <div className="text-sm">{account.balance}</div>
-              </li>
-              <Separator className="my-2" />
-            </>
-          ))}
-        </ul>
-      </div>
-
-      <Separator orientation="vertical" />
-
-      {/* Transations */}
-      <div className="flex-1 p-4">
-        <ScrollArea className="h-full w-full rounded-md">
-          <DatePickerWithRange date={date} setDate={setDate} className="mb-4" />
-          {transations.map((transation) => (
-            <>
-              <div key={transation.title} className="text-sm">
-                <div className="font-semibold">{transation.title}</div>
-                <div className="text-neutral-500">
-                  {transation.date.toLocaleDateString()}
-                </div>
-                <div className="text-sm">
-                  {transation.amount > 0 ? "+" : "-"}$
-                  {Math.abs(transation.amount)}
-                </div>
-              </div>
-              <Separator className="my-2" />
-            </>
-          ))}
+      <ResizablePanel>
+        <ScrollArea className="h-full">
+          <h1 className="text-lg font-semibold">Accounts</h1>
+          <ul>
+            <Separator className="my-2" />
+            {accounts?.map((account) => (
+              <>
+                <li key={account.id} className="text-sm">
+                  <div className="font-semibold">{account.name}</div>
+                  <div className="text-sm">{account.balance}</div>
+                </li>
+                <Separator className="my-2" />
+              </>
+            ))}
+          </ul>
         </ScrollArea>
-      </div>
-    </div>
+      </ResizablePanel>
+      <ResizableHandle />
+      <ResizablePanel>
+        {/* Transations */}
+        <div className="flex-1 p-4">
+          <ScrollArea className="h-full w-full rounded-md">
+            <DatePickerWithRange
+              date={date}
+              setDate={setDate}
+              className="mb-4"
+            />
+            {transations.map((transation) => (
+              <>
+                <div key={transation.title} className="text-sm">
+                  <div className="font-semibold">{transation.title}</div>
+                  <div className="text-neutral-500">
+                    {transation.date.toLocaleDateString()}
+                  </div>
+                  <div className="text-sm">
+                    {transation.amount > 0 ? "+" : "-"}$
+                    {Math.abs(transation.amount)}
+                  </div>
+                </div>
+                <Separator className="my-2" />
+              </>
+            ))}
+          </ScrollArea>
+        </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   )
 }
