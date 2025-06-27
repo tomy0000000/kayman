@@ -33,4 +33,4 @@ class CategoryRead(CategoryBase):
 
 
 class CategoryReadWithChildren(CategoryRead):
-    sub_categories: list[CategoryRead] | None = None
+    sub_categories: list["CategoryReadWithChildren"] | None = None
