@@ -5,10 +5,8 @@ const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
 })
 
-const eslintConfig = [
+export default [
   ...compat.config({
-    extends: ['next/core-web-vitals', 'next/typescript'],
+    extends: ['next/core-web-vitals', 'next/typescript', 'prettier', '@tanstack/eslint-plugin-query'],
   }),
 ]
-
-export default eslintConfig

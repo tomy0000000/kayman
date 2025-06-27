@@ -3,26 +3,28 @@ import { Calendar } from "@/components/ui/calendar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
-import { PaymentReadDetailed, readPayments } from "@/lib/client"
+import { readPayments } from "@/lib/client"
 import { useAuth } from "@/lib/context/AuthContext"
+import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 
 export default function CalendarApp() {
   const { client } = useAuth()
   const { toast } = useToast()
   const [date, setDate] = useState<Date | undefined>(new Date())
-  const [loading, setLoading] = useState(true)
-  const [payments, setPayments] = useState<PaymentReadDetailed[]>([])
 
-  useEffect(() => {
-    if (!client) {
-      return
-    }
-
-    setLoading(true)
-    const payment_date = date?.toLocaleDateString("en-CA") // 2025-01-01
-
-    async function fetchPayments() {
+  const {
+    isPending,
+    isError,
+    data: payments,
+    error,
+  } = useQuery({
+    queryKey: ["payments", date],
+    queryFn: async () => {
+      if (!client) {
+        throw new Error("Not login yet")
+      }
+      const payment_date = date?.toLocaleDateString("en-CA") // 2025-01-01
       const response = await readPayments({
         client,
         query: { payment_date },
@@ -33,12 +35,12 @@ export default function CalendarApp() {
       if (!response.data) {
         throw new Error("No data returned")
       }
-      setPayments(response.data)
-    }
+      return response.data
+    },
+  })
 
-    try {
-      fetchPayments()
-    } catch (error) {
+  useEffect(() => {
+    if (isError) {
       console.error(error)
       toast({
         title: "Failed to fetch payments",
@@ -46,10 +48,8 @@ export default function CalendarApp() {
           error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       })
-    } finally {
-      setLoading(false)
     }
-  }, [date, client, toast])
+  }, [isError, error, toast])
 
   return (
     <div className="flex h-full">
@@ -69,17 +69,17 @@ export default function CalendarApp() {
         </hgroup>
         <div className="px-4">
           <Separator className="my-2" />
-          {loading && (
+          {isPending && (
             <p className="tex-sm text-center text-neutral-500 leading-10">
               Loading...
             </p>
           )}
-          {payments.length === 0 && (
+          {payments?.length === 0 && (
             <p className="tex-sm text-center text-neutral-500 leading-10">
               No payments
             </p>
           )}
-          {payments.map((payment) => {
+          {payments?.map((payment) => {
             const entriesTotal = payment.entries.reduce((sum, entry) => {
               return sum + Number(entry.amount) * entry.quantity
             }, 0)
