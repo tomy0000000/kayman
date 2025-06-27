@@ -48,14 +48,14 @@ function TreeNode({ item, currentId, setCurrentId }: TreeNodeProps) {
 }
 
 interface TreeProps {
-  treeData: TreeItem[]
+  treeData: TreeItem[] | undefined
 }
 
 export default function Tree({ treeData }: TreeProps) {
   const [currentId, setCurrentId] = useState<string | null>(null)
   return (
     <TreeView aria-label="Files changed">
-      {treeData.map((item) => (
+      {treeData?.map((item) => (
         <TreeNode
           key={item.id}
           item={item}
