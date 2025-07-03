@@ -19,7 +19,7 @@ export default function CalendarApp() {
     data: payments,
     error,
   } = useQuery({
-    queryKey: ["payments", date],
+    queryKey: ["payments", date, client],
     queryFn: async () => {
       if (!client) {
         throw new Error("Not login yet")

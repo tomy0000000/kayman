@@ -37,12 +37,11 @@ export default function AccountApp() {
   })
 
   const {
-    isPending,
     isError,
     data: accounts,
     error,
   } = useQuery({
-    queryKey: ["accounts"],
+    queryKey: ["accounts", client],
     queryFn: async () => {
       if (!client) {
         throw new Error("Not login yet")

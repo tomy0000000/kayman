@@ -34,12 +34,11 @@ export default function CategoryApp() {
   })
 
   const {
-    isPending,
     isError,
     data: categories,
     error,
   } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ["categories", client],
     queryFn: async () => {
       if (!client) {
         throw new Error("Not login yet")
