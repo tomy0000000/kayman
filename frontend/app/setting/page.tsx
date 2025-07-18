@@ -1,33 +1,35 @@
-"use client"
-import { Button } from "@/components/ui/button"
+'use client'
+
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+
+import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/lib/context/AuthContext"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
-import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
+  FormMessage
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/lib/context/AuthContext'
 
 const formSchema = z.object({
   host: z.string().regex(/^https?:\/\/[a-zA-Z0-9.-]+(:\d*)?$/, {
     message:
-      "Host must start with 'https://' or 'http://' and a valid domain name (e.g. example.com).",
+      "Host must start with 'https://' or 'http://' and a valid domain name (e.g. example.com)."
   }),
   username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
+    message: 'Username must be at least 2 characters.'
   }),
   password: z.string().min(2, {
-    message: "Password must be at least 2 characters.",
-  }),
+    message: 'Password must be at least 2 characters.'
+  })
 })
 
 export default function SettingApp() {
@@ -35,7 +37,7 @@ export default function SettingApp() {
   const { host, username, password, login, logout } = useAuth()
   const { toast } = useToast()
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema)
   })
 
   // Load credential from context on mount
@@ -47,26 +49,26 @@ export default function SettingApp() {
     logout()
     form.reset({})
     toast({
-      title: "Logout successful!",
+      title: 'Logout successful!'
     })
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     toast({
-      title: "Login in progress...",
+      title: 'Login in progress...'
     })
     setValidating(true)
     try {
       await login(values.host, values.username, values.password)
       toast({
-        title: "Login successful!",
+        title: 'Login successful!'
       })
     } catch (error) {
       toast({
-        title: "Failed to login",
+        title: 'Failed to login',
         description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
+          error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive'
       })
     } finally {
       setValidating(false)

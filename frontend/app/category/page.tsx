@@ -1,28 +1,30 @@
-"use client"
-import DatePickerWithRange from "@/components/date-range-picker"
-import Tree from "@/components/tree"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { useToast } from "@/hooks/use-toast"
-import { readCategories } from "@/lib/client"
-import { useAuth } from "@/lib/context/AuthContext"
-import { categoryToTreeItem } from "@/lib/types"
-import { useQuery } from "@tanstack/react-query"
-import { subDays } from "date-fns"
-import { useEffect, useState } from "react"
-import { DateRange } from "react-day-picker"
+'use client'
+
+import { useQuery } from '@tanstack/react-query'
+import { subDays } from 'date-fns'
+import { useEffect, useState } from 'react'
+import { DateRange } from 'react-day-picker'
+
+import DatePickerWithRange from '@/components/date-range-picker'
+import Tree from '@/components/tree'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
+import { useToast } from '@/hooks/use-toast'
+import { readCategories } from '@/lib/client'
+import { useAuth } from '@/lib/context/AuthContext'
+import { categoryToTreeItem } from '@/lib/types'
 
 const transations = [
   {
-    title: "Payment 1",
-    date: new Date("2024-12-30"),
-    amount: 100,
+    title: 'Payment 1',
+    date: new Date('2024-12-30'),
+    amount: 100
   },
   {
-    title: "Payment 2",
-    date: new Date("2025-01-02"),
-    amount: -200,
-  },
+    title: 'Payment 2',
+    date: new Date('2025-01-02'),
+    amount: -200
+  }
 ]
 
 export default function CategoryApp() {
@@ -30,38 +32,38 @@ export default function CategoryApp() {
   const { toast } = useToast()
   const [date, setDate] = useState<DateRange | undefined>({
     from: subDays(new Date(), 30),
-    to: new Date(),
+    to: new Date()
   })
 
   const {
     isError,
     data: categories,
-    error,
+    error
   } = useQuery({
-    queryKey: ["categories", client],
+    queryKey: ['categories', client],
     queryFn: async () => {
       if (!client) {
-        throw new Error("Not login yet")
+        throw new Error('Not login yet')
       }
       const response = await readCategories({ client })
       if (response.error) {
-        throw new Error("Failed to fetch categories")
+        throw new Error('Failed to fetch categories')
       }
       return response.data
-    },
+    }
   })
   const treeData = categories?.map((category) =>
-    categoryToTreeItem(category, "root")
+    categoryToTreeItem(category, 'root')
   )
 
   useEffect(() => {
     if (isError) {
       console.error(error)
       toast({
-        title: "Failed to fetch categories",
+        title: 'Failed to fetch categories',
         description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
+          error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive'
       })
     }
   }, [isError, error, toast])
@@ -87,7 +89,7 @@ export default function CategoryApp() {
                   {transation.date.toLocaleDateString()}
                 </div>
                 <div className="text-sm">
-                  {transation.amount > 0 ? "+" : "-"}$
+                  {transation.amount > 0 ? '+' : '-'}$
                   {Math.abs(transation.amount)}
                 </div>
               </div>

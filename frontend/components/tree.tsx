@@ -1,8 +1,12 @@
 /* Modifed from https://github.com/shadcn-ui/ui/issues/355#issuecomment-2405553102 */
-"use client"
-import { TreeItem } from "@/lib/types"
-import { TreeView } from "@primer/react"
-import { useEffect, useState } from "react"
+'use client'
+
+import { TreeView } from '@primer/react'
+import { useEffect, useState } from 'react'
+
+import { TreeItem } from '@/lib/types'
+
+/* Modifed from https://github.com/shadcn-ui/ui/issues/355#issuecomment-2405553102 */
 
 interface TreeNodeProps {
   item: TreeItem

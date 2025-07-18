@@ -1,25 +1,26 @@
-import Logo from "@/components/logo"
-import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar"
-import { Icon } from "@iconify-icon/react"
-import Image from "next/image"
-import { useState } from "react"
+import { Icon } from '@iconify-icon/react'
+import Image from 'next/image'
+import { useState } from 'react'
+
+import Logo from '@/components/logo'
+import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar'
 
 const links = [
   {
-    label: "Calendar",
-    href: "/",
-    icon: <Icon icon="mdi:calendar" />,
+    label: 'Calendar',
+    href: '/',
+    icon: <Icon icon="mdi:calendar" />
   },
   {
-    label: "Account",
-    href: "/account",
-    icon: <Icon icon="mdi:account-balance-wallet" />,
+    label: 'Account',
+    href: '/account',
+    icon: <Icon icon="mdi:account-balance-wallet" />
   },
   {
-    label: "Category",
-    href: "/category",
-    icon: <Icon icon="mdi:category" />,
-  },
+    label: 'Category',
+    href: '/category',
+    icon: <Icon icon="mdi:category" />
+  }
 ]
 export default function AppSidebar() {
   const [open, setOpen] = useState(false)
@@ -39,8 +40,8 @@ export default function AppSidebar() {
         <div>
           <SidebarLink
             link={{
-              label: "Tomy Hsieh",
-              href: "/setting",
+              label: 'Tomy Hsieh',
+              href: '/setting',
               icon: (
                 <Image
                   src="https://img.tomy.me/tomy-light.png"
@@ -49,7 +50,7 @@ export default function AppSidebar() {
                   height={50}
                   alt="Avatar"
                 />
-              ),
+              )
             }}
           />
         </div>

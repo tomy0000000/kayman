@@ -1,31 +1,33 @@
-"use client"
-import DatePickerWithRange from "@/components/date-range-picker"
+'use client'
+
+import { useQuery } from '@tanstack/react-query'
+import { subDays } from 'date-fns'
+import { useEffect, useState } from 'react'
+import { DateRange } from 'react-day-picker'
+
+import DatePickerWithRange from '@/components/date-range-picker'
 import {
   ResizableHandle,
   ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { useToast } from "@/hooks/use-toast"
-import { readAccounts } from "@/lib/client"
-import { useAuth } from "@/lib/context/AuthContext"
-import { useQuery } from "@tanstack/react-query"
-import { subDays } from "date-fns"
-import { useEffect, useState } from "react"
-import { DateRange } from "react-day-picker"
+  ResizablePanelGroup
+} from '@/components/ui/resizable'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
+import { useToast } from '@/hooks/use-toast'
+import { readAccounts } from '@/lib/client'
+import { useAuth } from '@/lib/context/AuthContext'
 
 const transations = [
   {
-    title: "Payment 1",
-    date: new Date("2024-12-30"),
-    amount: 100,
+    title: 'Payment 1',
+    date: new Date('2024-12-30'),
+    amount: 100
   },
   {
-    title: "Payment 2",
-    date: new Date("2025-01-02"),
-    amount: -200,
-  },
+    title: 'Payment 2',
+    date: new Date('2025-01-02'),
+    amount: -200
+  }
 ]
 
 export default function AccountApp() {
@@ -33,38 +35,38 @@ export default function AccountApp() {
   const { toast } = useToast()
   const [date, setDate] = useState<DateRange | undefined>({
     from: subDays(new Date(), 30),
-    to: new Date(),
+    to: new Date()
   })
 
   const {
     isError,
     data: accounts,
-    error,
+    error
   } = useQuery({
-    queryKey: ["accounts", client],
+    queryKey: ['accounts', client],
     queryFn: async () => {
       if (!client) {
-        throw new Error("Not login yet")
+        throw new Error('Not login yet')
       }
       const response = await readAccounts({ client })
       if (response.error) {
-        throw new Error("Failed to fetch accounts")
+        throw new Error('Failed to fetch accounts')
       }
       if (!response.data) {
-        throw new Error("No data returned")
+        throw new Error('No data returned')
       }
       return response.data
-    },
+    }
   })
 
   useEffect(() => {
     if (isError) {
       console.error(error)
       toast({
-        title: "Failed to fetch accounts",
+        title: 'Failed to fetch accounts',
         description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
+          error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive'
       })
     }
   }, [isError, error, toast])
@@ -107,7 +109,7 @@ export default function AccountApp() {
                     {transation.date.toLocaleDateString()}
                   </div>
                   <div className="text-sm">
-                    {transation.amount > 0 ? "+" : "-"}$
+                    {transation.amount > 0 ? '+' : '-'}$
                     {Math.abs(transation.amount)}
                   </div>
                 </div>

@@ -1,12 +1,14 @@
-"use client"
-import { Calendar } from "@/components/ui/calendar"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { useToast } from "@/hooks/use-toast"
-import { readPayments } from "@/lib/client"
-import { useAuth } from "@/lib/context/AuthContext"
-import { useQuery } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+'use client'
+
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+
+import { Calendar } from '@/components/ui/calendar'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
+import { useToast } from '@/hooks/use-toast'
+import { readPayments } from '@/lib/client'
+import { useAuth } from '@/lib/context/AuthContext'
 
 export default function CalendarApp() {
   const { client } = useAuth()
@@ -17,36 +19,36 @@ export default function CalendarApp() {
     isPending,
     isError,
     data: payments,
-    error,
+    error
   } = useQuery({
-    queryKey: ["payments", date, client],
+    queryKey: ['payments', date, client],
     queryFn: async () => {
       if (!client) {
-        throw new Error("Not login yet")
+        throw new Error('Not login yet')
       }
-      const payment_date = date?.toLocaleDateString("en-CA") // 2025-01-01
+      const payment_date = date?.toLocaleDateString('en-CA') // 2025-01-01
       const response = await readPayments({
         client,
-        query: { payment_date },
+        query: { payment_date }
       })
       if (response.error) {
-        throw new Error("Failed to fetch payments")
+        throw new Error('Failed to fetch payments')
       }
       if (!response.data) {
-        throw new Error("No data returned")
+        throw new Error('No data returned')
       }
       return response.data
-    },
+    }
   })
 
   useEffect(() => {
     if (isError) {
       console.error(error)
       toast({
-        title: "Failed to fetch payments",
+        title: 'Failed to fetch payments',
         description:
-          error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
+          error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive'
       })
     }
   }, [isError, error, toast])
@@ -85,7 +87,7 @@ export default function CalendarApp() {
             }, 0)
             const transferAmount = payment.transactions
               .map((txn) => txn.amount)
-              .join(" / ")
+              .join(' / ')
             return (
               <div key={payment.id}>
                 <div className="flex flex-row justify-between text-sm">
@@ -96,9 +98,9 @@ export default function CalendarApp() {
                     </div>
                   </div>
                   <div className="flex items-center justify-center bg-red-500 text-white px-4 py-2 rounded-md">
-                    {payment.type === "Expense" && `-${entriesTotal}`}
-                    {payment.type === "Income" && `+${entriesTotal}`}
-                    {payment.type === "Transfer" && transferAmount}
+                    {payment.type === 'Expense' && `-${entriesTotal}`}
+                    {payment.type === 'Income' && `+${entriesTotal}`}
+                    {payment.type === 'Transfer' && transferAmount}
                   </div>
                 </div>
                 <Separator className="my-2" />

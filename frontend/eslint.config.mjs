@@ -1,13 +1,13 @@
-import { FlatCompat } from "@eslint/eslintrc"
-import pluginQuery from "@tanstack/eslint-plugin-query"
+import { FlatCompat } from '@eslint/eslintrc'
+import pluginQuery from '@tanstack/eslint-plugin-query'
 
 const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
+  baseDirectory: import.meta.dirname
 })
 
 export default [
   ...compat.config({
-    extends: ["next/core-web-vitals", "next/typescript", "prettier"],
+    extends: ['next/core-web-vitals', 'next/typescript', 'prettier']
   }),
-  ...pluginQuery.configs["flat/recommended"],
+  ...pluginQuery.configs['flat/recommended']
 ]

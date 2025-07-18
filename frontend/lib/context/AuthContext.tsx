@@ -1,15 +1,16 @@
-import { login as clientLogin } from "@/lib/client"
-import { Client, createClient } from "@hey-api/client-axios"
+import { Client, createClient } from '@hey-api/client-axios'
 import {
-  createContext,
   ReactNode,
+  createContext,
   useContext,
   useEffect,
-  useState,
-} from "react"
+  useState
+} from 'react'
 
-const LOCAL_STORAGE_PRESENT = typeof window !== "undefined"
-const LOCAL_STORAGE_KEY = "credential"
+import { login as clientLogin } from '@/lib/client'
+
+const LOCAL_STORAGE_PRESENT = typeof window !== 'undefined'
+const LOCAL_STORAGE_KEY = 'credential'
 
 type AuthContextType = {
   host: string
@@ -27,9 +28,9 @@ type AuthContextProps = {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export const AuthProvider = ({ children }: AuthContextProps) => {
-  const [host, setHost] = useState("")
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
+  const [host, setHost] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [client, setClient] = useState<Client | undefined>(undefined)
 
   // Load credential from local storage on mount
@@ -51,22 +52,22 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
     // Try to authenticate with the new config
     const response = await clientLogin({
       client,
-      body: { username, password },
+      body: { username, password }
     })
     if (response.error) {
-      throw new Error("Failed to authenticate")
+      throw new Error('Failed to authenticate')
     }
     if (!response.data) {
-      throw new Error("No data returned")
+      throw new Error('No data returned')
     }
-    if (response.data.token_type !== "bearer") {
+    if (response.data.token_type !== 'bearer') {
       throw new Error(`Invalid token type: ${response.data.token_type}`)
     }
 
     // Set the new config
     client.setConfig({
       baseURL: host,
-      auth: () => response.data.access_token,
+      auth: () => response.data.access_token
     })
 
     // Save the new config and credential
@@ -85,9 +86,9 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
   }
 
   const logout = () => {
-    setHost("")
-    setUsername("")
-    setPassword("")
+    setHost('')
+    setUsername('')
+    setPassword('')
     setClient(undefined)
     if (LOCAL_STORAGE_PRESENT) {
       window.localStorage.removeItem(LOCAL_STORAGE_KEY)
@@ -106,7 +107,7 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext)
   if (!context) {
-    throw new Error("useAuth must be used within a AuthProvider")
+    throw new Error('useAuth must be used within a AuthProvider')
   }
   return context
 }

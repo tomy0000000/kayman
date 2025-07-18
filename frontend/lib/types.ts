@@ -1,4 +1,4 @@
-import { CategoryReadWithChildren } from "@/lib/client"
+import { CategoryReadWithChildren } from '@/lib/client'
 
 type TreeItem = {
   id: string
