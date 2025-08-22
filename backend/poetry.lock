@@ -1909,14 +1909,14 @@ types-pyasn1 = "*"
 
 [[package]]
 name = "types-simplejson"
-version = "3.19.0.20241221"
+version = "3.20.0.20250822"
 description = "Typing stubs for simplejson"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "types_simplejson-3.19.0.20241221-py3-none-any.whl", hash = "sha256:179dfaef8c357156c781fa47cfdfcd953a7953fc375dfe9ab19a20054a828980"},
-    {file = "types_simplejson-3.19.0.20241221.tar.gz", hash = "sha256:114af9db0f49ad15755d2b6ad8e6fd04b5a493815e2fc1e011729d4650defc70"},
+    {file = "types_simplejson-3.20.0.20250822-py3-none-any.whl", hash = "sha256:b5e63ae220ac7a1b0bb9af43b9cb8652237c947981b2708b0c776d3b5d8fa169"},
+    {file = "types_simplejson-3.20.0.20250822.tar.gz", hash = "sha256:2b0bfd57a6beed3b932fd2c3c7f8e2f48a7df3978c9bba43023a32b3741a95b0"},
 ]
 
 [[package]]
@@ -2237,4 +2237,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0.0"
-content-hash = "ccf1066a21bf32ec181f16beb6aaa2efbb4b86ef5175648846c1ef255d13d596"
+content-hash = "ac2d20abb431fee994897478d17163b5867bfba5592863333c8ac52d6f0b07cc"
