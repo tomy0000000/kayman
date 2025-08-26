@@ -41,7 +41,7 @@ def override_openapi(app: FastAPI) -> None:
         app.openapi_schema = openapi_schema
         return app.openapi_schema
 
-    app.openapi = custom_openapi_operation_id  # type: ignore[assignment]
+    app.openapi = custom_openapi_operation_id  # type: ignore[method-assign]
 
 
 def main() -> None:
