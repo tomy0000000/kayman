@@ -5,6 +5,7 @@ from loguru import logger
 
 from kayman.core.config import settings
 from kayman.core.db import alembic_upgrade
+from kayman.openapi import override_openapi
 from kayman.routers import routers, tags
 from kayman.util import KustomJSONResponse, custom_generate_unique_id
 
@@ -31,6 +32,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Override the OpenAPI generation to customize operationId
+override_openapi(app)
 
 # Auto migrate the database on startup
 if not app.debug:
