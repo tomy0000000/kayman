@@ -16,6 +16,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "scripts/postinstall.sh",
     "prettier": "prettier -w .",
     "generate-client": "openapi-ts"
   },
