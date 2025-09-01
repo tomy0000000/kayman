@@ -5,10 +5,9 @@ from fastapi.responses import RedirectResponse
 from loguru import logger
 
 from kayman.core.config import settings
-from kayman.core.db import alembic_upgrade
 from kayman.openapi import override_openapi
 from kayman.routers import routers, tags
-from kayman.util import KustomJSONResponse, custom_generate_unique_id
+from kayman.util import KustomJSONResponse, custom_generate_unique_id, lifespan
 
 cors_middleware = Middleware(
     CORSMiddleware,
@@ -26,6 +25,7 @@ app = FastAPI(
     openapi_tags=tags,
     default_response_class=KustomJSONResponse,
     middlewares=[cors_middleware],
+    lifespan=lifespan,
     contact={"name": "Tomy Hsieh", "url": "https://github.com/tomy0000000"},
     license_info={
         "name": "MIT",
@@ -35,9 +35,6 @@ app = FastAPI(
 )
 logger.info(f"Application created in {settings.ENVIRONMENT} environment")
 
-# Auto migrate the database on startup
-if not app.debug:
-    app.add_event_handler("startup", alembic_upgrade)
 
 # Add all routers to the application
 for router in routers:

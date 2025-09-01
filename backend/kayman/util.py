@@ -1,11 +1,29 @@
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
 import simplejson
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
+
+from kayman.core.db import alembic_upgrade
+
+
+# Register startup and shutdown events
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    # Auto migrate the database on startup
+    if not app.debug:
+        alembic_upgrade()
+
+    yield
+
+    # Shutdown tasks can be added here
+    pass
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
