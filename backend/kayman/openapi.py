@@ -16,18 +16,28 @@ from typing import Any
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
-from kayman.core.config import settings
-
 
 def override_openapi(app: FastAPI) -> None:
     def custom_openapi_operation_id() -> dict[str, Any]:
         if app.openapi_schema:
             return app.openapi_schema
 
+        # Check source of `FastAPI.openapi` to update params
+        # that may change in future versions
         openapi_schema = get_openapi(
-            title=settings.PROJECT_NAME,
-            version="0.10.0",
+            title=app.title,
+            version=app.version,
+            openapi_version=app.openapi_version,
+            summary=app.summary,
+            description=app.description,
+            terms_of_service=app.terms_of_service,
+            contact=app.contact,
+            license_info=app.license_info,
             routes=app.routes,
+            webhooks=app.webhooks.routes,
+            tags=app.openapi_tags,
+            servers=app.servers,
+            separate_input_output_schemas=app.separate_input_output_schemas,
         )
 
         for path_data in openapi_schema["paths"].values():

@@ -33,9 +33,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Override the OpenAPI generation to customize operationId
-override_openapi(app)
-
 # Auto migrate the database on startup
 if not app.debug:
     app.add_event_handler("startup", alembic_upgrade)
@@ -43,6 +40,9 @@ if not app.debug:
 # Add all routers to the application
 for router in routers:
     app.include_router(router)
+
+# Override the OpenAPI generation to customize operationId
+override_openapi(app)
 
 
 # Redirect root path to Swagger UI
