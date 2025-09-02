@@ -9,6 +9,7 @@ on:
       - "backend/kayman/**"
       - "backend/pyproject.toml"
       - "backend/poetry.lock"
+      - "frontend/**"
   pull_request:
   workflow_dispatch:
 
