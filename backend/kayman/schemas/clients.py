@@ -9,3 +9,6 @@ class Client(SQLModel):
 class Token(SQLModel):
     access_token: str
     token_type: str
+
+
+type Clients = dict[str, Client]

@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
+from kayman.auth import setup_clients
 from kayman.core.db import alembic_upgrade
 
 
@@ -19,6 +20,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Auto migrate the database on startup
     if not app.debug:
         alembic_upgrade()
+
+    # Setup clients for authentication
+    setup_clients(app)
 
     yield
 

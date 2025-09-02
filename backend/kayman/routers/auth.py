@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from kayman.auth import authenticate_client, create_access_token, get_client
@@ -16,8 +16,12 @@ auth_router = APIRouter(
 
 
 @auth_router.post("/token", name="Login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> clients.Token:
-    client = authenticate_client(form_data.username, form_data.password)
+async def login(
+    request: Request, form_data: OAuth2PasswordRequestForm = Depends()
+) -> clients.Token:
+    client = authenticate_client(
+        form_data.username, form_data.password, request.app.state.clients
+    )
     if not client:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
