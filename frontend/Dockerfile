@@ -41,7 +41,7 @@ RUN poetry config virtualenvs.create false && \
 # Copy application
 COPY backend/ .
 
-RUN POSTGRES_PASSWORD=dummy poetry run python -m kayman.openapi openapi.json
+RUN scripts/generate_openapi.sh
 
 ###############################################################################
 # Build                                                                       #

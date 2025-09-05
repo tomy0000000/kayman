@@ -60,15 +60,48 @@ jobs:
         run: |
           poetry run scripts/lint.sh
 
+  build-openapi-schema:
+    name: "📄 Build OpenAPI Schema"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "backend"
+    steps:
+      - name: "🛒 Checkout"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Set up Poetry"
+        uses: tomy0000000/actions/python-poetry-install@main
+        with:
+          working_directory: "backend"
+          python_version: "3.12"
+
+      - name: "📄 Generate OpenAPI Schema"
+        run: |
+          scripts/generate_openapi.sh openapi.json
+
+      - name: "⬆️ Upload artifact"
+        uses: actions/upload-artifact@v3
+        with:
+          name: openapi-schema
+          path: openapi.json
+
   frontend-lint:
     name: "🔍 Frontend Linting"
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: "frontend"
+    needs: [build-openapi-schema]
     steps:
       - name: "🛒 Checkout"
         uses: actions/checkout@v4
+
+      - name: "⬇️ Download artifact"
+        uses: actions/download-artifact@v3
+        with:
+          name: openapi-schema
+          path: /tmp/openapi.json
 
       - name: "⚙️ Setup pnpm"
         uses: pnpm/action-setup@v4
