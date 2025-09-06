@@ -32,7 +32,7 @@ jobs:
 
       - name: "🧪 Testing"
         run: |
-          poetry run scripts/test.sh
+          scripts/test.sh
 
       - name: "📄 Report coverage"
         uses: codecov/codecov-action@v5

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Usage: poetry run scripts/test.sh
+# Usage: scripts/test.sh
 
-export POSTGRES_PASSWORD=dummy
-pytest
+POSTGRES_PASSWORD=dummy poetry run pytest
