@@ -22,7 +22,7 @@ jobs:
         working-directory: "backend"
     steps:
       - name: "🛒 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: "🐍 Install uv"
         uses: astral-sh/setup-uv@v6
@@ -50,7 +50,7 @@ jobs:
         working-directory: "backend"
     steps:
       - name: "🛒 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: "🐍 Install uv"
         uses: astral-sh/setup-uv@v6
@@ -72,7 +72,7 @@ jobs:
         working-directory: "backend"
     steps:
       - name: "🛒 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: "🐍 Install uv"
         uses: astral-sh/setup-uv@v6
@@ -101,7 +101,7 @@ jobs:
     needs: [build-openapi-schema]
     steps:
       - name: "🛒 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: "⬇️ Download artifact"
         uses: actions/download-artifact@v5
@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "🛒 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # FOSSA's API Key are meant to be exposed as to doc
       - name: "🪪 License Scan"
@@ -151,7 +151,7 @@ jobs:
     if: success() && github.ref == 'refs/heads/develop'
     steps:
       - name: "🛒 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: "⚙️ Setup Docker Meta"
         id: meta
@@ -182,7 +182,7 @@ jobs:
     if: success() && github.ref == 'refs/heads/develop'
     steps:
       - name: "🛒 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: "⚙️ Setup Docker Meta"
         id: meta
