@@ -4,18 +4,17 @@ FROM python:3.12
 WORKDIR /usr/src/kayman
 EXPOSE 8000
 
-# Install pip & poetry
-RUN pip install --no-cache-dir --upgrade pip==25 poetry==2
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Copy dependencies
-COPY backend/pyproject.toml backend/poetry.lock ./
+COPY backend/pyproject.toml backend/uv.lock ./
 
 # Install dependencies
-RUN poetry config virtualenvs.create false && \
-    poetry install --no-interaction --no-ansi
+RUN uv sync --locked
 
 # Copy application
 COPY backend .
 
 # Run application
-ENTRYPOINT [ "uvicorn", "kayman.main:app", "--host", "0.0.0.0", "--port", "8000" ]
+ENTRYPOINT [ "uv", "run", "uvicorn", "kayman.main:app", "--host", "0.0.0.0", "--port", "8000" ]

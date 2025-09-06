@@ -8,7 +8,7 @@ on:
       - ".github/**"
       - "backend/kayman/**"
       - "backend/pyproject.toml"
-      - "backend/poetry.lock"
+      - "backend/uv.lock"
       - "frontend/**"
   pull_request:
   workflow_dispatch:
@@ -24,11 +24,13 @@ jobs:
       - name: "🛒 Checkout"
         uses: actions/checkout@v4
 
-      - name: "🐍 Set up Poetry"
-        uses: tomy0000000/actions/python-poetry-install@main
+      - name: "🐍 Install uv"
+        uses: astral-sh/setup-uv@v6
+
+      - name: "🐍 Set up Python"
+        uses: actions/setup-python@v5
         with:
-          working_directory: "backend"
-          python_version: "3.12"
+          python-version-file: "backend/pyproject.toml"
 
       - name: "🧪 Testing"
         run: |
@@ -50,15 +52,17 @@ jobs:
       - name: "🛒 Checkout"
         uses: actions/checkout@v4
 
-      - name: "🐍 Set up Poetry"
-        uses: tomy0000000/actions/python-poetry-install@main
+      - name: "🐍 Install uv"
+        uses: astral-sh/setup-uv@v6
+
+      - name: "🐍 Set up Python"
+        uses: actions/setup-python@v5
         with:
-          working_directory: "backend"
-          python_version: "3.12"
+          python-version-file: "backend/pyproject.toml"
 
       - name: "🔍 Linting"
         run: |
-          poetry run scripts/lint.sh
+          scripts/lint.sh
 
   build-openapi-schema:
     name: "📄 Build OpenAPI Schema"
@@ -70,11 +74,13 @@ jobs:
       - name: "🛒 Checkout"
         uses: actions/checkout@v4
 
-      - name: "🐍 Set up Poetry"
-        uses: tomy0000000/actions/python-poetry-install@main
+      - name: "🐍 Install uv"
+        uses: astral-sh/setup-uv@v6
+
+      - name: "🐍 Set up Python"
+        uses: actions/setup-python@v5
         with:
-          working_directory: "backend"
-          python_version: "3.12"
+          python-version-file: "backend/pyproject.toml"
 
       - name: "📄 Generate OpenAPI Schema"
         run: |

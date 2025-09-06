@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Usage: poetry run scripts/lint.sh
+# Usage: scripts/lint.sh
 
-mypy kayman
-ruff check kayman
-ruff format kayman --check
+uv run mypy kayman
+uv run ruff check kayman
+uv run ruff format kayman --check

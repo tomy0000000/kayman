@@ -13,7 +13,7 @@
         "backend/Dockerfile",
         "-t",
         "tomy0000000/kayman-backend:latest",
-        ".",
+        "."
       ],
       "problemMatcher": [],
       "group": {
@@ -31,7 +31,7 @@
         "frontend/Dockerfile",
         "-t",
         "tomy0000000/kayman-frontend:latest",
-        ".",
+        "."
       ],
       "problemMatcher": [],
       "group": {
@@ -57,9 +57,8 @@
     {
       "label": "🧪 Run Backend Tests",
       "type": "shell",
-      "command": "poetry",
+      "command": "bash",
       "args": [
-        "run",
         "scripts/test.sh"
       ],
       "options": {
@@ -96,7 +95,7 @@
       "type": "shell",
       "command": "bash",
       "args": [
-        "scripts/build_client.sh",
+        "scripts/build_client.sh"
       ],
       "problemMatcher": [],
       "group": {

@@ -2,4 +2,4 @@
 set -euo pipefail
 # Usage: scripts/test.sh
 
-POSTGRES_PASSWORD=dummy poetry run pytest
+POSTGRES_PASSWORD=dummy uv run pytest
