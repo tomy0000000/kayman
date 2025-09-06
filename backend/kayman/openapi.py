@@ -3,7 +3,7 @@
 # Generate a customized OpenAPI JSON for frontend client generation.
 #
 # Usage:
-# POSTGRES_PASSWORD=dummy poetry run python -m kayman.openapi <path_to_openapi.json>
+# POSTGRES_PASSWORD=dummy python -m kayman.openapi <path_to_openapi.json>
 #
 # Reference:
 # https://fastapi.tiangolo.com/advanced/generate-clients/#preprocess-the-openapi-specification-for-the-client-generator

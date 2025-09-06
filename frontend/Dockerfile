@@ -1,26 +1,6 @@
 # syntax=docker.io/docker/dockerfile:1
 
 ###############################################################################
-# Dependencies                                                                #
-###############################################################################
-
-FROM node:22-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
-WORKDIR /app
-
-# https://github.com/nodejs/docker-node/tree/b5d21345ca11f46cf93be68923696979aafc0326?tab=readme-ov-file#nodealpine
-RUN apk add --no-cache gcompat=1.1.0-r4
-
-# Copy dependencies
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
-
-# Install dependencies
-RUN corepack enable pnpm && pnpm install --frozen-lockfile
-
-
-###############################################################################
 # OpenAPI Spec                                                                #
 ###############################################################################
 
@@ -41,7 +21,30 @@ RUN poetry config virtualenvs.create false && \
 # Copy application
 COPY backend/ .
 
-RUN scripts/generate_openapi.sh
+RUN scripts/generate_openapi.sh openapi.json
+
+###############################################################################
+# Dependencies                                                                #
+###############################################################################
+
+FROM node:22-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+WORKDIR /app
+
+# https://github.com/nodejs/docker-node/tree/b5d21345ca11f46cf93be68923696979aafc0326?tab=readme-ov-file#nodealpine
+RUN apk add --no-cache gcompat=1.1.0-r4
+
+# Copy dependencies
+COPY frontend/openapi-ts.config.ts frontend/package.json frontend/pnpm-lock.yaml ./
+COPY frontend/scripts ./scripts
+
+# Copy Openapi.json
+COPY --from=spec /usr/src/kayman/openapi.json /tmp/openapi.json
+
+# Install dependencies
+RUN corepack enable pnpm && pnpm install --frozen-lockfile
 
 ###############################################################################
 # Build                                                                       #
