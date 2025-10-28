@@ -1,11 +1,11 @@
 from collections.abc import Generator
 from typing import Any
 
+from alembic.config import Config
 from loguru import logger
 from sqlmodel import Session, create_engine
 
 from alembic import command
-from alembic.config import Config
 from kayman.core.config import settings
 
 engine = create_engine(
