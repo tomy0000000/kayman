@@ -1,7 +1,0 @@
-**/.git
-**/.hg
-**/.next
-**/.svn
-**/node_modules
-lib/client
-pnpm-lock.yaml
