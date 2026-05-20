@@ -4,7 +4,7 @@ version = "0.10.0"
 description = "Kayman is the one-stop solution for personal finance"
 license = { text = "MIT" }
 readme = "README.md"
-requires-python = ">=3.12,<4.0.0"
+requires-python = "==3.12.*"
 authors = [{ name = "Tomy Hsieh", email = "pypi@tomy.me" }]
 dependencies = [
     "fastapi (>=0.115,<0.116)",
