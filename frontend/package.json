@@ -68,7 +68,7 @@
     "@rolldown/plugin-babel": "^0.2.3",
     "@tanstack/react-query-devtools": "^5.100.10",
     "@tanstack/react-router-devtools": "^1.167.0",
-    "@tanstack/router-cli": "^1.167.5",
+    "@tanstack/router-cli": "^1.167.8",
     "@tanstack/router-plugin": "^1.168.6",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/babel__core": "^7.20.5",
