@@ -9,3 +9,6 @@ fi
 
 # Generate client
 pnpm run generate-client
+
+# Generate router
+pnpm run generate-router
