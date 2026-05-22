@@ -8,7 +8,7 @@ updates:
     assignees:
       - "tomy0000000"
     commit-message:
-      prefix: "⬆️ bump: "
+      prefix: "⬆️ [bump] "
     target-branch: "develop"
 
   - package-ecosystem: "github-actions"
@@ -18,7 +18,7 @@ updates:
     assignees:
       - "tomy0000000"
     commit-message:
-      prefix: "⬆️ bump: "
+      prefix: "⬆️ [bump][ci] "
     target-branch: "develop"
 
   - package-ecosystem: "npm"
@@ -28,7 +28,7 @@ updates:
     assignees:
       - "tomy0000000"
     commit-message:
-      prefix: "⬆️ bump: "
+      prefix: "⬆️ [bump][frontend] "
     target-branch: "develop"
 
   - package-ecosystem: "pip"
@@ -38,5 +38,5 @@ updates:
     assignees:
       - "tomy0000000"
     commit-message:
-      prefix: "⬆️ bump: "
+      prefix: "⬆️ [bump][backend] "
     target-branch: "develop"
