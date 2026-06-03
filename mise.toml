@@ -1,0 +1,15 @@
+[tools]
+node = "22.16.0"
+pnpm = "10.12.1"
+python = "3.12"
+uv = "0.10.10"
+
+[env]
+_.file = "instance/.env"
+ENVIRONMENT = { required = "Deployment environment: local, staging, or production" }
+SECRET_KEY = { required = "Secret key used to sign JWT tokens" }
+POSTGRES_USER = { required = "PostgreSQL username" }
+POSTGRES_PASSWORD = { required = "PostgreSQL password" }
+POSTGRES_HOST = { required = "PostgreSQL host (e.g. localhost or kayman-db)" }
+POSTGRES_PORT = { required = "PostgreSQL port (default 5432)" }
+POSTGRES_DB = { required = "PostgreSQL database name" }
