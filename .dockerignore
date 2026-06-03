@@ -1,0 +1,36 @@
+.git
+.github
+.vscode
+.DS_Store
+**/.DS_Store
+
+# Backend
+backend/.venv
+backend/.mypy_cache
+backend/.pytest_cache
+backend/.ruff_cache
+backend/htmlcov
+backend/coverage.xml
+backend/.coverage
+backend/instance
+backend/static
+backend/Dockerfile
+backend/.dockerignore
+backend/mise.local.toml
+backend/__pycache__
+**/__pycache__
+
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/.tanstack
+frontend/src/routeTree.gen.ts
+frontend/src/lib/client
+
+# Repo-level
+.mypy_cache
+.ruff_cache
+instance
+Dockerfile
+.dockerignore
+README.md
