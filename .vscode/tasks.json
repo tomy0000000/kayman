@@ -95,7 +95,7 @@
       "type": "shell",
       "command": "bash",
       "args": [
-        "scripts/build_client.sh"
+        "scripts/build-client.sh"
       ],
       "problemMatcher": [],
       "group": {
