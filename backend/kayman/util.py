@@ -11,6 +11,7 @@ from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
+from starlette.responses import Response
 from starlette.types import Scope
 
 from kayman.auth import setup_clients
@@ -75,7 +76,7 @@ class SPAStaticFiles(StaticFiles):
     Fall back to index.html on 404 to serve SPA fronten app
     """
 
-    async def get_response(self, path: str, scope: Scope):
+    async def get_response(self, path: str, scope: Scope) -> Response:
         try:
             return await super().get_response(path, scope)
         except HTTPException as exc:
