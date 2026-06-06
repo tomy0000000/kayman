@@ -13,3 +13,6 @@ POSTGRES_PASSWORD = { required = "PostgreSQL password" }
 POSTGRES_HOST = { required = "PostgreSQL host (e.g. localhost or kayman-db)" }
 POSTGRES_PORT = { required = "PostgreSQL port (default 5432)" }
 POSTGRES_DB = { required = "PostgreSQL database name" }
+
+[task_config]
+includes = ["scripts"]

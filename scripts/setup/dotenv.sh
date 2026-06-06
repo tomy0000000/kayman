@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Usage: scripts/setup-dotenv.sh
+#MISE description="Setup environment variables"
 
 ENV_FILE="instance/.env"
 if [ -f "$ENV_FILE" ]; then

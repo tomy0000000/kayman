@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Usage: scripts/start-dev-db.sh
-#
-# DO NOT use this in production, data will NOT persist!
+#MISE description="Start PostgreSQL database for development, DO NOT use this in production, data will NOT persist!"
 
 # Generate client
 docker run \

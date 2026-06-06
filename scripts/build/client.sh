@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Usage: scripts/build-client.sh
+#MISE description="Build Open API client for the frontend"
 
 # Remove a tmp file and remove on exit
 TMP_FILE="$(mktemp)"
