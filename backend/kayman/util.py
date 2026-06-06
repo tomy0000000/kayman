@@ -8,7 +8,10 @@ import simplejson
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from starlette.exceptions import HTTPException
+from starlette.types import Scope
 
 from kayman.auth import setup_clients
 from kayman.core.db import alembic_upgrade
@@ -47,7 +50,7 @@ def handle_special_types(obj: Any) -> Any:
 
 class KustomJSONResponse(JSONResponse):
     """
-    This is the default custom response class for K,
+    This is the default custom response class for Kayman,
     which made improvement on following data types:
 
     - decimal.Decimal: unlimited precision
@@ -65,3 +68,17 @@ class KustomJSONResponse(JSONResponse):
             default=handle_special_types,
             use_decimal=True,
         ).encode("utf-8")
+
+
+class SPAStaticFiles(StaticFiles):
+    """
+    Fall back to index.html on 404 to serve SPA fronten app
+    """
+
+    async def get_response(self, path: str, scope: Scope):
+        try:
+            return await super().get_response(path, scope)
+        except HTTPException as exc:
+            if exc.status_code == 404:
+                return await super().get_response("index.html", scope)
+            raise

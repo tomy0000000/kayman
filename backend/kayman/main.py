@@ -1,13 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
 from loguru import logger
 
 from kayman.core.config import settings
 from kayman.openapi import override_openapi
 from kayman.routers import routers, tags
-from kayman.util import KustomJSONResponse, custom_generate_unique_id, lifespan
+from kayman.util import (
+    KustomJSONResponse,
+    SPAStaticFiles,
+    custom_generate_unique_id,
+    lifespan,
+)
 
 cors_middleware = Middleware(
     CORSMiddleware,
@@ -36,15 +40,14 @@ app = FastAPI(
 logger.info(f"Application created in {settings.ENVIRONMENT} environment")
 
 
-# Add all routers to the application
+# Add all routers under /api
 for router in routers:
-    app.include_router(router)
+    app.include_router(router, prefix="/api")
+
+# Serve the built frontend at root
+app.mount(
+    "/", SPAStaticFiles(directory="static", html=True, check_dir=False), name="static"
+)
 
 # Override the OpenAPI generation to customize operationId
 override_openapi(app)
-
-
-# Redirect root path to Swagger UI
-@app.get("/", include_in_schema=False, tags=["root"])
-async def redirect_to_swagger() -> RedirectResponse:
-    return RedirectResponse("docs")
