@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Usage: scripts/backup.sh
+#MISE description="Restore PostgreSQL database from a dump file"
+#MISE dir="backend"
+
+# Validate file path
+if [ $# -eq 0 ]; then
+    echo "Usage: scripts/restore.sh path/to/data.dump"
+    exit 1
+fi
+RESTORE_FILE="${1}"
 
 # Load ENVs
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
@@ -12,15 +20,10 @@ if [ -f "$ENV_FILE" ]; then
 fi
 export PGPASSWORD="${POSTGRES_PASSWORD}"
 
-# Generate filename
-BACKUP_FILE="kayman_$(date +'%Y-%m-%dT%H_%M_%S').dump"
-
-# Dump Postgres Data
-pg_dump \
+# Restore Postgres Data
+psql \
     --host="${POSTGRES_HOST}" \
     --port="${POSTGRES_PORT}" \
     --username="${POSTGRES_USER}" \
     --dbname="${POSTGRES_DB}" \
-    --no-owner \
-    --disable-triggers \
-    >"${BACKUP_FILE}"
+    --file="${RESTORE_FILE}"

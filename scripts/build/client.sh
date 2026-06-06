@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-#MISE description="Build Open API client for the frontend"
+#MISE description="Build OpenAPI client for the frontend"
 
 # Remove a tmp file and remove on exit
 TMP_FILE="$(mktemp)"

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Usage: scripts/lint.sh
+#MISE description="Lint backend"
+#MISE dir="backend"
 
 uv run mypy kayman
 uv run ruff check kayman

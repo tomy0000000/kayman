@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Usage: scripts/start.sh
+#MISE description="Start backend server with hot reload"
+#MISE dir="backend"
 
 uv run uvicorn kayman.main:app \
     --host 0.0.0.0 \
