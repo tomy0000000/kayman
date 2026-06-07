@@ -13,6 +13,15 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  ENVIRONMENT: "ci"
+  SECRET_KEY: "dummy"
+  POSTGRES_USER: "dummy"
+  POSTGRES_PASSWORD: "dummy"
+  POSTGRES_HOST: "dummy"
+  POSTGRES_PORT: "9999"
+  POSTGRES_DB: "dummy"
+
 jobs:
   backend-test:
     name: "🧪 Backend Testing"
