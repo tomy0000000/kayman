@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
 set -eux
-# Usage: scripts/download-schema.sh
 
 # Read API_HOST env exit if failed
 api_host="${API_HOST:-}"

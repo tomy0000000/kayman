@@ -18,9 +18,7 @@
     "lint": "mise run lint:frontend",
     "preview": "mise run start:frontend-preview",
     "postinstall": "scripts/postinstall.sh",
-    "generate-client": "openapi-ts",
-    "format": "mise run format:prettier",
-    "generate-router": "mise run build:frontend-router"
+    "format": "mise run format:prettier"
   },
   "packageManager": "pnpm@10.12.1",
   "engines": {
