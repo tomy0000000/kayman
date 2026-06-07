@@ -1,22 +1,18 @@
 import secrets
 from typing import Literal
 
-from pydantic import PostgresDsn, computed_field
-from pydantic_core import MultiHostUrl
+from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy import URL
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file="instance/.env",
-        env_ignore_empty=True,
-        extra="ignore",
-    )
+    model_config = SettingsConfigDict()
     SECRET_KEY: str = secrets.token_urlsafe(32)
-    ENVIRONMENT: Literal["local", "staging", "production"] = "production"
+    ENVIRONMENT: Literal["local", "development", "production"] = "production"
 
     PROJECT_NAME: str = "Kayman"
-    POSTGRES_HOST: str = "kayman-db"  # Default Docker Compose service name
+    POSTGRES_HOST: str = "kayman-db"
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str = "kayman"
     POSTGRES_PASSWORD: str
@@ -24,17 +20,15 @@ class Settings(BaseSettings):
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:
-        # FIXME someday
-        # pydantic recognize PostgresDsn as MultiHostUrl in 2.9.2, not after that
-        return MultiHostUrl.build(  # type: ignore
-            scheme="postgresql",
+    def SQLALCHEMY_DATABASE_URI(self) -> str:
+        return URL.create(
+            drivername="postgresql+psycopg",
             username=self.POSTGRES_USER,
             password=self.POSTGRES_PASSWORD,
             host=self.POSTGRES_HOST,
             port=self.POSTGRES_PORT,
-            path=self.POSTGRES_DB,
-        )
+            database=self.POSTGRES_DB,
+        ).render_as_string(hide_password=False)
 
 
 settings = Settings()  # type: ignore
