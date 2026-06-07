@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-#MISE description="Setup environment variables"
+#MISE description="Setup environment variables for local development"
 
-ENV_FILE="instance/.env"
+ENV_FILE="instance/local.env"
 if [ -f "$ENV_FILE" ]; then
     echo "$ENV_FILE already exists, skipping"
     exit 0

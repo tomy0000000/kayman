@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
-#MISE description="Start PostgreSQL database for development, DO NOT use this in production, data will NOT persist!"
+#MISE description="Start PostgreSQL database for local development, DO NOT use this in production, data will NOT persist!"
 
 CONTAINER_NAME="kayman-db"
-ENV_FILE="instance/.env"
+ENV_FILE="instance/local.env"
 
 # Start docker daemon if it's not running
 if ! docker info >/dev/null 2>&1; then
