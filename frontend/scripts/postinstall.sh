@@ -10,4 +10,4 @@ fi
 mise run build:openapi-client
 
 # Generate router
-mise run build:frontend-router
+mise run build:router

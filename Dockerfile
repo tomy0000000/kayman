@@ -38,7 +38,7 @@ COPY . .
 RUN mise run build:openapi-client
 
 # Build router
-RUN mise run build:frontend-router
+RUN mise run build:router
 
 # Build frontend
 RUN mise run build:frontend
