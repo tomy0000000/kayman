@@ -8,7 +8,7 @@ trap 'rm -f "${TMP_FILE}"' EXIT
 
 # Convert openapi.json
 cd "backend"
-scripts/generate-openapi.sh "${TMP_FILE}"
+scripts/build/openapi-spec.sh "${TMP_FILE}"
 
 # Generate client
 cd "../frontend"

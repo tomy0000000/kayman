@@ -84,7 +84,7 @@ jobs:
 
       - name: "📄 Generate OpenAPI Schema"
         run: |
-          scripts/build/openapi.sh openapi.json
+          scripts/build/openapi-spec.sh openapi.json
 
       - name: "⬆️ Upload artifact"
         uses: actions/upload-artifact@v5
