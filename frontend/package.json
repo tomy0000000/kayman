@@ -13,14 +13,14 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
+    "start": "mise run start:frontend",
+    "build": "mise run build:frontend",
+    "lint": "mise run lint:frontend",
+    "preview": "mise run start:frontend-preview",
     "postinstall": "scripts/postinstall.sh",
-    "prettier": "prettier -w .",
     "generate-client": "openapi-ts",
-    "generate-router": "tsr generate"
+    "format": "mise run format:prettier",
+    "generate-router": "mise run build:frontend-router"
   },
   "packageManager": "pnpm@10.12.1",
   "engines": {

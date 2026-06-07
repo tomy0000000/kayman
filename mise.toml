@@ -15,4 +15,4 @@ POSTGRES_PORT = { required = "PostgreSQL port (default 5432)" }
 POSTGRES_DB = { required = "PostgreSQL database name" }
 
 [task_config]
-includes = ["scripts", "backend/scripts"]
+includes = ["scripts", "backend/scripts", "frontend/scripts"]
