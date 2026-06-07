@@ -122,6 +122,9 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: "frontend/pnpm-lock.yaml"
 
+      - name: "🐭 Setup mise"
+        uses: jdx/mise-action@v4
+
       - name: "📦 Install dependencies"
         run: pnpm install --frozen-lockfile
 
