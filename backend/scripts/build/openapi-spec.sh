@@ -4,4 +4,4 @@ set -euo pipefail
 #MISE dir="backend"
 #USAGE arg "<json_path>" help="The output path for the OpenAPI JSON file"
 
-POSTGRES_PASSWORD=dummy uv run python -m kayman.openapi "${usage_json_path?}"
+POSTGRES_PASSWORD=dummy uv run python -m kayman.openapi "${1:-${usage_json_path?}}"
