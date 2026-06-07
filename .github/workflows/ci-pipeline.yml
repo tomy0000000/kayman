@@ -34,7 +34,7 @@ jobs:
 
       - name: "🧪 Testing"
         run: |
-          scripts/test.sh
+          scripts/test/backend.sh
 
       - name: "📄 Report coverage"
         uses: codecov/codecov-action@v7
@@ -62,7 +62,7 @@ jobs:
 
       - name: "🔍 Linting"
         run: |
-          scripts/lint.sh
+          scripts/lint/backend.sh
 
   build-openapi-schema:
     name: "📄 Build OpenAPI Schema"
