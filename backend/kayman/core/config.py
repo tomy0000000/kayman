@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
     SECRET_KEY: str = secrets.token_urlsafe(32)
-    ENVIRONMENT: Literal["local", "staging", "production"] = "production"
+    ENVIRONMENT: Literal["local", "testing", "staging", "production"] = "production"
 
     PROJECT_NAME: str = "Kayman"
     POSTGRES_HOST: str = "kayman-db"  # Default Docker Compose service name

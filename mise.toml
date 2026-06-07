@@ -7,7 +7,7 @@ uv = "0.10.10"
 
 [env]
 _.file = "instance/.env"
-ENVIRONMENT = { required = "Deployment environment: local, staging, or production" }
+ENVIRONMENT = { required = "Deployment environment: local, testing, staging, or production" }
 SECRET_KEY = { required = "Secret key used to sign JWT tokens" }
 POSTGRES_USER = { required = "PostgreSQL username" }
 POSTGRES_PASSWORD = { required = "PostgreSQL password" }

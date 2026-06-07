@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 env:
-  ENVIRONMENT: "ci"
+  ENVIRONMENT: "testing"
   SECRET_KEY: "dummy"
   POSTGRES_USER: "dummy"
   POSTGRES_PASSWORD: "dummy"
