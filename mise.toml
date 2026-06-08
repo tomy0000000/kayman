@@ -7,3 +7,7 @@ uv = "0.10.10"
 
 [task_config]
 includes = ["scripts", "backend/scripts", "frontend/scripts"]
+
+[tasks.start]
+description = "Start all dev servers"
+depends = ["start:backend", "start:frontend"]
