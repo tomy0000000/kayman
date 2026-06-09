@@ -19,8 +19,8 @@ export function DatePickerWithRange() {
   })
 
   return (
-    <Field className="mx-auto w-60">
-      <FieldLabel htmlFor="date-picker-range">Date Picker Range</FieldLabel>
+    <Field className="w-60 shrink-0">
+      <FieldLabel htmlFor="date-picker-range">Date Range</FieldLabel>
       <Popover>
         <PopoverTrigger asChild>
           <Button
