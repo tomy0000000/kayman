@@ -4,4 +4,6 @@ set -euo pipefail
 #MISE dir="backend"
 
 POSTGRES_PASSWORD=dummy uv run pytest
-echo "View in browser: file://${MISE_PROJECT_ROOT}/backend/htmlcov/index.html"
+if [[ -n "${MISE_PROJECT_ROOT:-}" ]]; then
+  echo "View in browser: file://${MISE_PROJECT_ROOT}/backend/htmlcov/index.html"
+fi
