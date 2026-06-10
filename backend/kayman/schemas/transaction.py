@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from pydantic_extra_types.timezone_name import TimeZoneName
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, UniqueConstraint
@@ -10,7 +10,6 @@ from kayman.schemas._custom_types import SATimezone
 if TYPE_CHECKING:
     from kayman.schemas.account import Account
     from kayman.schemas.payment import Payment
-    from kayman.schemas.psp import PSP
 
 
 class TransactionBase(SQLModel):
@@ -22,8 +21,6 @@ class TransactionBase(SQLModel):
     description: str | None = None
     reconcile: bool = False
     index: int
-    psp_id: int | None = Field(foreign_key="payment_service_providers.id", default=None)
-    psp_reconcile: bool = False
 
 
 class Transaction(TransactionBase, table=True):
@@ -40,7 +37,6 @@ class Transaction(TransactionBase, table=True):
     timezone: TimeZoneName = Field(sa_column=Column(SATimezone(), nullable=False))
     account: "Account" = Relationship(back_populates="transactions")
     payment: "Payment" = Relationship(back_populates="transactions")
-    psp: Optional["PSP"] = Relationship(back_populates="transactions")
 
 
 class TransactionCreate(SQLModel):
@@ -50,8 +46,6 @@ class TransactionCreate(SQLModel):
     timezone: TimeZoneName
     description: str | None = None
     reconcile: bool = False
-    psp_id: int | None = None
-    psp_reconcile: bool = False
 
 
 class TransactionRead(TransactionBase):

@@ -22,8 +22,6 @@ def test_create_transactions_1_txn(session: Session):
     assert db_txn.description == txn.description
     assert db_txn.index == txn.index
     assert db_txn.payment_id == txn.payment_id
-    assert db_txn.psp_id == txn.psp_id
-    assert db_txn.psp_reconcile == txn.psp_reconcile
     assert db_txn.reconcile == txn.reconcile
     assert db_txn.timestamp == txn.timestamp
     assert db_txn.timezone == txn.timezone
@@ -52,8 +50,6 @@ def test_create_transactions_n_txn(session: Session):
         assert db_txn.description == txn.description
         assert db_txn.index == txn.index
         assert db_txn.payment_id == txn.payment_id
-        assert db_txn.psp_id == txn.psp_id
-        assert db_txn.psp_reconcile == txn.psp_reconcile
         assert db_txn.reconcile == txn.reconcile
         assert db_txn.timestamp == txn.timestamp
         assert db_txn.timezone == txn.timezone
@@ -77,8 +73,6 @@ def test_create_transactions_no_commit(session: Session, session_2: Session):
     assert session_txn.description == txn.description
     assert session_txn.index == txn.index
     assert session_txn.payment_id == txn.payment_id
-    assert session_txn.psp_id == txn.psp_id
-    assert session_txn.psp_reconcile == txn.psp_reconcile
     assert session_txn.reconcile == txn.reconcile
     assert session_txn.timestamp == txn.timestamp
     assert session_txn.timezone == txn.timezone
@@ -99,8 +93,6 @@ def test_create_transactions_no_commit(session: Session, session_2: Session):
     assert session_2_txn.description == txn.description
     assert session_2_txn.index == txn.index
     assert session_2_txn.payment_id == txn.payment_id
-    assert session_2_txn.psp_id == txn.psp_id
-    assert session_2_txn.psp_reconcile == txn.psp_reconcile
     assert session_2_txn.reconcile == txn.reconcile
     assert session_2_txn.timestamp == txn.timestamp
     assert session_2_txn.timezone == txn.timezone
