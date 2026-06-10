@@ -14,3 +14,4 @@ class AccountFactory(SQLAlchemyModelFactory):
     currency = factory.SubFactory("kayman.tests.factories.currency.CurrencyFactory")
     currency_code = factory.SelfAttribute("currency.code")
     balance = factory.Faker("pydecimal", left_digits=5, right_digits=2)
+    timezone = "UTC"
