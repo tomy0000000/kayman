@@ -1,0 +1,70 @@
+name: Feature / Task
+description: A scoped piece of work ready to build
+labels: ["type:feature"]
+assignees:
+  - tomy0000000
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for features and tasks already shaped in Linear.
+        Raw ideas should go to **Linear Triage** first, not here.
+
+  - type: input
+    id: spec
+    attributes:
+      label: Spec
+      description: Link to the Linear requirement, design doc, or parent issue.
+      placeholder: https://linear.app/<workspace>/issue/...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Where does this primarily land?
+      options:
+        - backend
+        - frontend
+        - misc
+      default: 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: 1–2 sentences. What does this accomplish? Why now?
+      placeholder: e.g. "Add magic-link sign-in so password-less users can log in."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Concrete, testable, each box independently verifiable. Given/When/Then where it fits.
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation notes
+      description: Optional. Files to touch, suggested approach, known gotchas.
+    validations:
+      required: false
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: Optional. Explicitly NOT doing in this issue.
+    validations:
+      required: false

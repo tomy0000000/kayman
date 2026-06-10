@@ -1,0 +1,8 @@
+**/.git
+**/.hg
+**/.svn
+**/node_modules
+dist
+src/lib/client
+src/routeTree.gen.ts
+pnpm-lock.yaml

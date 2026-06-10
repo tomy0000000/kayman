@@ -6,57 +6,137 @@ on:
       - "develop"
     paths:
       - ".github/**"
-      - "k_backend/**"
-      - "pyproject.toml"
-      - "poetry.lock"
+      - "backend/kayman/**"
+      - "backend/pyproject.toml"
+      - "backend/uv.lock"
+      - "frontend/**"
   pull_request:
   workflow_dispatch:
 
 jobs:
-  test:
-    name: "🧪 Testing"
+  backend-test:
+    name: "🧪 Backend Testing"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "backend"
     steps:
       - name: "🛒 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: "🐍 Set up Poetry"
-        uses: tomy0000000/actions/python-poetry-install@main
+      - name: "🐍 Install uv"
+        uses: astral-sh/setup-uv@v7
+
+      - name: "🐍 Set up Python"
+        uses: actions/setup-python@v6
         with:
-          python_version: "3.12"
+          python-version-file: "backend/pyproject.toml"
 
       - name: "🧪 Testing"
         run: |
-          poetry run scripts/test.sh
+          scripts/test/backend.sh
 
       - name: "📄 Report coverage"
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  lint:
-    name: "🔍 Linting"
+  backend-lint:
+    name: "🔍 Backend Linting"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "backend"
     steps:
       - name: "🛒 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: "🐍 Set up Poetry"
-        uses: tomy0000000/actions/python-poetry-install@main
+      - name: "🐍 Install uv"
+        uses: astral-sh/setup-uv@v7
+
+      - name: "🐍 Set up Python"
+        uses: actions/setup-python@v6
         with:
-          python_version: "3.12"
+          python-version-file: "backend/pyproject.toml"
 
       - name: "🔍 Linting"
         run: |
-          poetry run scripts/lint.sh
+          scripts/lint/backend.sh
+
+  build-openapi-schema:
+    name: "📄 Build OpenAPI Schema"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "backend"
+    steps:
+      - name: "🛒 Checkout"
+        uses: actions/checkout@v5
+
+      - name: "🐍 Install uv"
+        uses: astral-sh/setup-uv@v7
+
+      - name: "🐍 Set up Python"
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "backend/pyproject.toml"
+
+      - name: "📄 Generate OpenAPI Schema"
+        run: |
+          scripts/build/openapi-spec.sh openapi.json
+
+      - name: "⬆️ Upload artifact"
+        uses: actions/upload-artifact@v5
+        with:
+          name: openapi-schema
+          path: backend/openapi.json
+
+  frontend-lint:
+    name: "🔍 Frontend Linting"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "frontend"
+    needs: [build-openapi-schema]
+    steps:
+      - name: "🛒 Checkout"
+        uses: actions/checkout@v5
+
+      - name: "⬇️ Download artifact"
+        uses: actions/download-artifact@v6
+        with:
+          name: openapi-schema
+          path: /tmp
+
+      - name: "⚙️ Setup pnpm"
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: "frontend/package.json"
+          run_install: false
+
+      - name: "⚙️ Setup Node.js"
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: "frontend/package.json"
+          cache: "pnpm"
+          cache-dependency-path: "frontend/pnpm-lock.yaml"
+
+      - name: "🐭 Setup mise"
+        uses: jdx/mise-action@v4
+
+      - name: "📦 Install dependencies"
+        run: pnpm install --frozen-lockfile
+
+      - name: "🔍 Linting"
+        run: pnpm lint
 
   license:
     name: "🪪 License Scan"
     runs-on: ubuntu-latest
     steps:
       - name: "🛒 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # FOSSA's API Key are meant to be exposed as to doc
       - name: "🪪 License Scan"
@@ -64,14 +144,14 @@ jobs:
         with:
           api-key: 2d7865a44aa575d857521faaee1a57f8
 
-  build:
-    name: "🏗️ Build"
+  build-image:
+    name: "🐳 Build Docker Image"
     runs-on: ubuntu-latest
-    needs: [test, lint, license]
+    needs: [backend-test, backend-lint, frontend-lint, license]
     if: success() && github.ref == 'refs/heads/develop'
     steps:
       - name: "🛒 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: "⚙️ Setup Docker Meta"
         id: meta
@@ -82,6 +162,10 @@ jobs:
             ghcr.io/${{ github.repository }}
           tags: |
             type=edge
+          labels: |
+            org.opencontainers.image.title=kayman
+            org.opencontainers.image.documentation=${{ github.repository }}/wiki
+            org.opencontainers.image.authors=tomy0000000
 
       - name: "🏗 Build and Push Image"
         uses: tomy0000000/actions/build-push-image@main

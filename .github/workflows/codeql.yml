@@ -6,17 +6,24 @@ on:
       - "main"
       - "develop"
     paths:
-      - "k_backend/**"
+      - "backend/kayman/**"
   pull_request:
     branches:
       - "develop"
     paths:
-      - "k_backend/**"
+      - "kayman/**"
+
+defaults:
+  run:
+    working-directory: "./backend"
 
 jobs:
   analyze:
     name: "📊 Analyze"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "./backend"
     permissions:
       actions: read
       contents: read
@@ -29,12 +36,12 @@ jobs:
 
     steps:
       - name: "🛒 Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: "⚙️ Initialize"
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
 
       - name: "📊 Analyze"
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
