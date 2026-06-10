@@ -18,3 +18,4 @@ class TransactionFactory(SQLAlchemyModelFactory):
     payment_id = factory.SelfAttribute("payment.id")
     reconcile = factory.Faker("boolean")
     created_at = factory.Faker("date_time")
+    posted_at = factory.Faker("date_time")

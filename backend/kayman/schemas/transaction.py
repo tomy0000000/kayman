@@ -14,6 +14,7 @@ class TransactionBase(SQLModel):
     payment_id: int = Field(foreign_key="payment.id")
     amount: Decimal
     created_at: datetime = Field(default=datetime.now)
+    posted_at: datetime | None = None
     description: str | None = None
     reconcile: bool = False
     index: int
@@ -30,6 +31,9 @@ class Transaction(TransactionBase, table=True):
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), nullable=False)
     )
+    posted_at: datetime | None = Field(
+        sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
     account: "Account" = Relationship(back_populates="transactions")
     payment: "Payment" = Relationship(back_populates="transactions")
 
@@ -38,6 +42,7 @@ class TransactionCreate(SQLModel):
     account_id: int
     amount: Decimal
     created_at: datetime
+    posted_at: datetime | None = None
     description: str | None = None
     reconcile: bool = False
 

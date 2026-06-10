@@ -24,6 +24,7 @@ def test_create_transactions_1_txn(session: Session):
     assert db_txn.payment_id == txn.payment_id
     assert db_txn.reconcile == txn.reconcile
     assert db_txn.created_at == txn.created_at
+    assert db_txn.posted_at == txn.posted_at
 
 
 def test_create_transactions_n_txn(session: Session):
@@ -51,6 +52,7 @@ def test_create_transactions_n_txn(session: Session):
         assert db_txn.payment_id == txn.payment_id
         assert db_txn.reconcile == txn.reconcile
         assert db_txn.created_at == txn.created_at
+        assert db_txn.posted_at == txn.posted_at
 
 
 def test_create_transactions_no_commit(session: Session, session_2: Session):
@@ -73,6 +75,7 @@ def test_create_transactions_no_commit(session: Session, session_2: Session):
     assert session_txn.payment_id == txn.payment_id
     assert session_txn.reconcile == txn.reconcile
     assert session_txn.created_at == txn.created_at
+    assert session_txn.posted_at == txn.posted_at
 
     # The txn should not be visible to other sessions (yet)
     session_2_txn = session_2.get(Transaction, session_txn.id)
@@ -92,6 +95,7 @@ def test_create_transactions_no_commit(session: Session, session_2: Session):
     assert session_2_txn.payment_id == txn.payment_id
     assert session_2_txn.reconcile == txn.reconcile
     assert session_2_txn.created_at == txn.created_at
+    assert session_2_txn.posted_at == txn.posted_at
 
 
 def test_get_transactions_all(session: Session):
