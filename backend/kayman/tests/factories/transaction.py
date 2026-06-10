@@ -17,5 +17,5 @@ class TransactionFactory(SQLAlchemyModelFactory):
     payment = factory.SubFactory("kayman.tests.factories.payment.PaymentFactory")
     payment_id = factory.SelfAttribute("payment.id")
     reconcile = factory.Faker("boolean")
-    timestamp = factory.Faker("date_time")
+    created_at = factory.Faker("date_time")
     timezone = "UTC"

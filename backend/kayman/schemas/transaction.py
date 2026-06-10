@@ -16,8 +16,8 @@ class TransactionBase(SQLModel):
     account_id: int = Field(foreign_key="account.id")
     payment_id: int = Field(foreign_key="payment.id")
     amount: Decimal
-    timestamp: datetime = Field(default=datetime.now)
     timezone: TimeZoneName
+    created_at: datetime = Field(default=datetime.now)
     description: str | None = None
     reconcile: bool = False
     index: int
@@ -31,7 +31,7 @@ class Transaction(TransactionBase, table=True):
         ),
     )
     id: int | None = Field(primary_key=True, default=None)
-    timestamp: datetime = Field(
+    created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), nullable=False)
     )
     timezone: TimeZoneName = Field(sa_column=Column(SATimezone(), nullable=False))
@@ -42,7 +42,7 @@ class Transaction(TransactionBase, table=True):
 class TransactionCreate(SQLModel):
     account_id: int
     amount: Decimal
-    timestamp: datetime
+    created_at: datetime
     timezone: TimeZoneName
     description: str | None = None
     reconcile: bool = False
@@ -51,5 +51,5 @@ class TransactionCreate(SQLModel):
 class TransactionRead(TransactionBase):
     id: int
     payment_id: int
-    timestamp: datetime
+    created_at: datetime
     timezone: TimeZoneName

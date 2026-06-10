@@ -26,7 +26,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 12,
     account_id: 1,
-    timestamp: '2025-01-02T21:09:00Z',
+    created_at: '2025-01-02T21:09:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Adjustment',
     amount: '0',
@@ -36,7 +36,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 11,
     account_id: 1,
-    timestamp: '2025-01-02T18:34:00Z',
+    created_at: '2025-01-02T18:34:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Pharmacy',
     amount: '-12.86',
@@ -46,7 +46,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 10,
     account_id: 1,
-    timestamp: '2025-01-02T10:11:00Z',
+    created_at: '2025-01-02T10:11:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Rent',
     amount: '-1800.00',
@@ -56,7 +56,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 12,
     account_id: 1,
-    timestamp: '2025-01-02T21:09:00Z',
+    created_at: '2025-01-02T21:09:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Adjustment',
     amount: '0',
@@ -66,7 +66,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 11,
     account_id: 1,
-    timestamp: '2025-01-02T18:34:00Z',
+    created_at: '2025-01-02T18:34:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Pharmacy',
     amount: '-12.86',
@@ -76,7 +76,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 10,
     account_id: 1,
-    timestamp: '2025-01-02T10:11:00Z',
+    created_at: '2025-01-02T10:11:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Rent',
     amount: '-1800.00',
@@ -86,7 +86,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 12,
     account_id: 1,
-    timestamp: '2025-01-02T21:09:00Z',
+    created_at: '2025-01-02T21:09:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Adjustment',
     amount: '0',
@@ -96,7 +96,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 11,
     account_id: 1,
-    timestamp: '2025-01-02T18:34:00Z',
+    created_at: '2025-01-02T18:34:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Pharmacy',
     amount: '-12.86',
@@ -106,7 +106,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 10,
     account_id: 1,
-    timestamp: '2025-01-02T10:11:00Z',
+    created_at: '2025-01-02T10:11:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Rent',
     amount: '-1800.00',
@@ -116,7 +116,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 12,
     account_id: 1,
-    timestamp: '2025-01-02T21:09:00Z',
+    created_at: '2025-01-02T21:09:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Adjustment',
     amount: '0',
@@ -126,7 +126,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 11,
     account_id: 1,
-    timestamp: '2025-01-02T18:34:00Z',
+    created_at: '2025-01-02T18:34:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Pharmacy',
     amount: '-12.86',
@@ -136,7 +136,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 10,
     account_id: 1,
-    timestamp: '2025-01-02T10:11:00Z',
+    created_at: '2025-01-02T10:11:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Rent',
     amount: '-1800.00',
@@ -146,7 +146,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 12,
     account_id: 1,
-    timestamp: '2025-01-02T21:09:00Z',
+    created_at: '2025-01-02T21:09:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Adjustment',
     amount: '0',
@@ -156,7 +156,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 11,
     account_id: 1,
-    timestamp: '2025-01-02T18:34:00Z',
+    created_at: '2025-01-02T18:34:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Pharmacy',
     amount: '-12.86',
@@ -166,7 +166,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 10,
     account_id: 1,
-    timestamp: '2025-01-02T10:11:00Z',
+    created_at: '2025-01-02T10:11:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Rent',
     amount: '-1800.00',
@@ -176,7 +176,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 9,
     account_id: 1,
-    timestamp: '2025-01-02T07:48:00Z',
+    created_at: '2025-01-02T07:48:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Payroll deposit',
     amount: '2450.00',
@@ -186,7 +186,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 8,
     account_id: 1,
-    timestamp: '2025-01-01T16:22:00Z',
+    created_at: '2025-01-01T16:22:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Movie tickets',
     amount: '-28.50',
@@ -196,7 +196,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 7,
     account_id: 1,
-    timestamp: '2025-01-01T11:00:00Z',
+    created_at: '2025-01-01T11:00:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Brunch',
     amount: '-44.20',
@@ -206,7 +206,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 6,
     account_id: 1,
-    timestamp: '2024-12-31T23:55:00Z',
+    created_at: '2024-12-31T23:55:00Z',
     timezone: 'America/Los_Angeles',
     description: 'NYE dinner',
     amount: '-128.00',
@@ -216,7 +216,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 5,
     account_id: 1,
-    timestamp: '2024-12-31T14:18:00Z',
+    created_at: '2024-12-31T14:18:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Gas station',
     amount: '-52.30',
@@ -226,7 +226,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 4,
     account_id: 1,
-    timestamp: '2024-12-31T09:30:00Z',
+    created_at: '2024-12-31T09:30:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Refund: returned monitor',
     amount: '249.99',
@@ -237,7 +237,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 3,
     account_id: 1,
-    timestamp: '2024-12-30T19:05:00Z',
+    created_at: '2024-12-30T19:05:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Grocery run',
     amount: '-86.40',
@@ -248,7 +248,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 2,
     account_id: 1,
-    timestamp: '2024-12-30T12:42:00Z',
+    created_at: '2024-12-30T12:42:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Lunch with team',
     amount: '-32.10',
@@ -259,7 +259,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 1,
     account_id: 1,
-    timestamp: '2024-12-30T08:15:00Z',
+    created_at: '2024-12-30T08:15:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Morning coffee',
     amount: '-4.75',
@@ -270,7 +270,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 3,
     account_id: 1,
-    timestamp: '2024-12-30T19:05:00Z',
+    created_at: '2024-12-30T19:05:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Grocery run',
     amount: '-86.40',
@@ -281,7 +281,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 2,
     account_id: 1,
-    timestamp: '2024-12-30T12:42:00Z',
+    created_at: '2024-12-30T12:42:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Lunch with team',
     amount: '-32.10',
@@ -292,7 +292,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 1,
     account_id: 1,
-    timestamp: '2024-12-30T08:15:00Z',
+    created_at: '2024-12-30T08:15:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Morning coffee',
     amount: '-4.75',
@@ -303,7 +303,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 3,
     account_id: 1,
-    timestamp: '2024-12-30T19:05:00Z',
+    created_at: '2024-12-30T19:05:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Grocery run',
     amount: '-86.40',
@@ -314,7 +314,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 2,
     account_id: 1,
-    timestamp: '2024-12-30T12:42:00Z',
+    created_at: '2024-12-30T12:42:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Lunch with team',
     amount: '-32.10',
@@ -325,7 +325,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 1,
     account_id: 1,
-    timestamp: '2024-12-30T08:15:00Z',
+    created_at: '2024-12-30T08:15:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Morning coffee',
     amount: '-4.75',
@@ -336,7 +336,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 3,
     account_id: 1,
-    timestamp: '2024-12-30T19:05:00Z',
+    created_at: '2024-12-30T19:05:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Grocery run',
     amount: '-86.40',
@@ -347,7 +347,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 2,
     account_id: 1,
-    timestamp: '2024-12-30T12:42:00Z',
+    created_at: '2024-12-30T12:42:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Lunch with team',
     amount: '-32.10',
@@ -358,7 +358,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 1,
     account_id: 1,
-    timestamp: '2024-12-30T08:15:00Z',
+    created_at: '2024-12-30T08:15:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Morning coffee',
     amount: '-4.75',
@@ -369,7 +369,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 3,
     account_id: 1,
-    timestamp: '2024-12-30T19:05:00Z',
+    created_at: '2024-12-30T19:05:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Grocery run',
     amount: '-86.40',
@@ -380,7 +380,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 2,
     account_id: 1,
-    timestamp: '2024-12-30T12:42:00Z',
+    created_at: '2024-12-30T12:42:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Lunch with team',
     amount: '-32.10',
@@ -391,7 +391,7 @@ const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
     id: 1,
     account_id: 1,
-    timestamp: '2024-12-30T08:15:00Z',
+    created_at: '2024-12-30T08:15:00Z',
     timezone: 'America/Los_Angeles',
     description: 'Morning coffee',
     amount: '-4.75',
@@ -501,12 +501,12 @@ function AccountPage() {
       {/* Transactions */}
       <div className="min-h-0 w-full flex-1 snap-y snap-mandatory overflow-y-auto scroll-pt-7 sm:scroll-pt-0">
         {transactions.map(function (transaction, index) {
-          const timestamp = new Date(transaction.timestamp)
+          const timestamp = new Date(transaction.created_at)
           const amount = parseFloat(transaction.amount)
           const dateLabel = timestamp.toLocaleDateString()
           const prevDateLabel =
             index > 0
-              ? new Date(transactions[index - 1].timestamp).toLocaleDateString()
+              ? new Date(transactions[index - 1].created_at).toLocaleDateString()
               : null
           const showDate = dateLabel !== prevDateLabel
 

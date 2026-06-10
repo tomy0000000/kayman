@@ -23,7 +23,7 @@ def test_create_transactions_1_txn(session: Session):
     assert db_txn.index == txn.index
     assert db_txn.payment_id == txn.payment_id
     assert db_txn.reconcile == txn.reconcile
-    assert db_txn.timestamp == txn.timestamp
+    assert db_txn.created_at == txn.created_at
     assert db_txn.timezone == txn.timezone
 
 
@@ -51,7 +51,7 @@ def test_create_transactions_n_txn(session: Session):
         assert db_txn.index == txn.index
         assert db_txn.payment_id == txn.payment_id
         assert db_txn.reconcile == txn.reconcile
-        assert db_txn.timestamp == txn.timestamp
+        assert db_txn.created_at == txn.created_at
         assert db_txn.timezone == txn.timezone
 
 
@@ -74,7 +74,7 @@ def test_create_transactions_no_commit(session: Session, session_2: Session):
     assert session_txn.index == txn.index
     assert session_txn.payment_id == txn.payment_id
     assert session_txn.reconcile == txn.reconcile
-    assert session_txn.timestamp == txn.timestamp
+    assert session_txn.created_at == txn.created_at
     assert session_txn.timezone == txn.timezone
 
     # The txn should not be visible to other sessions (yet)
@@ -94,7 +94,7 @@ def test_create_transactions_no_commit(session: Session, session_2: Session):
     assert session_2_txn.index == txn.index
     assert session_2_txn.payment_id == txn.payment_id
     assert session_2_txn.reconcile == txn.reconcile
-    assert session_2_txn.timestamp == txn.timestamp
+    assert session_2_txn.created_at == txn.created_at
     assert session_2_txn.timezone == txn.timezone
 
 
