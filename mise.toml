@@ -11,3 +11,6 @@ includes = ["scripts", "backend/scripts", "frontend/scripts"]
 [tasks.start]
 description = "Start all dev servers"
 depends = ["start:backend", "start:frontend"]
+
+[tasks."start:db-dev.sh"]
+depends_post = "db:upgrade"
