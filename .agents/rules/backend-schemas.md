@@ -16,7 +16,7 @@ Reference: https://sqlmodel.tiangolo.com/tutorial/fastapi/multiple-models/
 Data-only. Fields shared by create input and read output. Excludes:
 
 - `id` (server-assigned)
-- Server-derived fields (e.g. `payment_id`, `index`, `balance`)
+- Server-derived fields (e.g. `Account.balance`)
 - `sa_column` / `Column(...)` directives — those are table-only
 
 Use plain Python types and `Field(default=..., default_factory=...)`. For callable defaults use `default_factory`, never `default=callable`.
@@ -29,7 +29,7 @@ The SQLAlchemy table. Add here:
 
 - `id: int | None = Field(primary_key=True, default=None)`
 - Relationships (`Relationship(...)`)
-- Server-derived columns excluded from `Base` (e.g. `Account.balance`, `Transaction.payment_id`, `Transaction.index`)
+- Server-derived columns excluded from `Base` (e.g. `Account.balance`)
 - `__table_args__` (constraints, indexes)
 - `sa_column` overrides when the column needs a custom SQL type (timezone-aware `DateTime`, `SATimezone`, SQL `Enum`, etc.). Re-declare the field here with the same name and type, with the `sa_column=` kwarg.
 
@@ -116,7 +116,5 @@ Cross-aggregate request/response wrappers live in `schemas/api_models.py` as pla
 These predate the rule. New work should follow the rule above; touch these when convenient.
 
 - `schemas/transaction.py:20`: `created_at: datetime = Field(default=datetime.now)` should use `default_factory=datetime.now`. The function reference is being passed as a static default.
-- `schemas/transaction.py:15-23`: `TransactionBase` holds `payment_id` and `index`, both server-derived. This forces `TransactionCreate(SQLModel)` (line 42) to drop Base inheritance. Move `payment_id` and `index` onto the `Transaction` table class, then `TransactionCreate(TransactionBase): pass`.
-- `schemas/transaction.py:51-55`: `TransactionRead` redeclares `payment_id`, `created_at`, `timezone` already present in `TransactionBase`. Drop the redeclarations.
 - `schemas/payment.py:34-42`: `PaymentBase` declares `type`, `timestamp`, `timezone` with `sa_column=Column(...)`. Move those `sa_column` overrides to the `Payment` table class; keep `PaymentBase` data-only.
 - `schemas/payment.py:68-96`: `PaymentEntryBase` includes server-derived `payment_id` and `index`, forcing `PaymentEntryCreate(SQLModel)` to drop Base inheritance. Move both fields to the `PaymentEntry` table class.

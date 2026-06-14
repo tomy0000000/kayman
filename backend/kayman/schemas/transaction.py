@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, UniqueConstraint
 
@@ -11,13 +11,13 @@ if TYPE_CHECKING:
 
 class TransactionBase(SQLModel):
     account_id: int = Field(foreign_key="account.id")
-    payment_id: int = Field(foreign_key="payment.id")
+    payment_id: int | None = Field(foreign_key="payment.id", default=None)
     amount: Decimal
     created_at: datetime = Field(default=datetime.now)
     posted_at: datetime | None = None
     description: str | None = None
     reconcile: bool = False
-    index: int
+    index: int | None = None
 
 
 class Transaction(TransactionBase, table=True):
@@ -35,19 +35,12 @@ class Transaction(TransactionBase, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=True)
     )
     account: "Account" = Relationship(back_populates="transactions")
-    payment: "Payment" = Relationship(back_populates="transactions")
+    payment: Optional["Payment"] = Relationship(back_populates="transactions")
 
 
-class TransactionCreate(SQLModel):
-    account_id: int
-    amount: Decimal
-    created_at: datetime
-    posted_at: datetime | None = None
-    description: str | None = None
-    reconcile: bool = False
+class TransactionCreate(TransactionBase):
+    pass
 
 
 class TransactionRead(TransactionBase):
     id: int
-    payment_id: int
-    created_at: datetime
