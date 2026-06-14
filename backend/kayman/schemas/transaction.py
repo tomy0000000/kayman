@@ -16,7 +16,6 @@ class TransactionBase(SQLModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     posted_at: datetime | None = None
     description: str | None = None
-    reconcile: bool = False
     reconciled_at: datetime | None = None
     index: int | None = None
 

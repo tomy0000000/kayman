@@ -16,7 +16,6 @@ class TransactionFactory(SQLAlchemyModelFactory):
     index = factory.Sequence(lambda n: n)
     payment = factory.SubFactory("kayman.tests.factories.payment.PaymentFactory")
     payment_id = factory.SelfAttribute("payment.id")
-    reconcile = factory.Faker("boolean")
     created_at = factory.Faker("date_time")
     posted_at = factory.Faker("date_time")
     reconciled_at = factory.Faker("date_time")
