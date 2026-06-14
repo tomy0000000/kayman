@@ -115,6 +115,5 @@ Cross-aggregate request/response wrappers live in `schemas/api_models.py` as pla
 
 These predate the rule. New work should follow the rule above; touch these when convenient.
 
-- `schemas/transaction.py:20`: `created_at: datetime = Field(default=datetime.now)` should use `default_factory=datetime.now`. The function reference is being passed as a static default.
 - `schemas/payment.py:34-42`: `PaymentBase` declares `type`, `timestamp`, `timezone` with `sa_column=Column(...)`. Move those `sa_column` overrides to the `Payment` table class; keep `PaymentBase` data-only.
 - `schemas/payment.py:68-96`: `PaymentEntryBase` includes server-derived `payment_id` and `index`, forcing `PaymentEntryCreate(SQLModel)` to drop Base inheritance. Move both fields to the `PaymentEntry` table class.

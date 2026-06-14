@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional
 
@@ -13,7 +13,7 @@ class TransactionBase(SQLModel):
     account_id: int = Field(foreign_key="account.id")
     payment_id: int | None = Field(foreign_key="payment.id", default=None)
     amount: Decimal
-    created_at: datetime = Field(default=datetime.now)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     posted_at: datetime | None = None
     description: str | None = None
     reconcile: bool = False
