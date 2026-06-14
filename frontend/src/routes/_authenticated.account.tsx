@@ -5,6 +5,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Amount } from '@/components/amount'
+import { CreateTransactionFab } from '@/components/create-transaction-fab'
 import { DatePickerWithRange } from '@/components/date-range-picker'
 import { Button } from '@/components/ui/button'
 import {
@@ -546,6 +547,8 @@ function AccountPage() {
           )
         })}
       </div>
+
+      <CreateTransactionFab client={client} />
     </>
   )
 }
