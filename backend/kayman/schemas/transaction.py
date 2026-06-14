@@ -17,6 +17,7 @@ class TransactionBase(SQLModel):
     posted_at: datetime | None = None
     description: str | None = None
     reconcile: bool = False
+    reconciled_at: datetime | None = None
     index: int | None = None
 
 
@@ -32,6 +33,9 @@ class Transaction(TransactionBase, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=False)
     )
     posted_at: datetime | None = Field(
+        sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
+    reconciled_at: datetime | None = Field(
         sa_column=Column(DateTime(timezone=True), nullable=True)
     )
     account: "Account" = Relationship(back_populates="transactions")

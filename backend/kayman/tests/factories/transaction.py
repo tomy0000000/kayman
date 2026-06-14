@@ -19,3 +19,4 @@ class TransactionFactory(SQLAlchemyModelFactory):
     reconcile = factory.Faker("boolean")
     created_at = factory.Faker("date_time")
     posted_at = factory.Faker("date_time")
+    reconciled_at = factory.Faker("date_time")
