@@ -13,6 +13,7 @@ from kayman.core.config import settings
 from kayman.core.db import engine
 from kayman.mock_data import load_records
 from kayman.schemas.account import Account
+from kayman.schemas.category import Category
 from kayman.schemas.currency import Currency
 from kayman.schemas.transaction import Transaction
 
@@ -29,6 +30,12 @@ def seed(session: Session, logger: Logger) -> None:
         session.add(currency)
     session.commit()
     logger.success(f"Currencies seeded: {len(currencies)}")
+
+    categories = load_records("categories", Category)
+    for category in sorted(categories, key=lambda c: c.id or 0):
+        session.add(category)
+    session.commit()
+    logger.success(f"Categories seeded: {len(categories)}")
 
     accounts = load_records("accounts", Account)
     for account in sorted(accounts, key=lambda a: a.id or 0):

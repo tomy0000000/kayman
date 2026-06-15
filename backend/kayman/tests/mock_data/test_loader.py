@@ -6,6 +6,7 @@ from sqlmodel import SQLModel
 
 from kayman.mock_data import load_records
 from kayman.schemas.account import Account
+from kayman.schemas.category import Category
 from kayman.schemas.currency import Currency
 from kayman.schemas.transaction import Transaction
 
@@ -14,6 +15,7 @@ from kayman.schemas.transaction import Transaction
     "entity, schema",
     [
         ("currencies", Currency),
+        ("categories", Category),
         ("accounts", Account),
         ("transactions", Transaction),
     ],
@@ -39,13 +41,38 @@ def test_currency_codes_are_unique() -> None:
     assert len(codes) == len(set(codes)), "duplicate currency codes in currencies.json"
 
 
-@pytest.mark.parametrize("entity", ["accounts"])
+@pytest.mark.parametrize("entity", ["categories", "accounts"])
 def test_record_ids_are_unique(entity: str) -> None:
-    schema = {"accounts": Account}[entity]
+    schema = {"categories": Category, "accounts": Account}[entity]
     records = load_records(entity, schema)
     ids = [r.id for r in records]
 
     assert len(ids) == len(set(ids)), f"duplicate ids in {entity}.json"
+
+
+def test_categories_parent_ids_resolve() -> None:
+    categories = load_records("categories", Category)
+    known_ids = {c.id for c in categories}
+
+    for cat in categories:
+        if cat.parent_id is None:
+            continue
+        assert cat.parent_id in known_ids, (
+            f"category id={cat.id} {cat.name!r} references "
+            f"unknown parent_id={cat.parent_id}"
+        )
+
+
+def test_categories_have_no_forward_parent_refs() -> None:
+    """Every parent_id must be lower than its child id so id-order == topo order."""
+    categories = load_records("categories", Category)
+
+    for cat in categories:
+        if cat.parent_id is None or cat.id is None:
+            continue
+        assert cat.parent_id < cat.id, (
+            f"forward ref: id={cat.id} {cat.name!r} -> parent_id={cat.parent_id}"
+        )
 
 
 def test_accounts_reference_known_currencies() -> None:

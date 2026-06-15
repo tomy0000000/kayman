@@ -1,0 +1,1318 @@
+[
+  {
+    "description": null,
+    "disabled": false,
+    "id": 1,
+    "name": "Food",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 2,
+    "name": "Breakfast",
+    "parent_id": 1
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 3,
+    "name": "Lunch",
+    "parent_id": 1
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 4,
+    "name": "Dinner",
+    "parent_id": 1
+  },
+  {
+    "description": "Every other bites that are not considered as a proper meal, that are consumed immediately",
+    "disabled": false,
+    "id": 5,
+    "name": "Snack",
+    "parent_id": 1
+  },
+  {
+    "description": "A barista crafts the drink onsite",
+    "disabled": false,
+    "id": 6,
+    "name": "Beverage",
+    "parent_id": 1
+  },
+  {
+    "description": "Purchase made mostly to sit down in the dining area",
+    "disabled": false,
+    "id": 7,
+    "name": "Cafe / Bar",
+    "parent_id": 1
+  },
+  {
+    "description": "Food material that can hardly be classified into any specific meal",
+    "disabled": false,
+    "id": 8,
+    "name": "Grocery",
+    "parent_id": 1
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 9,
+    "name": "Transit",
+    "parent_id": null
+  },
+  {
+    "description": "Subway, MRT, Tube",
+    "disabled": false,
+    "id": 10,
+    "name": "Metro",
+    "parent_id": 9
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 11,
+    "name": "Bus",
+    "parent_id": 9
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 12,
+    "name": "Tram",
+    "parent_id": 9
+  },
+  {
+    "description": "Uber, Lyft, Waymo",
+    "disabled": false,
+    "id": 13,
+    "name": "Taxi",
+    "parent_id": 9
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 14,
+    "name": "Electronics",
+    "parent_id": null
+  },
+  {
+    "description": "Operate on its own",
+    "disabled": false,
+    "id": 15,
+    "name": "Hardware",
+    "parent_id": 14
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 16,
+    "name": "Utility",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 17,
+    "name": "Laundry",
+    "parent_id": 16
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 18,
+    "name": "Car",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 19,
+    "name": "Misc",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 20,
+    "name": "Ferry",
+    "parent_id": 9
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 21,
+    "name": "Fuel",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 22,
+    "name": "Parking",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 23,
+    "name": "Entertainment",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 24,
+    "name": "Supply",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 25,
+    "name": "Travel",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 26,
+    "name": "Home",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 28,
+    "name": "Garment",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 29,
+    "name": "Productivity",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 30,
+    "name": "Development",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 31,
+    "name": "Subscription",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 32,
+    "name": "Toy",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 33,
+    "name": "News",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 34,
+    "name": "Education",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 35,
+    "name": "Health",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 36,
+    "name": "Income",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 37,
+    "name": "Social",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 38,
+    "name": "Fee",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 39,
+    "name": "Tax",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 40,
+    "name": "Supper",
+    "parent_id": 1
+  },
+  {
+    "description": "Cable car, gondola",
+    "disabled": false,
+    "id": 41,
+    "name": "Aerial Lift",
+    "parent_id": 9
+  },
+  {
+    "description": "Public bike, scooter",
+    "disabled": false,
+    "id": 42,
+    "name": "Micromobility",
+    "parent_id": 9
+  },
+  {
+    "description": "Commuter pass that are not particular for any type of transportation",
+    "disabled": false,
+    "id": 43,
+    "name": "Pass",
+    "parent_id": 9
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 44,
+    "name": "Bus+ VIP",
+    "parent_id": 9
+  },
+  {
+    "description": "Pay-as-you-go software",
+    "disabled": false,
+    "id": 45,
+    "name": "Computer Software",
+    "parent_id": 14
+  },
+  {
+    "description": "Exist to complement the usage of another electronics",
+    "disabled": false,
+    "id": 46,
+    "name": "Accessory",
+    "parent_id": 14
+  },
+  {
+    "description": "Repair, warranty",
+    "disabled": false,
+    "id": 47,
+    "name": "Service",
+    "parent_id": 14
+  },
+  {
+    "description": "Pay-as-you-go apps, one-time in-app-purchases",
+    "disabled": false,
+    "id": 48,
+    "name": "iOS App",
+    "parent_id": 14
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 49,
+    "name": "Cable TV",
+    "parent_id": 16
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 50,
+    "name": "Cell Phone",
+    "parent_id": 16
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 51,
+    "name": "Domain",
+    "parent_id": 16
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 52,
+    "name": "Electricity",
+    "parent_id": 16
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 53,
+    "name": "Garbage",
+    "parent_id": 16
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 54,
+    "name": "Gas",
+    "parent_id": 16
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 55,
+    "name": "Landline",
+    "parent_id": 16
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 56,
+    "name": "Internet",
+    "parent_id": 16
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 57,
+    "name": "Sewer",
+    "parent_id": 16
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 58,
+    "name": "Water",
+    "parent_id": 16
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 59,
+    "name": "Charging",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 60,
+    "name": "Wash",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 61,
+    "name": "Toll",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 62,
+    "name": "Fine",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 63,
+    "name": "Insurance",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 64,
+    "name": "Maintenance",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 65,
+    "name": "Inspection",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 66,
+    "name": "Tax",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 67,
+    "name": "Lease",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 68,
+    "name": "Tesla FSD",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 69,
+    "name": "Music",
+    "parent_id": 23
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 70,
+    "name": "Video",
+    "parent_id": 23
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 71,
+    "name": "Book",
+    "parent_id": 23
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 72,
+    "name": "Game",
+    "parent_id": 23
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 73,
+    "name": "Show",
+    "parent_id": 23
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 74,
+    "name": "Magazine",
+    "parent_id": 23
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 75,
+    "name": "KTV",
+    "parent_id": 23
+  },
+  {
+    "description": "Permanent exhibition",
+    "disabled": false,
+    "id": 76,
+    "name": "Museum",
+    "parent_id": 23
+  },
+  {
+    "description": "Tour, Special exhibition",
+    "disabled": false,
+    "id": 77,
+    "name": "Exhibition",
+    "parent_id": 23
+  },
+  {
+    "description": "Board Games Cafe that pays fee to rent games and place in store",
+    "disabled": false,
+    "id": 78,
+    "name": "Board Game",
+    "parent_id": 23
+  },
+  {
+    "description": "Zoo, Aquarium, Amusement park, Observation deck",
+    "disabled": false,
+    "id": 79,
+    "name": "Attraction",
+    "parent_id": 23
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 80,
+    "name": "Apple One",
+    "parent_id": 23
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 81,
+    "name": "Spotify",
+    "parent_id": 69
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 82,
+    "name": "KKBOX",
+    "parent_id": 69
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 83,
+    "name": "Apple Music",
+    "parent_id": 69
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 84,
+    "name": "LINE Music",
+    "parent_id": 69
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 85,
+    "name": "CD",
+    "parent_id": 69
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 86,
+    "name": "Concert",
+    "parent_id": 69
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 87,
+    "name": "Netflix",
+    "parent_id": 70
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 88,
+    "name": "YouTube",
+    "parent_id": 70
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 89,
+    "name": "Disney+",
+    "parent_id": 70
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 90,
+    "name": "Peacock",
+    "parent_id": 70
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 91,
+    "name": "Fox+",
+    "parent_id": 70
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 92,
+    "name": "LINE TV",
+    "parent_id": 70
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 93,
+    "name": "Home Video",
+    "parent_id": 70
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 94,
+    "name": "Movie Theater",
+    "parent_id": 70
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 95,
+    "name": "Rental",
+    "parent_id": 70
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 96,
+    "name": "Tissue / Wipe",
+    "parent_id": 24
+  },
+  {
+    "description": "Pen, Paper",
+    "disabled": false,
+    "id": 97,
+    "name": "Stationery",
+    "parent_id": 24
+  },
+  {
+    "description": "Kitchen towel, Scrub sponges, Water filter",
+    "disabled": false,
+    "id": 98,
+    "name": "Kitchen",
+    "parent_id": 24
+  },
+  {
+    "description": "Toilet paper, Soap, Toothpaste, Lotion",
+    "disabled": false,
+    "id": 99,
+    "name": "Toiletry",
+    "parent_id": 24
+  },
+  {
+    "description": "Body wash, Shampoo, Conditioner",
+    "disabled": false,
+    "id": 100,
+    "name": "Shower",
+    "parent_id": 24
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 101,
+    "name": "Flower",
+    "parent_id": 24
+  },
+  {
+    "description": "Candle, Aroma, Scented stick",
+    "disabled": false,
+    "id": 102,
+    "name": "Fragrance",
+    "parent_id": 24
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 103,
+    "name": "Laundry",
+    "parent_id": 24
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 104,
+    "name": "Trash Bag",
+    "parent_id": 24
+  },
+  {
+    "description": "Small size supplies on-the-go",
+    "disabled": false,
+    "id": 105,
+    "name": "Travel",
+    "parent_id": 24
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 106,
+    "name": "Flight",
+    "parent_id": 25
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 107,
+    "name": "Train",
+    "parent_id": 25
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 108,
+    "name": "Cruise",
+    "parent_id": 25
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 109,
+    "name": "Lodging",
+    "parent_id": 25
+  },
+  {
+    "description": "Viator, Get Your Guide, Klook, KKday",
+    "disabled": false,
+    "id": 110,
+    "name": "Activity / Tour",
+    "parent_id": 25
+  },
+  {
+    "description": "Shipping, Storing, or Check-in fee for transport",
+    "disabled": false,
+    "id": 111,
+    "name": "Luggage",
+    "parent_id": 25
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 112,
+    "name": "Concierge / Tip",
+    "parent_id": 25
+  },
+  {
+    "description": "Stuff that have zero-functional purpose besides commemorate a visit",
+    "disabled": false,
+    "id": 113,
+    "name": "Souvenir",
+    "parent_id": 25
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 114,
+    "name": "Postcard",
+    "parent_id": 25
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 115,
+    "name": "Stamp",
+    "parent_id": 25
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 116,
+    "name": "Flighty Pro",
+    "parent_id": 25
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 117,
+    "name": "Tripsy",
+    "parent_id": 25
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 118,
+    "name": "Rent",
+    "parent_id": 26
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 119,
+    "name": "Furniture",
+    "parent_id": 26
+  },
+  {
+    "description": "Electronics that mainly serve to perform household tasks",
+    "disabled": false,
+    "id": 120,
+    "name": "Appliance",
+    "parent_id": 26
+  },
+  {
+    "description": "Small pieces item that complements a living space",
+    "disabled": false,
+    "id": 121,
+    "name": "Accessory",
+    "parent_id": 26
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 122,
+    "name": "Insurance",
+    "parent_id": 26
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 123,
+    "name": "Maintenance",
+    "parent_id": 26
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 124,
+    "name": "Tax",
+    "parent_id": 26
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 125,
+    "name": "Shirt",
+    "parent_id": 28
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 126,
+    "name": "Pants",
+    "parent_id": 28
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 127,
+    "name": "Jacket",
+    "parent_id": 28
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 128,
+    "name": "Underwear",
+    "parent_id": 28
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 129,
+    "name": "Pajamas",
+    "parent_id": 28
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 130,
+    "name": "Sock",
+    "parent_id": 28
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 131,
+    "name": "Shoe",
+    "parent_id": 28
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 132,
+    "name": "Hat",
+    "parent_id": 28
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 133,
+    "name": "Glove",
+    "parent_id": 28
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 134,
+    "name": "Bag",
+    "parent_id": 28
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 135,
+    "name": "1Password",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 136,
+    "name": "Bear",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 137,
+    "name": "ChatGPT",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 138,
+    "name": "Dropbox",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 139,
+    "name": "Feedly Pro",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 140,
+    "name": "Flexibits",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 141,
+    "name": "Glass",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 142,
+    "name": "Google One",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 143,
+    "name": "Grammarly",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 144,
+    "name": "iCloud",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 145,
+    "name": "LeetCode",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 146,
+    "name": "LINE",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 147,
+    "name": "LinkedIn",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 148,
+    "name": "MaxRewards",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 149,
+    "name": "point.me",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 150,
+    "name": "Proton",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 151,
+    "name": "Setapp",
+    "parent_id": 29
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 152,
+    "name": "AWS",
+    "parent_id": 30
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 153,
+    "name": "Google Cloud",
+    "parent_id": 30
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 154,
+    "name": "Digital Ocean",
+    "parent_id": 30
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 155,
+    "name": "Linode",
+    "parent_id": 30
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 156,
+    "name": "Apple Developer",
+    "parent_id": 30
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 157,
+    "name": "Kaleidoscope",
+    "parent_id": 30
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 158,
+    "name": "Google Colab Pro",
+    "parent_id": 30
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 159,
+    "name": "Wakatime Premium",
+    "parent_id": 30
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 160,
+    "name": "Amazon Prime",
+    "parent_id": 31
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 161,
+    "name": "DoorDash Dash Pass",
+    "parent_id": 31
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 162,
+    "name": "Collectible",
+    "parent_id": 32
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 163,
+    "name": "LEGO",
+    "parent_id": 32
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 164,
+    "name": "Sticker",
+    "parent_id": 32
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 165,
+    "name": "了概",
+    "parent_id": 33
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 166,
+    "name": "科技島讀",
+    "parent_id": 33
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 167,
+    "name": "Tuition",
+    "parent_id": 34
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 168,
+    "name": "Textbook",
+    "parent_id": 34
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 169,
+    "name": "Hospital",
+    "parent_id": 35
+  },
+  {
+    "description": "Eye exam, Physical exam",
+    "disabled": false,
+    "id": 170,
+    "name": "Examination",
+    "parent_id": 35
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 171,
+    "name": "Haircut",
+    "parent_id": 35
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 172,
+    "name": "Salary",
+    "parent_id": 36
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 173,
+    "name": "Bonus",
+    "parent_id": 36
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 174,
+    "name": "Gift",
+    "parent_id": 36
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 175,
+    "name": "Reimbursement",
+    "parent_id": 36
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 176,
+    "name": "Cashback",
+    "parent_id": 36
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 177,
+    "name": "Interest",
+    "parent_id": 36
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 178,
+    "name": "Dividend",
+    "parent_id": 36
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 179,
+    "name": "Red Envelope",
+    "parent_id": 36
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 181,
+    "name": "Family",
+    "parent_id": null
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 182,
+    "name": "Fitness / Gym",
+    "parent_id": 35
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 183,
+    "name": "Accessory",
+    "parent_id": 18
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 184,
+    "name": "Insurance",
+    "parent_id": 35
+  },
+  {
+    "description": "Tickets to watch sports game",
+    "disabled": false,
+    "id": 185,
+    "name": "Sport",
+    "parent_id": 23
+  },
+  {
+    "description": "Bouldering, Skiing, Ice Skating, Scuba diving",
+    "disabled": false,
+    "id": 186,
+    "name": "Activity",
+    "parent_id": 23
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 187,
+    "name": "Board Game",
+    "parent_id": 32
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 188,
+    "name": "Printing",
+    "parent_id": 16
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 189,
+    "name": "Rental Car",
+    "parent_id": 25
+  },
+  {
+    "description": null,
+    "disabled": false,
+    "id": 190,
+    "name": "Medicine",
+    "parent_id": 35
+  }
+]
