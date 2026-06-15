@@ -12,6 +12,7 @@ from sqlmodel import Session
 from kayman.core.config import settings
 from kayman.core.db import engine
 from kayman.mock_data import load_records
+from kayman.schemas.account import Account
 from kayman.schemas.currency import Currency
 
 if TYPE_CHECKING:
@@ -27,6 +28,12 @@ def seed(session: Session, logger: Logger) -> None:
         session.add(currency)
     session.commit()
     logger.success(f"Currencies seeded: {len(currencies)}")
+
+    accounts = load_records("accounts", Account)
+    for account in sorted(accounts, key=lambda a: a.id or 0):
+        session.add(account)
+    session.commit()
+    logger.success(f"Accounts seeded: {len(accounts)}")
 
 
 def main() -> int:

@@ -2,6 +2,7 @@ import pytest
 from sqlmodel import SQLModel
 
 from kayman.mock_data import load_records
+from kayman.schemas.account import Account
 from kayman.schemas.currency import Currency
 
 
@@ -9,6 +10,7 @@ from kayman.schemas.currency import Currency
     "entity, schema",
     [
         ("currencies", Currency),
+        ("accounts", Account),
     ],
 )
 def test_load_records(entity: str, schema: type[SQLModel]) -> None:
@@ -30,3 +32,24 @@ def test_currency_codes_are_unique() -> None:
     codes = [c.code for c in currencies]
 
     assert len(codes) == len(set(codes)), "duplicate currency codes in currencies.json"
+
+
+@pytest.mark.parametrize("entity", ["accounts"])
+def test_record_ids_are_unique(entity: str) -> None:
+    schema = {"accounts": Account}[entity]
+    records = load_records(entity, schema)
+    ids = [r.id for r in records]
+
+    assert len(ids) == len(set(ids)), f"duplicate ids in {entity}.json"
+
+
+def test_accounts_reference_known_currencies() -> None:
+    currencies = load_records("currencies", Currency)
+    accounts = load_records("accounts", Account)
+
+    known_codes = {c.code for c in currencies}
+    for account in accounts:
+        assert account.currency_code in known_codes, (
+            f"account id={account.id} {account.name!r} references "
+            f"unknown currency_code {account.currency_code!r}"
+        )

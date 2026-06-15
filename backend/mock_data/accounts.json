@@ -1,0 +1,44 @@
+[
+  {
+    "balance": "3000",
+    "currency_code": "TWD",
+    "id": 1,
+    "name": "Wallet TWD",
+    "timezone": "Asia/Taipei"
+  },
+  {
+    "balance": "1000000",
+    "currency_code": "TWD",
+    "id": 2,
+    "name": "中國信託台幣活存",
+    "timezone": "Asia/Taipei"
+  },
+  {
+    "balance": "-25000",
+    "currency_code": "TWD",
+    "id": 3,
+    "name": "國泰世華銀行 CUBE 信用卡",
+    "timezone": "Asia/Taipei"
+  },
+  {
+    "balance": "100",
+    "currency_code": "USD",
+    "id": 4,
+    "name": "Wallet USD",
+    "timezone": "America/Los_Angeles"
+  },
+  {
+    "balance": "100000",
+    "currency_code": "USD",
+    "id": 5,
+    "name": "Chase Checking",
+    "timezone": "America/New_York"
+  },
+  {
+    "balance": "-3000",
+    "currency_code": "USD",
+    "id": 6,
+    "name": "American Express Gold Card",
+    "timezone": "America/New_York"
+  }
+]
