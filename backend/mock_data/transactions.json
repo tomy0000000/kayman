@@ -1,0 +1,155 @@
+[
+  {
+    "account_id": 2,
+    "amount": "1200000",
+    "created_at": "2026-01-15T10:00:00+08:00",
+    "description": "January salary deposit",
+    "id": 1,
+    "posted_at": "2026-01-16T10:00:00+08:00",
+    "reconciled_at": "2026-01-29T10:00:00+08:00"
+  },
+  {
+    "account_id": 2,
+    "amount": "-195000",
+    "created_at": "2026-01-20T14:00:00+08:00",
+    "description": "TWD to USD wire transfer (out)",
+    "id": 2,
+    "posted_at": "2026-01-21T14:00:00+08:00",
+    "reconciled_at": "2026-02-03T14:00:00+08:00"
+  },
+  {
+    "account_id": 5,
+    "amount": "6000",
+    "created_at": "2026-01-20T14:00:00+08:00",
+    "description": "TWD to USD wire transfer (in)",
+    "id": 3,
+    "posted_at": "2026-01-21T14:00:00+08:00",
+    "reconciled_at": "2026-02-03T14:00:00+08:00"
+  },
+  {
+    "account_id": 5,
+    "amount": "105000",
+    "created_at": "2026-01-31T17:00:00-05:00",
+    "description": "January US salary deposit",
+    "id": 4,
+    "posted_at": "2026-02-01T17:00:00-05:00",
+    "reconciled_at": "2026-02-14T17:00:00-05:00"
+  },
+  {
+    "account_id": 5,
+    "amount": "-3000",
+    "created_at": "2026-02-01T10:00:00-05:00",
+    "description": "February rent",
+    "id": 5,
+    "posted_at": "2026-02-02T10:00:00-05:00",
+    "reconciled_at": "2026-02-15T10:00:00-05:00"
+  },
+  {
+    "account_id": 2,
+    "amount": "-5000",
+    "created_at": "2026-02-01T09:00:00+08:00",
+    "description": "ATM withdrawal to wallet",
+    "id": 6,
+    "posted_at": "2026-02-02T09:00:00+08:00",
+    "reconciled_at": "2026-02-15T09:00:00+08:00"
+  },
+  {
+    "account_id": 1,
+    "amount": "5000",
+    "created_at": "2026-02-01T09:00:00+08:00",
+    "description": "ATM withdrawal to wallet",
+    "id": 7,
+    "posted_at": "2026-02-02T09:00:00+08:00",
+    "reconciled_at": "2026-02-15T09:00:00+08:00"
+  },
+  {
+    "account_id": 1,
+    "amount": "-200",
+    "created_at": "2026-02-05T12:30:00+08:00",
+    "description": "Lunch at the noodle place",
+    "id": 8,
+    "posted_at": "2026-02-06T12:30:00+08:00",
+    "reconciled_at": "2026-02-19T12:30:00+08:00"
+  },
+  {
+    "account_id": 1,
+    "amount": "-150",
+    "created_at": "2026-02-06T08:30:00+08:00",
+    "description": "Morning coffee",
+    "id": 9,
+    "posted_at": "2026-02-07T08:30:00+08:00",
+    "reconciled_at": "2026-02-20T08:30:00+08:00"
+  },
+  {
+    "account_id": 1,
+    "amount": "-1650",
+    "created_at": "2026-02-10T18:00:00+08:00",
+    "description": "Weekly groceries",
+    "id": 10,
+    "posted_at": "2026-02-11T18:00:00+08:00",
+    "reconciled_at": "2026-02-24T18:00:00+08:00"
+  },
+  {
+    "account_id": 3,
+    "amount": "-5000",
+    "created_at": "2026-02-12T19:30:00+08:00",
+    "description": "Dinner with friends",
+    "id": 11,
+    "posted_at": "2026-02-13T19:30:00+08:00",
+    "reconciled_at": "2026-02-26T19:30:00+08:00"
+  },
+  {
+    "account_id": 5,
+    "amount": "-8000",
+    "created_at": "2026-02-14T12:00:00-05:00",
+    "description": "Hotel in NYC",
+    "id": 12,
+    "posted_at": "2026-02-15T12:00:00-05:00",
+    "reconciled_at": "2026-02-28T12:00:00-05:00"
+  },
+  {
+    "account_id": 3,
+    "amount": "-20000",
+    "created_at": "2026-02-15T15:00:00+08:00",
+    "description": "AirPods Pro",
+    "id": 13,
+    "posted_at": "2026-02-16T15:00:00+08:00",
+    "reconciled_at": "2026-03-01T15:00:00+08:00"
+  },
+  {
+    "account_id": 6,
+    "amount": "-1500",
+    "created_at": "2026-02-20T19:00:00-05:00",
+    "description": "Anniversary dinner",
+    "id": 14,
+    "posted_at": "2026-02-21T19:00:00-05:00",
+    "reconciled_at": "2026-03-06T19:00:00-05:00"
+  },
+  {
+    "account_id": 6,
+    "amount": "-1500",
+    "created_at": "2026-02-22T10:00:00-05:00",
+    "description": "Apple One annual",
+    "id": 15,
+    "posted_at": "2026-02-23T10:00:00-05:00",
+    "reconciled_at": "2026-03-08T10:00:00-05:00"
+  },
+  {
+    "account_id": 4,
+    "amount": "200",
+    "created_at": "2026-03-01T14:00:00-05:00",
+    "description": "Birthday gift from family",
+    "id": 16,
+    "posted_at": "2026-03-02T14:00:00-05:00",
+    "reconciled_at": null
+  },
+  {
+    "account_id": 4,
+    "amount": "-100",
+    "created_at": "2026-03-05T09:00:00-08:00",
+    "description": "Specialty coffee",
+    "id": 17,
+    "posted_at": "2026-03-06T09:00:00-08:00",
+    "reconciled_at": null
+  }
+]

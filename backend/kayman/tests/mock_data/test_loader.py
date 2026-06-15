@@ -1,9 +1,13 @@
+from collections import defaultdict
+from decimal import Decimal
+
 import pytest
 from sqlmodel import SQLModel
 
 from kayman.mock_data import load_records
 from kayman.schemas.account import Account
 from kayman.schemas.currency import Currency
+from kayman.schemas.transaction import Transaction
 
 
 @pytest.mark.parametrize(
@@ -11,6 +15,7 @@ from kayman.schemas.currency import Currency
     [
         ("currencies", Currency),
         ("accounts", Account),
+        ("transactions", Transaction),
     ],
 )
 def test_load_records(entity: str, schema: type[SQLModel]) -> None:
@@ -52,4 +57,31 @@ def test_accounts_reference_known_currencies() -> None:
         assert account.currency_code in known_codes, (
             f"account id={account.id} {account.name!r} references "
             f"unknown currency_code {account.currency_code!r}"
+        )
+
+
+def test_transaction_totals_match_account_balances() -> None:
+    """For every account, sum of seeded transactions must equal its balance."""
+    accounts = load_records("accounts", Account)
+    transactions = load_records("transactions", Transaction)
+
+    actuals: dict[int, Decimal] = defaultdict(lambda: Decimal(0))
+    for txn in transactions:
+        actuals[txn.account_id] += txn.amount
+
+    for account in accounts:
+        assert account.id is not None
+        assert actuals[account.id] == account.balance, (
+            f"account id={account.id} {account.name!r}: txn total "
+            f"{actuals[account.id]} != balance {account.balance}"
+        )
+
+
+def test_transactions_reference_known_accounts() -> None:
+    accounts = {a.id for a in load_records("accounts", Account)}
+    transactions = load_records("transactions", Transaction)
+
+    for txn in transactions:
+        assert txn.account_id in accounts, (
+            f"transaction id={txn.id} references unknown account {txn.account_id}"
         )

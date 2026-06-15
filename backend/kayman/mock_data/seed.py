@@ -14,6 +14,7 @@ from kayman.core.db import engine
 from kayman.mock_data import load_records
 from kayman.schemas.account import Account
 from kayman.schemas.currency import Currency
+from kayman.schemas.transaction import Transaction
 
 if TYPE_CHECKING:
     from loguru import Logger
@@ -34,6 +35,12 @@ def seed(session: Session, logger: Logger) -> None:
         session.add(account)
     session.commit()
     logger.success(f"Accounts seeded: {len(accounts)}")
+
+    transactions = load_records("transactions", Transaction)
+    for transaction in sorted(transactions, key=lambda t: t.id or 0):
+        session.add(transaction)
+    session.commit()
+    logger.success(f"Transactions seeded: {len(transactions)}")
 
 
 def main() -> int:
