@@ -7,6 +7,7 @@ from sqlmodel import Session
 from kayman.auth import get_client
 from kayman.core.db import get_session
 from kayman.crud.currency import create_currency, read_currencies
+from kayman.mock_data import load_records
 from kayman.schemas.currency import Currency
 
 TAG_NAME = "Currency"
@@ -24,30 +25,10 @@ currency_router = APIRouter(
 
 EXAMPLES = {
     "create": {
-        "United States Dollar": Example(
-            {
-                "summary": "United States Dollar",
-                "value": {"code": "USD", "name": "United States Dollar", "symbol": "$"},
-            }
-        ),
-        "Euro": Example(
-            {
-                "summary": "Euro",
-                "value": {"code": "EUR", "name": "Euro", "symbol": "€"},
-            }
-        ),
-        "British Pound": Example(
-            {
-                "summary": "British Pound",
-                "value": {"code": "GBP", "name": "British Pound", "symbol": "£"},
-            }
-        ),
-        "New Taiwan Dollar": Example(
-            {
-                "summary": "New Taiwan Dollar",
-                "value": {"code": "TWD", "name": "New Taiwan Dollar", "symbol": "NT$"},
-            }
-        ),
+        currency.name: Example(
+            {"summary": currency.name, "value": currency.model_dump(mode="json")}
+        )
+        for currency in load_records("currencies", Currency)
     }
 }
 

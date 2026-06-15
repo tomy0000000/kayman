@@ -1,0 +1,47 @@
+[
+  {
+    "code": "EUR",
+    "name": "Euro",
+    "symbol": "€"
+  },
+  {
+    "code": "GBP",
+    "name": "British Pound",
+    "symbol": "£"
+  },
+  {
+    "code": "HKD",
+    "name": "Hong Kong Dollar",
+    "symbol": "HK$"
+  },
+  {
+    "code": "JPY",
+    "name": "Japanese Yen",
+    "symbol": "¥"
+  },
+  {
+    "code": "SGD",
+    "name": "Singapore Dollar",
+    "symbol": "S$"
+  },
+  {
+    "code": "THB",
+    "name": "Thai Baht",
+    "symbol": "฿"
+  },
+  {
+    "code": "TWD",
+    "name": "New Taiwan Dollar",
+    "symbol": "NT$"
+  },
+  {
+    "code": "USD",
+    "name": "United States Dollar",
+    "symbol": "$"
+  },
+  {
+    "code": "VND",
+    "name": "Vietnamese Dong",
+    "symbol": "₫"
+  }
+]
