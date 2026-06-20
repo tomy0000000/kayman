@@ -13,10 +13,17 @@ class TransactionBase(SQLModel):
     account_id: int = Field(foreign_key="account.id")
     payment_id: int | None = Field(foreign_key="payment.id", default=None)
     amount: Decimal
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    posted_at: datetime | None = None
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
+    posted_at: datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
     description: str | None = None
-    reconciled_at: datetime | None = None
+    reconciled_at: datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
     index: int | None = None
 
 
@@ -28,15 +35,6 @@ class Transaction(TransactionBase, table=True):
         ),
     )
     id: int | None = Field(primary_key=True, default=None)
-    created_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), nullable=False)
-    )
-    posted_at: datetime | None = Field(
-        sa_column=Column(DateTime(timezone=True), nullable=True)
-    )
-    reconciled_at: datetime | None = Field(
-        sa_column=Column(DateTime(timezone=True), nullable=True)
-    )
     account: "Account" = Relationship(back_populates="transactions")
     payment: Optional["Payment"] = Relationship(back_populates="transactions")
 
@@ -47,3 +45,4 @@ class TransactionCreate(TransactionBase):
 
 class TransactionRead(TransactionBase):
     id: int
+    created_at: datetime
