@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { type TransactionRead, readAccount } from '@/lib/client'
 import { cn, formatCurrency } from '@/lib/utils'
 
-export const Route = createFileRoute('/_authenticated/account/$id/transaction')(
+export const Route = createFileRoute('/_auth/account/$id/transaction')(
   {
     component: AccountTransactionPage
   }

@@ -7,7 +7,7 @@ import {
   SidebarTrigger
 } from '@/components/ui/sidebar'
 
-export const Route = createFileRoute('/_authenticated')({
+export const Route = createFileRoute('/_auth')({
   beforeLoad: ({ context, location }) => {
     if (!context.auth.client) {
       throw redirect({

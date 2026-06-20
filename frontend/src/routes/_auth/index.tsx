@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { readPayments } from '@/lib/client'
 
-export const Route = createFileRoute('/_authenticated/')({
+export const Route = createFileRoute('/_auth/')({
   component: HomePage
 })
 

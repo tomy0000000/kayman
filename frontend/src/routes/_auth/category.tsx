@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { readCategories } from '@/lib/client'
 import { categoryToTreeItem } from '@/lib/types'
 
-export const Route = createFileRoute('/_authenticated/category')({
+export const Route = createFileRoute('/_auth/category')({
   component: CategoryPage
 })
 

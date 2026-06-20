@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator'
 import { readAccounts } from '@/lib/client'
 import { cn, formatCurrency } from '@/lib/utils'
 
-export const Route = createFileRoute('/_authenticated/account/')({
+export const Route = createFileRoute('/_auth/account/')({
   component: AccountListPage
 })
 
