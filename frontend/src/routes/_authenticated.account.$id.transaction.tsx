@@ -1,27 +1,20 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { ChevronDown } from 'lucide-react'
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect } from 'react'
 import { toast } from 'sonner'
 
 import { Amount } from '@/components/amount'
 import { CreateTransactionFab } from '@/components/create-transaction-fab'
 import { DatePickerWithRange } from '@/components/date-range-picker'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
-import { Field, FieldLabel } from '@/components/ui/field'
 import { Separator } from '@/components/ui/separator'
-import { type TransactionRead, readAccounts } from '@/lib/client'
+import { type TransactionRead, readAccount } from '@/lib/client'
 import { cn, formatCurrency } from '@/lib/utils'
 
-export const Route = createFileRoute('/_authenticated/account')({
-  component: AccountPage
-})
+export const Route = createFileRoute('/_authenticated/account/$id/transaction')(
+  {
+    component: AccountTransactionPage
+  }
+)
 
 const transactions: Array<TransactionRead & { status?: string | null }> = [
   {
@@ -377,32 +370,32 @@ const runningBalances: number[] = (() => {
   return result
 })()
 
-function AccountPage() {
+function AccountTransactionPage() {
   const { client } = Route.useRouteContext()
-  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
-    null
-  )
+  const { id } = Route.useParams()
+  const accountId = Number(id)
 
   const {
     isError,
-    data: accounts,
+    data: account,
     error
   } = useQuery({
-    queryKey: ['accounts'],
+    queryKey: ['account', accountId],
     queryFn: async () => {
-      const response = await readAccounts({ client })
-      if (response.error) throw new Error('Failed to fetch accounts')
+      const response = await readAccount({
+        client,
+        path: { account_id: accountId }
+      })
+      if (response.error) throw new Error('Failed to fetch account')
       if (!response.data) throw new Error('No data returned')
       return response.data
     }
   })
 
-  const selectedAccount = accounts?.find((a) => a.id === selectedAccountId)
-
   useEffect(() => {
     if (!isError) return
     console.error(error)
-    toast.error('Failed to fetch accounts', {
+    toast.error('Failed to fetch account', {
       description:
         error instanceof Error ? error.message : 'An unknown error occurred'
     })
@@ -410,53 +403,9 @@ function AccountPage() {
 
   return (
     <>
-      {/* Account and Date Picker */}
+      {/* Date Picker */}
       <div className="bg-background sticky top-0 z-10 pt-4">
         <div className="flex items-end gap-3 overflow-x-auto">
-          <Field className="w-60 shrink-0">
-            <FieldLabel htmlFor="account-picker">Account</FieldLabel>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  id="account-picker"
-                  variant="outline"
-                  className="w-full justify-between"
-                >
-                  {selectedAccount ? (
-                    <span className="flex items-center gap-2">
-                      <span className="font-medium">
-                        {selectedAccount.name}
-                      </span>
-                      <span className="text-muted-foreground text-xs">
-                        {selectedAccount.currency_code}
-                      </span>
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">
-                      Select account
-                    </span>
-                  )}
-                  <ChevronDown className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                className="w-(--radix-dropdown-menu-trigger-width)"
-              >
-                {accounts?.map((account) => (
-                  <DropdownMenuItem
-                    key={account.id}
-                    onSelect={() => setSelectedAccountId(account.id)}
-                  >
-                    <span className="leading-none">{account.name}</span>
-                    <span className="text-muted-foreground ml-auto text-xs leading-none">
-                      {account.currency_code}
-                    </span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </Field>
           <DatePickerWithRange />
         </div>
 
@@ -531,13 +480,13 @@ function AccountPage() {
                 <div className="flex w-24 shrink-0 flex-col items-end">
                   <Amount
                     amount={amount}
-                    currencyCode={selectedAccount?.currency_code}
+                    currencyCode={account?.currency_code}
                   />
                   <span className="text-muted-foreground text-xs">
-                    {selectedAccount
+                    {account
                       ? formatCurrency(
                           runningBalances[index],
-                          selectedAccount.currency_code
+                          account.currency_code
                         )
                       : runningBalances[index]}
                   </span>
