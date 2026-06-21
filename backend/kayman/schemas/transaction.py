@@ -1,7 +1,9 @@
+import enum
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional
 
+from pydantic import computed_field
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, UniqueConstraint
 
 if TYPE_CHECKING:
@@ -42,9 +44,24 @@ class TransactionCreate(TransactionBase):
     pass
 
 
+class TransactionStatus(enum.Enum):
+    PENDING = "PENDING"
+    POSTED = "POSTED"
+    CLEARED = "CLEARED"
+
+
 class TransactionRead(TransactionBase):
     id: int
     created_at: datetime
+
+    @computed_field
+    @property
+    def status(self) -> TransactionStatus:
+        if self.reconciled_at is not None:
+            return TransactionStatus.CLEARED
+        if self.posted_at is not None:
+            return TransactionStatus.POSTED
+        return TransactionStatus.PENDING
 
 
 class TransactionWithBalanceRead(TransactionRead):
