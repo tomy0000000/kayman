@@ -2,6 +2,7 @@ import {
   type ReactNode,
   useCallback,
   useMemo,
+  useRef,
   useState
 } from 'react'
 
@@ -43,6 +44,16 @@ function clientFromCredential({ host, accessToken }: StoredCredential): Client {
   return createClient({ baseURL: host, auth: () => accessToken })
 }
 
+function addUnauthorizedInterceptor(client: Client, onUnauthorized: () => void) {
+  client.instance.interceptors.response.use(undefined, (error) => {
+    if (error?.response?.status === 401) {
+      sessionStorage.setItem('logout_reason', 'session_expired')
+      onUnauthorized()
+    }
+    return Promise.reject(error)
+  })
+}
+
 const EMPTY_STATE: AuthState = {
   host: '',
   username: '',
@@ -51,11 +62,22 @@ const EMPTY_STATE: AuthState = {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const logoutRef = useRef<(() => void) | null>(null)
+
   const [state, setState] = useState<AuthState>(() => {
     const stored = loadCredential()
     if (!stored) return EMPTY_STATE
-    return { ...stored, client: clientFromCredential(stored) }
+    const client = clientFromCredential(stored)
+    addUnauthorizedInterceptor(client, () => logoutRef.current?.())
+    return { ...stored, client }
   })
+
+  const logout = useCallback(() => {
+    window.localStorage.removeItem(LOCAL_STORAGE_KEY)
+    setState(EMPTY_STATE)
+  }, [])
+
+  logoutRef.current = logout
 
   const login = useCallback(
     async (host: string, username: string, password: string) => {
@@ -71,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const accessToken = data.access_token
       client.setConfig({ baseURL: host, auth: () => accessToken })
+      addUnauthorizedInterceptor(client, () => logoutRef.current?.())
 
       window.localStorage.setItem(
         LOCAL_STORAGE_KEY,
@@ -80,11 +103,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     []
   )
-
-  const logout = useCallback(() => {
-    window.localStorage.removeItem(LOCAL_STORAGE_KEY)
-    setState(EMPTY_STATE)
-  }, [])
 
   const value = useMemo<AuthContextValue>(
     () => ({ ...state, login, logout }),

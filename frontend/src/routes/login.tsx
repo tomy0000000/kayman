@@ -1,8 +1,9 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { ChevronDown } from 'lucide-react'
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import { z } from 'zod'
 
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -59,6 +60,14 @@ function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [sessionExpired, setSessionExpired] = useState(false)
+
+  useEffect(() => {
+    if (sessionStorage.getItem('logout_reason') === 'session_expired') {
+      sessionStorage.removeItem('logout_reason')
+      setSessionExpired(true)
+    }
+  }, [])
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -77,6 +86,13 @@ function LoginPage() {
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-sm space-y-4 p-8">
       <h1 className="text-xl font-semibold">Sign in</h1>
+      {sessionExpired && (
+        <Alert className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
+          <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+            You were signed out due to inactivity. Please sign in again.
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
         <Input
