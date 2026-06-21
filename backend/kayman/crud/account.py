@@ -1,9 +1,12 @@
 from collections.abc import Sequence
+from datetime import datetime
 from decimal import Decimal
 
+from sqlalchemy import func
 from sqlmodel import Integer, Session, cast, select
 
 from kayman.schemas.account import Account, AccountBase, AccountCreate, AccountUpdate
+from kayman.schemas.transaction import Transaction
 
 
 def create_account(session: Session, account: AccountCreate) -> AccountBase:
@@ -15,6 +18,17 @@ def create_account(session: Session, account: AccountCreate) -> AccountBase:
 
 def read_account(session: Session, account_id: int) -> Account | None:
     return session.get(Account, account_id)
+
+
+def read_account_balance(
+    session: Session, account_id: int, at: datetime | None = None
+) -> Decimal:
+    scalar = select(func.coalesce(func.sum(Transaction.amount), 0)).where(
+        Transaction.account_id == account_id
+    )
+    if at is not None:
+        scalar = scalar.where(Transaction.created_at < at)
+    return Decimal(session.exec(scalar).one())
 
 
 def read_accounts(

@@ -1,5 +1,6 @@
 import random
 import re
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -10,12 +11,13 @@ from kayman.crud.account import (
     _verify_account_ids,
     create_account,
     read_account,
+    read_account_balance,
     read_accounts,
     update_account_balances,
     update_accounts,
 )
 from kayman.schemas.account import Account
-from kayman.tests.factories import AccountFactory
+from kayman.tests.factories import AccountFactory, TransactionFactory
 
 
 def test_create_account(session: Session):
@@ -42,6 +44,90 @@ def test_read_account(session: Session):
 
 def test_read_account_not_found(session: Session):
     assert read_account(session, 1) is None
+
+
+def test_read_account_balance_empty_account(session: Session):
+    account = AccountFactory()
+
+    assert read_account_balance(session, account.id) == Decimal(0)
+
+
+def test_read_account_balance_nonexistent_account(session: Session):
+    assert read_account_balance(session, 9999) == Decimal(0)
+
+
+def test_read_account_balance_sums_all_txns_when_at_is_none(session: Session):
+    account = AccountFactory()
+    TransactionFactory(
+        account=account,
+        amount=Decimal("10.50"),
+        created_at=datetime(2026, 1, 5, tzinfo=UTC),
+    )
+    TransactionFactory(
+        account=account,
+        amount=Decimal("-3.25"),
+        created_at=datetime(2026, 2, 1, tzinfo=UTC),
+    )
+    TransactionFactory(
+        account=account,
+        amount=Decimal("7"),
+        created_at=datetime(2026, 3, 1, tzinfo=UTC),
+    )
+
+    assert read_account_balance(session, account.id) == Decimal("14.25")
+
+
+def test_read_account_balance_at_includes_only_txns_before_cutoff(session: Session):
+    account = AccountFactory()
+    TransactionFactory(
+        account=account,
+        amount=Decimal("100"),
+        created_at=datetime(2025, 12, 1, tzinfo=UTC),
+    )
+    TransactionFactory(
+        account=account,
+        amount=Decimal("50"),
+        created_at=datetime(2025, 12, 31, tzinfo=UTC),
+    )
+    TransactionFactory(
+        account=account,
+        amount=Decimal("999"),
+        created_at=datetime(2026, 2, 1, tzinfo=UTC),
+    )
+
+    assert read_account_balance(
+        session, account.id, at=datetime(2026, 1, 1, tzinfo=UTC)
+    ) == Decimal("150")
+
+
+def test_read_account_balance_at_is_exclusive(session: Session):
+    account = AccountFactory()
+    cutoff = datetime(2026, 1, 1, tzinfo=UTC)
+    TransactionFactory(
+        account=account,
+        amount=Decimal("5"),
+        created_at=datetime(2025, 12, 31, tzinfo=UTC),
+    )
+    TransactionFactory(account=account, amount=Decimal("10"), created_at=cutoff)
+
+    assert read_account_balance(session, account.id, at=cutoff) == Decimal("5")
+
+
+def test_read_account_balance_isolates_account(session: Session):
+    account_a = AccountFactory()
+    account_b = AccountFactory()
+    TransactionFactory(
+        account=account_a,
+        amount=Decimal("10"),
+        created_at=datetime(2026, 1, 5, tzinfo=UTC),
+    )
+    TransactionFactory(
+        account=account_b,
+        amount=Decimal("999"),
+        created_at=datetime(2026, 1, 5, tzinfo=UTC),
+    )
+
+    assert read_account_balance(session, account_a.id) == Decimal("10")
 
 
 def test_read_accounts(session: Session):
