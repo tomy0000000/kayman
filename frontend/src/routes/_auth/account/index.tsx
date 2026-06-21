@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { Wallet } from 'lucide-react'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
@@ -49,7 +49,7 @@ function AccountListPage() {
             {index > 0 && <Separator />}
             <Link
               to="/account/$id/transaction"
-              params={{ id: account.id }}
+              params={{ id: account.id.toString() }}
               className="flex items-center gap-3 py-3 hover:bg-muted/50 -mx-4 px-4 transition-colors"
             >
               <Wallet className="text-muted-foreground size-6 shrink-0" />
