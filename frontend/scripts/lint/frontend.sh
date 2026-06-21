@@ -3,4 +3,8 @@ set -euo pipefail
 #MISE description="Lint frontend"
 #MISE dir="frontend"
 
+# Typescript lint
+pnpm exec tsc --build --noEmit
+
+# ESLint
 pnpm exec eslint .

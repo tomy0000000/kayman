@@ -3,5 +3,8 @@ set -euo pipefail
 #MISE description="Build frontend for production"
 #MISE dir="frontend"
 
-pnpm exec tsc -b
+# Compile Typescript to Javascript
+pnpm exec tsc --build
+
+# Bundling with Vite
 pnpm exec vite build
