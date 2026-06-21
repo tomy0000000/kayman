@@ -63,7 +63,6 @@ class InvoiceBaseStrict(InvoiceBaseWithId):
 
 
 class Invoice(InvoiceBaseStrict, table=True):
-    __tablename__ = "invoice"
     details: list["InvoiceDetail"] = Relationship(back_populates="invoice")
 
 
@@ -128,7 +127,6 @@ class InvoiceDetailBaseStrict(InvoiceDetailBaseWithId):
 
 
 class InvoiceDetail(InvoiceDetailBaseStrict, table=True):
-    __tablename__ = "invoice_detail"
     invoice: "Invoice" = Relationship(back_populates="details")
 
 
@@ -160,7 +158,6 @@ class InvoiceDetailWriteResponse(SQLModel):
 
 
 class InvoiceCarrier(SQLModel, table=True):
-    __tablename__ = "invoice_carrier"
     id: int | None = Field(primary_key=True, default=None)
     type: str
     card_id: str

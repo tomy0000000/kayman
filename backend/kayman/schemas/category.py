@@ -14,7 +14,6 @@ class CategoryBase(SQLModel):
 
 
 class Category(CategoryBase, table=True):
-    __tablename__ = "category"
     id: int | None = Field(primary_key=True, default=None)
     entries: list["PaymentEntry"] = Relationship(back_populates="category")
     parent_category: Optional["Category"] = Relationship(

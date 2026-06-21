@@ -44,7 +44,6 @@ class PaymentBase(SQLModel):
 
 
 class Payment(PaymentBase, table=True):
-    __tablename__ = "payment"
     id: int | None = Field(primary_key=True, default=None)
     # Auto calculated for Expense or Income
     # Manually logged for Transfer or Exchange
@@ -76,7 +75,6 @@ class PaymentEntryBase(SQLModel):
 
 
 class PaymentEntry(PaymentEntryBase, table=True):
-    __tablename__ = "payment_entry"
     __table_args__ = (
         UniqueConstraint(
             "payment_id", "index", name="payment_entry_payment_id_index_key"

@@ -18,7 +18,6 @@ class AccountBase(SQLModel):
 
 
 class Account(AccountBase, table=True):
-    __tablename__ = "account"
     id: int | None = Field(primary_key=True, default=None)
     balance: Decimal
     timezone: TimeZoneName = Field(sa_column=Column(SATimezone(), nullable=False))

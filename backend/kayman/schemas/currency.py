@@ -8,7 +8,6 @@ if TYPE_CHECKING:
 
 
 class Currency(SQLModel, table=True):
-    __tablename__ = "currency"
     code: str = Field(primary_key=True)
     name: str
     symbol: str

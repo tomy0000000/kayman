@@ -28,7 +28,6 @@ class TransactionBase(SQLModel):
 
 
 class Transaction(TransactionBase, table=True):
-    __tablename__ = "transaction"
     __table_args__ = (
         UniqueConstraint(
             "payment_id", "index", name="transaction_payment_id_index_key"
