@@ -1,3 +1,5 @@
+import logging
+import sys
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -9,13 +11,56 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
+from loguru import logger
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
 from starlette.responses import Response
 from starlette.types import Scope
 
 from kayman.auth import setup_clients
+from kayman.core.config import settings
 from kayman.core.db import alembic_upgrade
+
+_LOG_LEVELS = {
+    "local": "DEBUG",
+    "development": "DEBUG",
+    "testing": "WARNING",
+    "production": "INFO",
+}
+
+
+class InterceptHandler(logging.Handler):
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            level: str | int = logger.level(record.levelname).name
+        except ValueError:
+            level = record.levelno
+        frame, depth = logging.currentframe(), 2
+        while frame and frame.f_code.co_filename == logging.__file__:
+            frame = frame.f_back
+            depth += 1
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
+
+
+def setup_logger() -> None:
+    level = _LOG_LEVELS[settings.ENVIRONMENT]
+    logger.remove()
+    if settings.ENVIRONMENT == "production":
+        logger.add(
+            sys.stderr,
+            level=level,
+            serialize=True,
+            diagnose=False,
+            backtrace=False,
+            enqueue=True,
+        )
+    else:
+        logger.add(sys.stderr, level=level)
+
+    # Bridge stdlib logging (uvicorn, FastAPI, SQLAlchemy, alembic) to loguru
+    logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 
 
 # Register startup and shutdown events

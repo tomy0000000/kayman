@@ -1,7 +1,8 @@
+import os
 import secrets
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import computed_field
+from pydantic import computed_field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
 
@@ -9,7 +10,13 @@ from sqlalchemy import URL
 class Settings(BaseSettings):
     model_config = SettingsConfigDict()
     SECRET_KEY: str = secrets.token_urlsafe(32)
-    ENVIRONMENT: Literal["local", "development", "production"] = "production"
+    ENVIRONMENT: Literal["local", "development", "testing", "production"] = "production"
+
+    @model_validator(mode="after")
+    def _force_testing_under_pytest(self) -> Self:
+        if "PYTEST_VERSION" in os.environ:
+            self.ENVIRONMENT = "testing"
+        return self
 
     PROJECT_NAME: str = "Kayman"
     POSTGRES_HOST: str = "kayman-db"

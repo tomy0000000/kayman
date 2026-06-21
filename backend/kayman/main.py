@@ -11,7 +11,10 @@ from kayman.util import (
     SPAStaticFiles,
     custom_generate_unique_id,
     lifespan,
+    setup_logger,
 )
+
+setup_logger()
 
 cors_middleware = Middleware(
     CORSMiddleware,
