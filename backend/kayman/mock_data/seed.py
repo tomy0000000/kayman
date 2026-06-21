@@ -7,6 +7,7 @@ import sys
 from typing import TYPE_CHECKING
 
 from loguru import logger
+from sqlalchemy import text
 from sqlmodel import Session
 
 from kayman.core.config import settings
@@ -23,6 +24,22 @@ if TYPE_CHECKING:
 ALLOWED_ENVIRONMENTS = {"local", "development"}
 
 
+def _resync_id_sequence(session: Session, table: str) -> None:
+    """Advance the id sequence past the largest seeded id."""
+    quoted = f'"{table}"'
+    session.connection().execute(
+        text(
+            f"SELECT setval("
+            f"pg_get_serial_sequence(:table, 'id'), "
+            f"COALESCE((SELECT MAX(id) FROM {quoted}), 1), "
+            f"(SELECT MAX(id) FROM {quoted}) IS NOT NULL"
+            f")"
+        ),
+        {"table": table},
+    )
+    session.commit()
+
+
 def seed(session: Session, logger: Logger) -> None:
     """reseed from mock_data/*.json."""
     currencies = load_records("currencies", Currency)
@@ -35,18 +52,21 @@ def seed(session: Session, logger: Logger) -> None:
     for category in sorted(categories, key=lambda c: c.id or 0):
         session.add(category)
     session.commit()
+    _resync_id_sequence(session, "category")
     logger.success(f"Categories seeded: {len(categories)}")
 
     accounts = load_records("accounts", Account)
     for account in sorted(accounts, key=lambda a: a.id or 0):
         session.add(account)
     session.commit()
+    _resync_id_sequence(session, "account")
     logger.success(f"Accounts seeded: {len(accounts)}")
 
     transactions = load_records("transactions", Transaction)
     for transaction in sorted(transactions, key=lambda t: t.id or 0):
         session.add(transaction)
     session.commit()
+    _resync_id_sequence(session, "transaction")
     logger.success(f"Transactions seeded: {len(transactions)}")
 
 
