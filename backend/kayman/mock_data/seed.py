@@ -62,7 +62,11 @@ def seed(session: Session, logger: Logger) -> None:
     _resync_id_sequence(session, "account")
     logger.success(f"Accounts seeded: {len(accounts)}")
 
-    transactions = load_records("transactions", Transaction)
+    transactions = load_records(
+        "transactions",
+        Transaction,
+        datetime_fields=["created_at", "posted_at", "reconciled_at"],
+    )
     for transaction in sorted(transactions, key=lambda t: t.id or 0):
         session.add(transaction)
     session.commit()
