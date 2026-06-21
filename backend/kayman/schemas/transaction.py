@@ -46,3 +46,7 @@ class TransactionCreate(TransactionBase):
 class TransactionRead(TransactionBase):
     id: int
     created_at: datetime
+
+
+class TransactionWithBalanceRead(TransactionRead):
+    running_balance: Decimal

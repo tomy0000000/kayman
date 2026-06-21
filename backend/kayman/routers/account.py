@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic_core import PydanticCustomError
@@ -13,12 +14,14 @@ from kayman.crud.account import (
     read_accounts,
     update_accounts,
 )
+from kayman.logics.transaction import get_transactions_with_running_balance
 from kayman.schemas.account import (
     AccountBase,
     AccountCreate,
     AccountRead,
     AccountUpdate,
 )
+from kayman.schemas.transaction import TransactionWithBalanceRead
 
 TAG_NAME = "Account"
 tag = {
@@ -63,6 +66,27 @@ def read(*, session: Session = Depends(get_session), account_id: int) -> Account
 @account_router.get("", name="Read Accounts", response_model=list[AccountRead])
 def reads(*, session: Session = Depends(get_session)) -> Sequence[AccountBase]:
     return read_accounts(session)
+
+
+@account_router.get(
+    "/{account_id}/transactions",
+    name="Read Account Transactions With Running Balance",
+    response_model=list[TransactionWithBalanceRead],
+)
+def read_transactions_with_balance(
+    *,
+    session: Session = Depends(get_session),
+    account_id: int,
+    start: datetime | None = None,
+    end: datetime | None = None,
+) -> list[TransactionWithBalanceRead]:
+    if read_account(session, account_id) is None:
+        raise PydanticCustomError(
+            "account_not_found",
+            f"Account with id: {account_id} does not exist",
+            {"loc": ("path", "account_id")},
+        )
+    return get_transactions_with_running_balance(session, account_id, start, end)
 
 
 @account_router.patch(
