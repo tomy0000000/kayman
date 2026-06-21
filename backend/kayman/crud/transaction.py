@@ -1,8 +1,12 @@
 from collections.abc import Sequence
+from datetime import datetime
+from typing import Literal
 
 from sqlmodel import Session, select
 
 from kayman.schemas.transaction import Transaction, TransactionBase
+
+TransactionOrderBy = Literal["created_at", "posted_at", "amount", "id"]
 
 
 def create_transactions(
@@ -22,10 +26,22 @@ def create_transactions(
 
 
 def get_transactions(
-    session: Session, account_id: int | None = None
+    session: Session,
+    account_id: int | None = None,
+    start: datetime | None = None,
+    end: datetime | None = None,
+    order_by: TransactionOrderBy | None = None,
+    descending: bool = False,
 ) -> Sequence[Transaction]:
     scalar = select(Transaction)
     if account_id:
         scalar = scalar.where(Transaction.account_id == account_id)
+    if start is not None:
+        scalar = scalar.where(Transaction.created_at >= start)
+    if end is not None:
+        scalar = scalar.where(Transaction.created_at < end)
+    if order_by is not None:
+        column = getattr(Transaction, order_by)
+        scalar = scalar.order_by(column.desc() if descending else column.asc())
     txns = session.exec(scalar).all()
     return txns

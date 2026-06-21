@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from datetime import datetime
 
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
@@ -40,6 +41,10 @@ def create(
 
 @txn_router.get("", name="Read Transactions", response_model=list[TransactionRead])
 def reads(
-    *, session: Session = Depends(get_session), account_id: int | None = None
+    *,
+    session: Session = Depends(get_session),
+    account_id: int | None = None,
+    start: datetime | None = None,
+    end: datetime | None = None,
 ) -> Sequence[TransactionBase]:
-    return get_transactions(session, account_id)
+    return get_transactions(session, account_id, start, end)

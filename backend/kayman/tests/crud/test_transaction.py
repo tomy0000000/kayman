@@ -1,3 +1,6 @@
+from datetime import UTC, datetime
+from decimal import Decimal
+
 from sqlmodel import Session
 
 from kayman.crud.transaction import create_transactions, get_transactions
@@ -112,3 +115,110 @@ def test_get_transactions_by_account(session: Session):
 
     assert len(get_transactions(session, account_id=account_1.id)) == 1
     assert len(get_transactions(session, account_id=account_2.id)) == 1
+
+
+def test_get_transactions_start_is_inclusive(session: Session):
+    account = AccountFactory()
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    before_dt = datetime(2025, 12, 31, tzinfo=UTC)
+    after_dt = datetime(2026, 2, 1, tzinfo=UTC)
+    TransactionFactory(account=account, created_at=before_dt)
+    on_start = TransactionFactory(account=account, created_at=start)
+    after = TransactionFactory(account=account, created_at=after_dt)
+
+    results = get_transactions(session, account_id=account.id, start=start)
+
+    assert {txn.id for txn in results} == {on_start.id, after.id}
+
+
+def test_get_transactions_end_is_exclusive(session: Session):
+    account = AccountFactory()
+    end = datetime(2026, 2, 1, tzinfo=UTC)
+    before_dt = datetime(2026, 1, 15, tzinfo=UTC)
+    after_dt = datetime(2026, 3, 1, tzinfo=UTC)
+    before = TransactionFactory(account=account, created_at=before_dt)
+    TransactionFactory(account=account, created_at=end)
+    TransactionFactory(account=account, created_at=after_dt)
+
+    results = get_transactions(session, account_id=account.id, end=end)
+
+    assert {txn.id for txn in results} == {before.id}
+
+
+def test_get_transactions_start_and_end_window(session: Session):
+    account = AccountFactory()
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    end = datetime(2026, 2, 1, tzinfo=UTC)
+    before_dt = datetime(2025, 12, 31, tzinfo=UTC)
+    in_window_dt = datetime(2026, 1, 15, tzinfo=UTC)
+    TransactionFactory(account=account, created_at=before_dt)
+    in_window = TransactionFactory(account=account, created_at=in_window_dt)
+    TransactionFactory(account=account, created_at=end)
+
+    results = get_transactions(session, account_id=account.id, start=start, end=end)
+
+    assert {txn.id for txn in results} == {in_window.id}
+
+
+def test_get_transactions_order_by_created_at_ascending(session: Session):
+    account = AccountFactory()
+    d1 = datetime(2026, 1, 1, tzinfo=UTC)
+    d2 = datetime(2026, 1, 2, tzinfo=UTC)
+    d3 = datetime(2026, 1, 3, tzinfo=UTC)
+    middle = TransactionFactory(account=account, created_at=d2)
+    first = TransactionFactory(account=account, created_at=d1)
+    last = TransactionFactory(account=account, created_at=d3)
+
+    results = get_transactions(session, account_id=account.id, order_by="created_at")
+
+    assert [txn.id for txn in results] == [first.id, middle.id, last.id]
+
+
+def test_get_transactions_order_by_created_at_descending(session: Session):
+    account = AccountFactory()
+    d1 = datetime(2026, 1, 1, tzinfo=UTC)
+    d2 = datetime(2026, 1, 2, tzinfo=UTC)
+    d3 = datetime(2026, 1, 3, tzinfo=UTC)
+    middle = TransactionFactory(account=account, created_at=d2)
+    first = TransactionFactory(account=account, created_at=d1)
+    last = TransactionFactory(account=account, created_at=d3)
+
+    results = get_transactions(
+        session, account_id=account.id, order_by="created_at", descending=True
+    )
+
+    assert [txn.id for txn in results] == [last.id, middle.id, first.id]
+
+
+def test_get_transactions_order_by_amount(session: Session):
+    account = AccountFactory()
+    high = TransactionFactory(account=account, amount=Decimal("100"))
+    low = TransactionFactory(account=account, amount=Decimal("-50"))
+    mid = TransactionFactory(account=account, amount=Decimal("25"))
+
+    results = get_transactions(session, account_id=account.id, order_by="amount")
+
+    assert [txn.id for txn in results] == [low.id, mid.id, high.id]
+
+
+def test_get_transactions_order_by_posted_at(session: Session):
+    account = AccountFactory()
+    d1 = datetime(2026, 1, 1, tzinfo=UTC)
+    d2 = datetime(2026, 1, 2, tzinfo=UTC)
+    d3 = datetime(2026, 1, 3, tzinfo=UTC)
+    second = TransactionFactory(account=account, posted_at=d2)
+    first = TransactionFactory(account=account, posted_at=d1)
+    third = TransactionFactory(account=account, posted_at=d3)
+
+    results = get_transactions(session, account_id=account.id, order_by="posted_at")
+
+    assert [txn.id for txn in results] == [first.id, second.id, third.id]
+
+
+def test_get_transactions_descending_without_order_by_is_unsorted(session: Session):
+    account = AccountFactory()
+    TransactionFactory.create_batch(3, account=account)
+
+    results = get_transactions(session, account_id=account.id, descending=True)
+
+    assert len(results) == 3
