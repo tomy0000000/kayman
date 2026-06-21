@@ -7,369 +7,17 @@ import { toast } from 'sonner'
 import { Amount } from '@/components/amount'
 import { CreateTransactionFab } from '@/components/create-transaction-fab'
 import { DatePickerWithRange } from '@/components/date-range-picker'
+import { TransactionBadge } from '@/components/transaction-badge'
 import { Separator } from '@/components/ui/separator'
-import { type TransactionRead, readAccount } from '@/lib/client'
-import { cn, formatCurrency } from '@/lib/utils'
+import {
+  readAccount,
+  readAccountTransactionsWithRunningBalance
+} from '@/lib/client'
+import { cn, endExclusive, formatCurrency } from '@/lib/utils'
 
-export const Route = createFileRoute('/_auth/account/$id/transaction')(
-  {
-    component: AccountTransactionPage
-  }
-)
-
-const transactions: Array<TransactionRead & { status?: string | null }> = [
-  {
-    id: 12,
-    account_id: 1,
-    created_at: '2025-01-02T21:09:00Z',
-    description: 'Adjustment',
-    amount: '0',
-    payment_id: 4,
-    index: 12
-  },
-  {
-    id: 11,
-    account_id: 1,
-    created_at: '2025-01-02T18:34:00Z',
-    description: 'Pharmacy',
-    amount: '-12.86',
-    payment_id: 4,
-    index: 11
-  },
-  {
-    id: 10,
-    account_id: 1,
-    created_at: '2025-01-02T10:11:00Z',
-    description: 'Rent',
-    amount: '-1800.00',
-    payment_id: 4,
-    index: 10
-  },
-  {
-    id: 12,
-    account_id: 1,
-    created_at: '2025-01-02T21:09:00Z',
-    description: 'Adjustment',
-    amount: '0',
-    payment_id: 4,
-    index: 12
-  },
-  {
-    id: 11,
-    account_id: 1,
-    created_at: '2025-01-02T18:34:00Z',
-    description: 'Pharmacy',
-    amount: '-12.86',
-    payment_id: 4,
-    index: 11
-  },
-  {
-    id: 10,
-    account_id: 1,
-    created_at: '2025-01-02T10:11:00Z',
-    description: 'Rent',
-    amount: '-1800.00',
-    payment_id: 4,
-    index: 10
-  },
-  {
-    id: 12,
-    account_id: 1,
-    created_at: '2025-01-02T21:09:00Z',
-    description: 'Adjustment',
-    amount: '0',
-    payment_id: 4,
-    index: 12
-  },
-  {
-    id: 11,
-    account_id: 1,
-    created_at: '2025-01-02T18:34:00Z',
-    description: 'Pharmacy',
-    amount: '-12.86',
-    payment_id: 4,
-    index: 11
-  },
-  {
-    id: 10,
-    account_id: 1,
-    created_at: '2025-01-02T10:11:00Z',
-    description: 'Rent',
-    amount: '-1800.00',
-    payment_id: 4,
-    index: 10
-  },
-  {
-    id: 12,
-    account_id: 1,
-    created_at: '2025-01-02T21:09:00Z',
-    description: 'Adjustment',
-    amount: '0',
-    payment_id: 4,
-    index: 12
-  },
-  {
-    id: 11,
-    account_id: 1,
-    created_at: '2025-01-02T18:34:00Z',
-    description: 'Pharmacy',
-    amount: '-12.86',
-    payment_id: 4,
-    index: 11
-  },
-  {
-    id: 10,
-    account_id: 1,
-    created_at: '2025-01-02T10:11:00Z',
-    description: 'Rent',
-    amount: '-1800.00',
-    payment_id: 4,
-    index: 10
-  },
-  {
-    id: 12,
-    account_id: 1,
-    created_at: '2025-01-02T21:09:00Z',
-    description: 'Adjustment',
-    amount: '0',
-    payment_id: 4,
-    index: 12
-  },
-  {
-    id: 11,
-    account_id: 1,
-    created_at: '2025-01-02T18:34:00Z',
-    description: 'Pharmacy',
-    amount: '-12.86',
-    payment_id: 4,
-    index: 11
-  },
-  {
-    id: 10,
-    account_id: 1,
-    created_at: '2025-01-02T10:11:00Z',
-    description: 'Rent',
-    amount: '-1800.00',
-    payment_id: 4,
-    index: 10
-  },
-  {
-    id: 9,
-    account_id: 1,
-    created_at: '2025-01-02T07:48:00Z',
-    description: 'Payroll deposit',
-    amount: '2450.00',
-    payment_id: 4,
-    index: 9
-  },
-  {
-    id: 8,
-    account_id: 1,
-    created_at: '2025-01-01T16:22:00Z',
-    description: 'Movie tickets',
-    amount: '-28.50',
-    payment_id: 3,
-    index: 8
-  },
-  {
-    id: 7,
-    account_id: 1,
-    created_at: '2025-01-01T11:00:00Z',
-    description: 'Brunch',
-    amount: '-44.20',
-    payment_id: 3,
-    index: 7
-  },
-  {
-    id: 6,
-    account_id: 1,
-    created_at: '2024-12-31T23:55:00Z',
-    description: 'NYE dinner',
-    amount: '-128.00',
-    payment_id: 2,
-    index: 6
-  },
-  {
-    id: 5,
-    account_id: 1,
-    created_at: '2024-12-31T14:18:00Z',
-    description: 'Gas station',
-    amount: '-52.30',
-    payment_id: 2,
-    index: 5
-  },
-  {
-    id: 4,
-    account_id: 1,
-    created_at: '2024-12-31T09:30:00Z',
-    description: 'Refund: returned monitor',
-    amount: '249.99',
-    payment_id: 2,
-    status: 'reconciled',
-    index: 4
-  },
-  {
-    id: 3,
-    account_id: 1,
-    created_at: '2024-12-30T19:05:00Z',
-    description: 'Grocery run',
-    amount: '-86.40',
-    payment_id: 1,
-    status: 'statement',
-    index: 3
-  },
-  {
-    id: 2,
-    account_id: 1,
-    created_at: '2024-12-30T12:42:00Z',
-    description: 'Lunch with team',
-    amount: '-32.10',
-    status: 'posted',
-    payment_id: 1,
-    index: 2
-  },
-  {
-    id: 1,
-    account_id: 1,
-    created_at: '2024-12-30T08:15:00Z',
-    description: 'Morning coffee',
-    amount: '-4.75',
-    status: 'pending',
-    payment_id: 1,
-    index: 1
-  },
-  {
-    id: 3,
-    account_id: 1,
-    created_at: '2024-12-30T19:05:00Z',
-    description: 'Grocery run',
-    amount: '-86.40',
-    payment_id: 1,
-    status: 'statement',
-    index: 3
-  },
-  {
-    id: 2,
-    account_id: 1,
-    created_at: '2024-12-30T12:42:00Z',
-    description: 'Lunch with team',
-    amount: '-32.10',
-    status: 'posted',
-    payment_id: 1,
-    index: 2
-  },
-  {
-    id: 1,
-    account_id: 1,
-    created_at: '2024-12-30T08:15:00Z',
-    description: 'Morning coffee',
-    amount: '-4.75',
-    status: 'pending',
-    payment_id: 1,
-    index: 1
-  },
-  {
-    id: 3,
-    account_id: 1,
-    created_at: '2024-12-30T19:05:00Z',
-    description: 'Grocery run',
-    amount: '-86.40',
-    payment_id: 1,
-    status: 'statement',
-    index: 3
-  },
-  {
-    id: 2,
-    account_id: 1,
-    created_at: '2024-12-30T12:42:00Z',
-    description: 'Lunch with team',
-    amount: '-32.10',
-    status: 'posted',
-    payment_id: 1,
-    index: 2
-  },
-  {
-    id: 1,
-    account_id: 1,
-    created_at: '2024-12-30T08:15:00Z',
-    description: 'Morning coffee',
-    amount: '-4.75',
-    status: 'pending',
-    payment_id: 1,
-    index: 1
-  },
-  {
-    id: 3,
-    account_id: 1,
-    created_at: '2024-12-30T19:05:00Z',
-    description: 'Grocery run',
-    amount: '-86.40',
-    payment_id: 1,
-    status: 'statement',
-    index: 3
-  },
-  {
-    id: 2,
-    account_id: 1,
-    created_at: '2024-12-30T12:42:00Z',
-    description: 'Lunch with team',
-    amount: '-32.10',
-    status: 'posted',
-    payment_id: 1,
-    index: 2
-  },
-  {
-    id: 1,
-    account_id: 1,
-    created_at: '2024-12-30T08:15:00Z',
-    description: 'Morning coffee',
-    amount: '-4.75',
-    status: 'pending',
-    payment_id: 1,
-    index: 1
-  },
-  {
-    id: 3,
-    account_id: 1,
-    created_at: '2024-12-30T19:05:00Z',
-    description: 'Grocery run',
-    amount: '-86.40',
-    payment_id: 1,
-    status: 'statement',
-    index: 3
-  },
-  {
-    id: 2,
-    account_id: 1,
-    created_at: '2024-12-30T12:42:00Z',
-    description: 'Lunch with team',
-    amount: '-32.10',
-    status: 'posted',
-    payment_id: 1,
-    index: 2
-  },
-  {
-    id: 1,
-    account_id: 1,
-    created_at: '2024-12-30T08:15:00Z',
-    description: 'Morning coffee',
-    amount: '-4.75',
-    status: 'pending',
-    payment_id: 1,
-    index: 1
-  }
-]
-
-// Compute running balance per transaction (display is newest-first, so accumulate oldest→newest)
-const runningBalances: number[] = (() => {
-  const result = new Array(transactions.length)
-  let bal = 0
-  for (let i = transactions.length - 1; i >= 0; i--) {
-    bal += parseFloat(transactions[i].amount)
-    result[i] = bal
-  }
-  return result
-})()
+export const Route = createFileRoute('/_auth/account/$id/transaction')({
+  component: AccountTransactionPage
+})
 
 function AccountTransactionPage() {
   const { client } = Route.useRouteContext()
@@ -377,6 +25,8 @@ function AccountTransactionPage() {
   const accountId = Number(id)
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const start = dateRange?.from?.toISOString() ?? null
+  const end = endExclusive(dateRange?.to)
 
   const {
     isError,
@@ -395,6 +45,24 @@ function AccountTransactionPage() {
     }
   })
 
+  const {
+    isError: isTransactionsError,
+    data: transactions,
+    error: transactionsError
+  } = useQuery({
+    queryKey: ['transactions', { accountId, start, end }],
+    queryFn: async () => {
+      const response = await readAccountTransactionsWithRunningBalance({
+        client,
+        path: { account_id: accountId },
+        query: { start, end }
+      })
+      if (response.error) throw new Error('Failed to fetch transactions')
+      if (!response.data) throw new Error('No data returned')
+      return response.data
+    }
+  })
+
   useEffect(() => {
     if (!isError) return
     console.error(error)
@@ -404,11 +72,22 @@ function AccountTransactionPage() {
     })
   }, [isError, error])
 
+  useEffect(() => {
+    if (!isTransactionsError) return
+    console.error(transactionsError)
+    toast.error('Failed to fetch transactions', {
+      description:
+        transactionsError instanceof Error
+          ? transactionsError.message
+          : 'An unknown error occurred'
+    })
+  }, [isTransactionsError, transactionsError])
+
   return (
     <>
       {/* Date Picker */}
       <div className="bg-background sticky top-0 z-10 pt-4">
-        <div className="flex items-end gap-3 overflow-x-auto">
+        <div className="flex items-end justify-center gap-3 overflow-x-auto">
           <DatePickerWithRange
             dateRange={dateRange}
             setDateRange={setDateRange}
@@ -420,13 +99,15 @@ function AccountTransactionPage() {
 
       {/* Transactions */}
       <div className="min-h-0 w-full flex-1 snap-y snap-mandatory overflow-y-auto scroll-pt-7 sm:scroll-pt-0">
-        {transactions.map(function (transaction, index) {
+        {transactions?.map(function (transaction, index) {
           const timestamp = new Date(transaction.created_at)
           const amount = parseFloat(transaction.amount)
           const dateLabel = timestamp.toLocaleDateString()
           const prevDateLabel =
             index > 0
-              ? new Date(transactions[index - 1].created_at).toLocaleDateString()
+              ? new Date(
+                  transactions[index - 1].created_at
+                ).toLocaleDateString()
               : null
           const showDate = dateLabel !== prevDateLabel
 
@@ -478,9 +159,7 @@ function AccountTransactionPage() {
                 </div>
 
                 {/* Status */}
-                <div className="text-muted-foreground shrink-0 text-xs">
-                  {transaction.status}
-                </div>
+                <TransactionBadge status={transaction.status} />
 
                 {/* Amount + running balance */}
                 <div className="flex w-24 shrink-0 flex-col items-end">
@@ -491,10 +170,10 @@ function AccountTransactionPage() {
                   <span className="text-muted-foreground text-xs">
                     {account
                       ? formatCurrency(
-                          runningBalances[index],
+                          parseFloat(transaction.running_balance),
                           account.currency_code
                         )
-                      : runningBalances[index]}
+                      : transaction.running_balance}
                   </span>
                 </div>
               </div>
