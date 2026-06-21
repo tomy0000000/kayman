@@ -60,14 +60,15 @@ function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [sessionExpired, setSessionExpired] = useState(false)
+  const [sessionExpired] = useState(
+    () => sessionStorage.getItem('logout_reason') === 'session_expired'
+  )
 
   useEffect(() => {
-    if (sessionStorage.getItem('logout_reason') === 'session_expired') {
+    if (sessionExpired) {
       sessionStorage.removeItem('logout_reason')
-      setSessionExpired(true)
     }
-  }, [])
+  }, [sessionExpired])
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
