@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { Fragment, useEffect } from 'react'
+import { Fragment, useEffect, useState } from 'react'
+import { type DateRange } from 'react-day-picker'
 import { toast } from 'sonner'
 
 import { DatePickerWithRange } from '@/components/date-range-picker'
@@ -21,6 +22,7 @@ const transactions = [
 
 function CategoryPage() {
   const { client } = Route.useRouteContext()
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
   const {
     isError,
@@ -58,7 +60,10 @@ function CategoryPage() {
 
       <div className="flex-1 p-4">
         <ScrollArea className="h-full w-full rounded-md">
-          <DatePickerWithRange />
+          <DatePickerWithRange
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+          />
           {transactions.map((transaction) => (
             <Fragment key={transaction.title}>
               <div className="text-sm">

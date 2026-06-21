@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { Fragment, useEffect } from 'react'
+import { Fragment, useEffect, useState } from 'react'
+import { type DateRange } from 'react-day-picker'
 import { toast } from 'sonner'
 
 import { Amount } from '@/components/amount'
@@ -375,6 +376,8 @@ function AccountTransactionPage() {
   const { id } = Route.useParams()
   const accountId = Number(id)
 
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+
   const {
     isError,
     data: account,
@@ -406,7 +409,10 @@ function AccountTransactionPage() {
       {/* Date Picker */}
       <div className="bg-background sticky top-0 z-10 pt-4">
         <div className="flex items-end gap-3 overflow-x-auto">
-          <DatePickerWithRange />
+          <DatePickerWithRange
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+          />
         </div>
 
         <Separator className="my-4 bg-foreground/30" />
