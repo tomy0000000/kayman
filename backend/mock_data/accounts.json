@@ -3,7 +3,7 @@
     "balance": "3000",
     "currency_code": "TWD",
     "id": 1,
-    "name": "Wallet TWD",
+    "name": "Wallet",
     "timezone": "Asia/Taipei"
   },
   {
@@ -24,7 +24,7 @@
     "balance": "100",
     "currency_code": "USD",
     "id": 4,
-    "name": "Wallet USD",
+    "name": "Wallet",
     "timezone": "America/Los_Angeles"
   },
   {
