@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, Plus } from 'lucide-react'
+import { ChevronDown, Info, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { toast } from 'sonner'
@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
 import {
   Sheet,
   SheetContent,
@@ -32,7 +31,9 @@ import {
   readAccounts
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
+import { toLocalDateTimeInputValue } from '@/lib/utils'
 
+import { TimePicker } from './time-picker'
 import {
   InputGroup,
   InputGroupAddon,
@@ -40,16 +41,19 @@ import {
   InputGroupText
 } from './ui/input-group'
 
-function toLocalDateTimeInputValue(date: Date) {
-  const offsetMs = date.getTimezoneOffset() * 60_000
-  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16)
-}
-
-export function CreateTransactionFab({ client }: { client: Client }) {
+export function CreateTransactionFab({
+  client,
+  accountId: initialAccountId
+}: {
+  client: Client
+  accountId?: number
+}) {
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState('')
-  const [accountId, setAccountId] = useState<number | null>(null)
+  const [accountId, setAccountId] = useState<number | null>(
+    initialAccountId ?? null
+  )
   const [createdAtLocal, setCreatedAtLocal] = useState(() =>
     toLocalDateTimeInputValue(new Date())
   )
@@ -71,7 +75,7 @@ export function CreateTransactionFab({ client }: { client: Client }) {
 
   const reset = () => {
     setAmount('')
-    setAccountId(null)
+    setAccountId(initialAccountId ?? null)
     setCreatedAtLocal(toLocalDateTimeInputValue(new Date()))
   }
 
@@ -215,13 +219,31 @@ export function CreateTransactionFab({ client }: { client: Client }) {
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="txn-created-at">Timestamp</FieldLabel>
-              <Input
+              <FieldLabel
+                htmlFor="txn-created-at"
+                className="flex items-center gap-1.5"
+              >
+                Timestamp
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="About timestamp"
+                      className="text-muted-foreground"
+                    >
+                      <Info className="size-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Timestamp will be converted to account's timezone before
+                    save
+                  </TooltipContent>
+                </Tooltip>
+              </FieldLabel>
+              <TimePicker
                 id="txn-created-at"
-                type="datetime-local"
                 value={createdAtLocal}
-                onChange={(e) => setCreatedAtLocal(e.target.value)}
-                required
+                onChange={setCreatedAtLocal}
               />
             </Field>
           </FieldGroup>

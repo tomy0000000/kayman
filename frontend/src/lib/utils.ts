@@ -22,3 +22,8 @@ export function endExclusive(date: Date | undefined): string | null {
   const next = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
   return next.toISOString()
 }
+
+export function toLocalDateTimeInputValue(date: Date) {
+  const offsetMs = date.getTimezoneOffset() * 60_000
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 19)
+}
