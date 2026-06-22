@@ -576,7 +576,7 @@ requires-dist = [
     { name = "simplejson", specifier = ">=3.17.6,<4.0.0" },
     { name = "sqlalchemy", specifier = ">=2.0.37,<3.0.0" },
     { name = "sqlmodel", specifier = ">=0.0.38" },
-    { name = "tzdata", specifier = ">=2022.4,<2023.0" },
+    { name = "tzdata", specifier = ">=2026.2" },
 ]
 
 [package.metadata.requires-dev]
@@ -1324,11 +1324,11 @@ wheels = [
 
 [[package]]
 name = "tzdata"
-version = "2022.7"
+version = "2026.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/5b/30/b7abfb11be6642d26de1c1840d25e8d90333513350ad0ebc03101d55e13b/tzdata-2022.7.tar.gz", hash = "sha256:fe5f866eddd8b96e9fcba978f8e503c909b19ea7efda11e52e39494bad3a7bfa", size = 185615, upload-time = "2022-11-30T19:31:43.827Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ba/19/1b9b0e29f30c6d35cb345486df41110984ea67ae69dddbc0e8a100999493/tzdata-2026.2.tar.gz", hash = "sha256:9173fde7d80d9018e02a662e168e5a2d04f87c41ea174b139fbef642eda62d10", size = 198254, upload-time = "2026-04-24T15:22:08.651Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fa/5e/f99a7df3ae2079211d31ec23b1d34380c7870c26e99159f6e422dcbab538/tzdata-2022.7-py2.py3-none-any.whl", hash = "sha256:2b88858b0e3120792a3c0635c23daf36a7d7eeeca657c323da299d2094402a0d", size = 340147, upload-time = "2022-11-30T19:31:42.467Z" },
+    { url = "https://files.pythonhosted.org/packages/ce/e4/dccd7f47c4b64213ac01ef921a1337ee6e30e8c6466046018326977efd95/tzdata-2026.2-py2.py3-none-any.whl", hash = "sha256:bbe9af844f658da81a5f95019480da3a89415801f6cc966806612cc7169bffe7", size = 349321, upload-time = "2026-04-24T15:22:05.876Z" },
 ]
 
 [[package]]
