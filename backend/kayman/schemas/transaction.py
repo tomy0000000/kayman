@@ -55,7 +55,6 @@ class TransactionRead(TransactionBase):
     created_at: datetime
 
     @computed_field
-    @property
     def status(self) -> TransactionStatus:
         if self.reconciled_at is not None:
             return TransactionStatus.CLEARED

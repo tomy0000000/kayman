@@ -25,7 +25,9 @@ ALLOWED_ENVIRONMENTS = {"local", "development"}
 
 
 def _resync_id_sequence(session: Session, table: str) -> None:
-    """Advance the id sequence past the largest seeded id."""
+    """Advance the id sequence past the largest seeded id (Postgres only)."""
+    if session.bind is None or session.bind.dialect.name != "postgresql":
+        return
     quoted = f'"{table}"'
     session.connection().execute(
         text(
