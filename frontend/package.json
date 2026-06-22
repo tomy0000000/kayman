@@ -20,18 +20,19 @@
     "postinstall": "scripts/postinstall.sh",
     "format": "mise run format:frontend"
   },
-  "packageManager": "pnpm@10.12.1",
   "engines": {
-    "node": "26.x"
+    "node": "26.3.1"
   },
   "devEngines": {
     "runtime": {
       "name": "node",
-      "onFail": "error"
+      "onFail": "error",
+      "version": "26.3.1"
     },
     "packageManager": {
       "name": "pnpm",
-      "onFail": "error"
+      "onFail": "error",
+      "version": "11.8.0"
     }
   },
   "dependencies": {
