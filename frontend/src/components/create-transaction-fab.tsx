@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, Info, Plus } from 'lucide-react'
+import { ChevronDown, Info } from 'lucide-react'
 import { useState } from 'react'
-import { useHotkeys } from 'react-hotkeys-hook'
 import { toast } from 'sonner'
 
+import { FabSheet } from '@/components/fab-sheet'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -12,14 +12,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger
-} from '@/components/ui/sheet'
+import { SheetFooter } from '@/components/ui/sheet'
 import {
   Tooltip,
   TooltipContent,
@@ -57,8 +50,6 @@ export function CreateTransactionFab({
   const [createdAtLocal, setCreatedAtLocal] = useState(() =>
     toLocalDateTimeInputValue(new Date())
   )
-
-  useHotkeys('n', () => setOpen(true), { preventDefault: true })
 
   const { data: accounts } = useQuery({
     queryKey: ['accounts'],
@@ -117,147 +108,124 @@ export function CreateTransactionFab({
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <SheetTrigger asChild>
-            <Button
-              size="icon-lg"
-              className="fixed right-6 bottom-6 z-40 size-14 rounded-full shadow-lg"
-              aria-label="Create transaction"
-            >
-              <Plus className="size-6" />
-            </Button>
-          </SheetTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="left">
-          New transaction
-          <kbd
-            data-slot="kbd"
-            className="bg-background/15 ml-1 px-1.5 py-0.5 font-sans text-[10px] font-medium"
-          >
-            N
-          </kbd>
-        </TooltipContent>
-      </Tooltip>
-      <SheetContent side="right" className="flex flex-col">
-        <SheetHeader>
-          <SheetTitle>New transaction</SheetTitle>
-        </SheetHeader>
-        <form
-          onSubmit={handleSubmit}
-          className="flex min-h-0 flex-1 flex-col gap-4"
-        >
-          <FieldGroup className="flex-1 overflow-y-auto px-4">
-            <Field>
-              <FieldLabel htmlFor="txn-account">Account</FieldLabel>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    id="txn-account"
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-between"
-                  >
-                    {selectedAccount ? (
-                      <span className="flex items-center gap-2">
-                        <span className="font-medium">
-                          {selectedAccount.name}
-                        </span>
-                        <span className="text-muted-foreground text-xs">
-                          {selectedAccount.currency_code}
-                        </span>
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">
-                        Select account
-                      </span>
-                    )}
-                    <ChevronDown className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="start"
-                  className="w-(--radix-dropdown-menu-trigger-width)"
+    <FabSheet
+      open={open}
+      onOpenChange={setOpen}
+      hotkey="n"
+      label="New transaction"
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="flex min-h-0 flex-1 flex-col gap-4"
+      >
+        <FieldGroup className="flex-1 overflow-y-auto px-4">
+          <Field>
+            <FieldLabel htmlFor="txn-account">Account</FieldLabel>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  id="txn-account"
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between"
                 >
-                  {accounts?.map((account) => (
-                    <DropdownMenuItem
-                      key={account.id}
-                      onSelect={() => setAccountId(account.id)}
-                    >
-                      <span className="leading-none">{account.name}</span>
-                      <span className="text-muted-foreground ml-auto text-xs leading-none">
-                        {account.currency_code}
+                  {selectedAccount ? (
+                    <span className="flex items-center gap-2">
+                      <span className="font-medium">
+                        {selectedAccount.name}
                       </span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="txn-amount">Amount</FieldLabel>
-              <InputGroup>
-                <InputGroupAddon>
-                  <InputGroupText>$</InputGroupText>
-                </InputGroupAddon>
-                <InputGroupInput
-                  id="txn-amount"
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  required
-                />
-                <InputGroupAddon align="inline-end">
-                  <InputGroupText>
-                    {selectedAccount?.currency_code}
-                  </InputGroupText>
-                </InputGroupAddon>
-              </InputGroup>
-            </Field>
-
-            <Field>
-              <FieldLabel
-                htmlFor="txn-created-at"
-                className="flex items-center gap-1.5"
+                      <span className="text-muted-foreground text-xs">
+                        {selectedAccount.currency_code}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">
+                      Select account
+                    </span>
+                  )}
+                  <ChevronDown className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                className="w-(--radix-dropdown-menu-trigger-width)"
               >
-                Timestamp
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="About timestamp"
-                      className="text-muted-foreground"
-                    >
-                      <Info className="size-3.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Timestamp will be converted to account's timezone before
-                    save
-                  </TooltipContent>
-                </Tooltip>
-              </FieldLabel>
-              <TimePicker
-                id="txn-created-at"
-                value={createdAtLocal}
-                onChange={setCreatedAtLocal}
-              />
-            </Field>
-          </FieldGroup>
+                {accounts?.map((account) => (
+                  <DropdownMenuItem
+                    key={account.id}
+                    onSelect={() => setAccountId(account.id)}
+                  >
+                    <span className="leading-none">{account.name}</span>
+                    <span className="text-muted-foreground ml-auto text-xs leading-none">
+                      {account.currency_code}
+                    </span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Field>
 
-          <SheetFooter>
-            <Button
-              type="submit"
-              disabled={isPending || accountId == null || amount === ''}
+          <Field>
+            <FieldLabel htmlFor="txn-amount">Amount</FieldLabel>
+            <InputGroup>
+              <InputGroupAddon>
+                <InputGroupText>$</InputGroupText>
+              </InputGroupAddon>
+              <InputGroupInput
+                id="txn-amount"
+                type="number"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+              />
+              <InputGroupAddon align="inline-end">
+                <InputGroupText>
+                  {selectedAccount?.currency_code}
+                </InputGroupText>
+              </InputGroupAddon>
+            </InputGroup>
+          </Field>
+
+          <Field>
+            <FieldLabel
+              htmlFor="txn-created-at"
+              className="flex items-center gap-1.5"
             >
-              {isPending ? 'Creating...' : 'Create'}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+              Timestamp
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="About timestamp"
+                    className="text-muted-foreground"
+                  >
+                    <Info className="size-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Timestamp will be converted to account's timezone before save
+                </TooltipContent>
+              </Tooltip>
+            </FieldLabel>
+            <TimePicker
+              id="txn-created-at"
+              value={createdAtLocal}
+              onChange={setCreatedAtLocal}
+            />
+          </Field>
+        </FieldGroup>
+
+        <SheetFooter>
+          <Button
+            type="submit"
+            disabled={isPending || accountId == null || amount === ''}
+          >
+            {isPending ? 'Creating...' : 'Create'}
+          </Button>
+        </SheetFooter>
+      </form>
+    </FabSheet>
   )
 }
