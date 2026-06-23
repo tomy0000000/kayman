@@ -2,10 +2,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-import '@/index.css'
-import { TooltipProvider } from '@/components/ui/tooltip'
-import { AuthProvider } from '@/lib/auth'
 import { App } from '@/app'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import '@/index.css'
+import { AuthProvider } from '@/lib/auth'
 
 const queryClient = new QueryClient()
 

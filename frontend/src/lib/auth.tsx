@@ -7,7 +7,11 @@ import {
   useState
 } from 'react'
 
-import { AuthContext, type AuthContextValue, type AuthState } from '@/lib/auth-context'
+import {
+  AuthContext,
+  type AuthContextValue,
+  type AuthState
+} from '@/lib/auth-context'
 import { login as apiLogin } from '@/lib/client'
 import { type Client, createClient } from '@/lib/client/client'
 
@@ -101,7 +105,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       window.localStorage.setItem(
         LOCAL_STORAGE_KEY,
-        JSON.stringify({ host, username, accessToken } satisfies StoredCredential)
+        JSON.stringify({
+          host,
+          username,
+          accessToken
+        } satisfies StoredCredential)
       )
       setState({ host, username, accessToken, client })
     },
