@@ -26,13 +26,13 @@ import {
 import type { Client } from '@/lib/client/client'
 import { toLocalDateTimeInputValue } from '@/lib/utils'
 
-import { TimePicker } from './time-picker'
+import { TimePicker } from '@/components/time-picker'
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupText
-} from './ui/input-group'
+} from '@/components/ui/input-group'
 
 export function CreateTransactionFab({
   client,
