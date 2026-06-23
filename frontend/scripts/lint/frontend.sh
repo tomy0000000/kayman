@@ -8,3 +8,6 @@ pnpm exec tsc --build --noEmit
 
 # ESLint
 pnpm exec eslint .
+
+# Format lint
+pnpm exec prettier --check .

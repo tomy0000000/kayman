@@ -3,4 +3,4 @@ set -euo pipefail
 #MISE description="Format frontend with Prettier"
 #MISE dir="frontend"
 
-pnpm exec prettier -w .
+pnpm exec prettier --write .
