@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/tooltip'
 import {
   type TransactionCreate,
-  type TransactionRead,
+  createTransaction,
   readAccounts
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
@@ -72,11 +72,7 @@ export function CreateTransactionFab({
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (body: TransactionCreate) => {
-      const response = await client.post<TransactionRead>({
-        url: '/api/transactions',
-        body,
-        security: [{ scheme: 'bearer', type: 'http' }]
-      })
+      const response = await createTransaction({ client, body })
       if (response.error) throw new Error('Failed to create transaction')
       if (!response.data) throw new Error('No data returned')
       return response.data
