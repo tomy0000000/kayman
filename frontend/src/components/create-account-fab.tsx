@@ -1,28 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, Globe } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
 import { FabSheet } from '@/components/fab-sheet'
+import { TimezoneCombobox } from '@/components/timezone-combobox'
 import { Button } from '@/components/ui/button'
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-  useComboboxAnchor
-} from '@/components/ui/combobox'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel
+} from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { InputGroupAddon } from '@/components/ui/input-group'
 import { SheetFooter } from '@/components/ui/sheet'
 import {
   type AccountCreate,
@@ -31,8 +27,6 @@ import {
   readCurrencies
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
-
-const TIMEZONES = Intl.supportedValuesOf('timeZone')
 
 interface CreateAccountFabProps {
   client: Client
@@ -46,7 +40,6 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
   const [timezone, setTimezone] = useState(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone
   )
-  const timezoneAnchor = useComboboxAnchor()
 
   const { data: currencies } = useQuery({
     queryKey: ['currencies'],
@@ -165,30 +158,12 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
 
           <Field>
             <FieldLabel htmlFor="account-timezone">Timezone</FieldLabel>
-            <Combobox
+            <TimezoneCombobox
               id="account-timezone"
-              items={TIMEZONES}
               value={timezone}
-              onValueChange={(value) => setTimezone(value ?? '')}
-            >
-              <div ref={timezoneAnchor}>
-                <ComboboxInput placeholder="Select timezone">
-                  <InputGroupAddon>
-                    <Globe className="size-4" />
-                  </InputGroupAddon>
-                </ComboboxInput>
-              </div>
-              <ComboboxContent anchor={timezoneAnchor} className="min-w-0">
-                <ComboboxEmpty>No timezone found.</ComboboxEmpty>
-                <ComboboxList>
-                  {(tz: string) => (
-                    <ComboboxItem key={tz} value={tz}>
-                      {tz}
-                    </ComboboxItem>
-                  )}
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
+              onValueChange={setTimezone}
+            />
+            <FieldDescription>Will be stored as {timezone}</FieldDescription>
           </Field>
         </FieldGroup>
 
