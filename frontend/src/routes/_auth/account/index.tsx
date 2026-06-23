@@ -4,6 +4,7 @@ import { Wallet } from 'lucide-react'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 
+import { CreateAccountFab } from '@/components/create-account-fab'
 import { Separator } from '@/components/ui/separator'
 import { readAccounts } from '@/lib/client'
 import { cn, formatCurrency } from '@/lib/utils'
@@ -74,6 +75,8 @@ function AccountListPage() {
       {accounts?.length === 0 && (
         <p className="text-muted-foreground p-4 text-sm">No accounts found.</p>
       )}
+
+      <CreateAccountFab client={client} />
     </div>
   )
 }

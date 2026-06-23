@@ -33,7 +33,7 @@ export function FabSheet({
   useHotkeys(hotkey, () => onOpenChange(true), { preventDefault: true })
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
       <Tooltip>
         <TooltipTrigger asChild>
           <SheetTrigger asChild>
