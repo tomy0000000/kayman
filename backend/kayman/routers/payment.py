@@ -7,15 +7,15 @@ from sqlmodel import Session
 
 from kayman.auth import get_client
 from kayman.core.db import get_session
-from kayman.crud.payment import (
-    create_payment,
-    read_payment,
-    read_payments,
+from kayman.crud.event import (
+    create_event,
+    read_event,
+    read_events,
 )
 from kayman.crud.payment_entry import create_payment_entries
 from kayman.crud.transaction import create_transactions
 from kayman.logics.account import update_balances_with_transactions
-from kayman.logics.payment import validate_total
+from kayman.logics.event import validate_total
 from kayman.schemas.api_models import PaymentCreateDetailed, PaymentReadDetailed
 from kayman.schemas.event import (
     Event,
@@ -264,9 +264,9 @@ def create(
     except ValueError as err:
         raise HTTPException(status_code=400, detail=err.args[0]) from err
 
-    # Store payment
-    db_payment = create_payment(session, body.payment, commit=False)
-    payment_id = EventRead.model_validate(db_payment).id
+    # Store event
+    db_event = create_event(session, body.payment, commit=False)
+    event_id = EventRead.model_validate(db_event).id
 
     # Store entries
     entries = []
@@ -275,7 +275,7 @@ def create(
             PaymentEntryBase.model_validate(
                 entry_create,
                 update={
-                    "payment_id": payment_id,
+                    "payment_id": event_id,
                     "index": entry_index,
                 },
             )
@@ -289,7 +289,7 @@ def create(
             TransactionBase.model_validate(
                 transaction,
                 update={
-                    "payment_id": payment_id,
+                    "payment_id": event_id,
                     "index": transaction_index,
                 },
             )
@@ -299,25 +299,25 @@ def create(
     # Modify account balance
     update_balances_with_transactions(session, body.transactions, commit=False)
 
-    # Read the new payment
-    new_payment = read_payment(session, payment_id)
-    if new_payment is None:
+    # Read the new event
+    new_event = read_event(session, event_id)
+    if new_event is None:
         raise HTTPException(status_code=500, detail="Failed to create payment")
 
     # Commit all changes
     session.commit()
 
-    return new_payment
+    return new_event
 
 
 @payment_router.get(
     "/{payment_id}", name="Read Payment", response_model=PaymentReadDetailed
 )
 def read(*, session: Session = Depends(get_session), payment_id: int) -> EventBase:
-    payment = read_payment(session, payment_id)
-    if payment is None:
+    event = read_event(session, payment_id)
+    if event is None:
         raise HTTPException(status_code=404, detail="Payment not found")
-    return payment
+    return event
 
 
 @payment_router.get("", name="Read Payments", response_model=list[PaymentReadDetailed])
@@ -327,21 +327,21 @@ def reads(
     payment_date: date | None = None,
     category_id: int | None = None,
 ) -> Sequence[EventBase]:
-    return read_payments(session, payment_date, category_id)
+    return read_events(session, payment_date, category_id)
 
 
 @payment_router.patch("", name="Update Payment", response_model=EventRead)
-def update(*, session: Session = Depends(get_session), payment: Event) -> EventBase:
-    session.merge(payment)
+def update(*, session: Session = Depends(get_session), event: Event) -> EventBase:
+    session.merge(event)
     session.commit()
-    session.refresh(payment)
-    return payment
+    session.refresh(event)
+    return event
 
 
 @payment_router.delete("/{id}", name="Delete Payment")
 def delete(*, session: Session = Depends(get_session), id: int) -> None:
-    payment = session.get(Event, id)
-    if payment is None:
+    event = session.get(Event, id)
+    if event is None:
         raise HTTPException(status_code=404, detail="Payment not found")
-    session.delete(payment)
+    session.delete(event)
     session.commit()

@@ -14,7 +14,7 @@ class TransactionFactory(SQLAlchemyModelFactory):
     amount = factory.Faker("pydecimal", left_digits=5, right_digits=2)
     description = factory.Faker("sentence")
     index = factory.Sequence(lambda n: n)
-    payment = factory.SubFactory("kayman.tests.factories.payment.PaymentFactory")
+    payment = factory.SubFactory("kayman.tests.factories.event.EventFactory")
     payment_id = factory.SelfAttribute("payment.id")
     created_at = factory.Faker("date_time")
     posted_at = factory.Faker("date_time")

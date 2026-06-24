@@ -1,13 +1,13 @@
 import pytest
 
-from kayman.logics.payment import validate_total
+from kayman.logics.event import validate_total
 from kayman.schemas.event import PaymentType
-from kayman.tests.factories import PaymentFactory
+from kayman.tests.factories import EventFactory
 
 
 def test_validate_total_expense():
     """Expense: Entries total is matched with transactions total"""
-    details = PaymentFactory.build_details(
+    details = EventFactory.build_details(
         type=PaymentType.Expense, entry_num=3, transaction_num=5
     )
     validate_total(details)
@@ -15,7 +15,7 @@ def test_validate_total_expense():
 
 def test_validate_total_expense_multi_currencies():
     """Expense: Multiple currencies are used, validation should be skipped"""
-    details = PaymentFactory.build_details(
+    details = EventFactory.build_details(
         type=PaymentType.Expense, entry_num=3, transaction_num=5
     )
     details.entries[-1].currency_code += "_INVALID"  # explicitly change currency
@@ -24,7 +24,7 @@ def test_validate_total_expense_multi_currencies():
 
 def test_validate_total_expense_mismatch():
     """Expense: Entries and transactions totals do not match"""
-    details = PaymentFactory.build_details(
+    details = EventFactory.build_details(
         type=PaymentType.Expense, entry_num=3, transaction_num=5
     )
     details.transactions[-1].amount += 1
@@ -34,7 +34,7 @@ def test_validate_total_expense_mismatch():
 
 def test_validate_total_income():
     """Income: Entries total is matched with transactions total"""
-    details = PaymentFactory.build_details(
+    details = EventFactory.build_details(
         type=PaymentType.Income, entry_num=3, transaction_num=5
     )
     validate_total(details)
@@ -42,7 +42,7 @@ def test_validate_total_income():
 
 def test_validate_total_income_multi_currencies():
     """Income: Multiple currencies are used, validation should be skipped"""
-    details = PaymentFactory.build_details(
+    details = EventFactory.build_details(
         type=PaymentType.Income, entry_num=3, transaction_num=5
     )
     details.entries[-1].currency_code += "_INVALID"  # explicitly change currency
@@ -51,7 +51,7 @@ def test_validate_total_income_multi_currencies():
 
 def test_validate_total_income_mismatch():
     """Income: Entries and transactions totals do not match"""
-    details = PaymentFactory.build_details(
+    details = EventFactory.build_details(
         type=PaymentType.Income, entry_num=3, transaction_num=5
     )
     details.transactions[-1].amount += 1
@@ -61,7 +61,7 @@ def test_validate_total_income_mismatch():
 
 def test_validate_total_transfer():
     """Transfer: Validation should be skipped"""
-    details = PaymentFactory.build_details(
+    details = EventFactory.build_details(
         type=PaymentType.Transfer, entry_num=3, transaction_num=5
     )
     validate_total(details)
@@ -69,7 +69,7 @@ def test_validate_total_transfer():
 
 def test_validate_total_exchange():
     """Exchange: Validation should be skipped"""
-    details = PaymentFactory.build_details(
+    details = EventFactory.build_details(
         type=PaymentType.Exchange, entry_num=3, transaction_num=5
     )
     validate_total(details)

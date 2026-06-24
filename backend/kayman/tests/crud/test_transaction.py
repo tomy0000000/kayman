@@ -5,11 +5,11 @@ from sqlmodel import Session
 
 from kayman.crud.transaction import create_transactions, get_transactions
 from kayman.schemas.transaction import Transaction, TransactionBase
-from kayman.tests.factories import AccountFactory, PaymentFactory, TransactionFactory
+from kayman.tests.factories import AccountFactory, EventFactory, TransactionFactory
 
 
 def test_create_transactions_1_txn(session: Session):
-    txn_create = PaymentFactory.build_details().transactions[0]
+    txn_create = EventFactory.build_details().transactions[0]
     txn = TransactionBase.model_validate(
         txn_create,
         update={
@@ -31,7 +31,7 @@ def test_create_transactions_1_txn(session: Session):
 
 
 def test_create_transactions_n_txn(session: Session):
-    txn_creates = PaymentFactory.build_details(transaction_num=10).transactions
+    txn_creates = EventFactory.build_details(transaction_num=10).transactions
     txns = []
     for txn_index, txn_create in enumerate(txn_creates):
         txns.append(
@@ -59,7 +59,7 @@ def test_create_transactions_n_txn(session: Session):
 
 
 def test_create_transactions_no_commit(session: Session, session_2: Session):
-    txn_create = PaymentFactory.build_details().transactions[0]
+    txn_create = EventFactory.build_details().transactions[0]
     txn = TransactionBase.model_validate(
         txn_create,
         update={

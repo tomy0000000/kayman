@@ -6,7 +6,7 @@ from kayman.schemas.api_models import PaymentCreateDetailed
 from kayman.schemas.event import PaymentType
 
 
-class PaymentFactory(SQLAlchemyModelFactory):
+class EventFactory(SQLAlchemyModelFactory):
     class Meta:
         model = Event
         sqlalchemy_session_persistence = "commit"
@@ -41,13 +41,13 @@ class PaymentFactory(SQLAlchemyModelFactory):
             # entries_total == transactions_total
             transactions[-1].amount -= transactions_total - entries_total
 
-        # Create payment
-        payment = cls.build(
+        # Create event
+        event = cls.build(
             type=type,
             entries=entries,
             transactions=transactions,
         )
 
         return PaymentCreateDetailed(
-            payment=payment, entries=entries, transactions=transactions
+            payment=event, entries=entries, transactions=transactions
         )

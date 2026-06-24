@@ -2,11 +2,11 @@ from sqlmodel import Session
 
 from kayman.crud.payment_entry import create_payment_entries
 from kayman.schemas.event import PaymentEntry, PaymentEntryBase
-from kayman.tests.factories import PaymentFactory
+from kayman.tests.factories import EventFactory
 
 
 def test_create_payment_entries(session: Session):
-    entry_creates = PaymentFactory.build_details(entry_num=3).entries
+    entry_creates = EventFactory.build_details(entry_num=3).entries
     payment_entries = []
     for entry_index, entry in enumerate(entry_creates):
         payment_entries.append(
@@ -34,7 +34,7 @@ def test_create_payment_entries(session: Session):
 
 
 def test_create_payment_entries_no_commit(session: Session, session_2: Session):
-    entry_create = PaymentFactory.build_details().entries[0]
+    entry_create = EventFactory.build_details().entries[0]
     payment_entry = PaymentEntryBase.model_validate(
         entry_create,
         update={
