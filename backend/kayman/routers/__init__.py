@@ -5,7 +5,7 @@ from kayman.routers import (
     auth,
     category,
     currency,
-    payment,
+    event,
     transaction,
     tw_invoice,
 )
@@ -15,7 +15,7 @@ routers = [
     account.account_router,
     currency.currency_router,
     category.category_router,
-    payment.payment_router,
+    event.event_router,
     transaction.txn_router,
     tw_invoice.invoice_router,
 ]
@@ -25,7 +25,7 @@ tags: list[dict[str, Any]] = [
     account.tag,
     currency.tag,
     category.tag,
-    payment.tag,
+    event.tag,
     transaction.tag,
     tw_invoice.tag,
 ]

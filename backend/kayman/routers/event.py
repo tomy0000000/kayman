@@ -16,7 +16,7 @@ from kayman.crud.payment_entry import create_payment_entries
 from kayman.crud.transaction import create_transactions
 from kayman.logics.account import update_balances_with_transactions
 from kayman.logics.event import validate_total
-from kayman.schemas.api_models import PaymentCreateDetailed, PaymentReadDetailed
+from kayman.schemas.api_models import EventCreateDetailed, EventReadDetailed
 from kayman.schemas.event import (
     Event,
     EventBase,
@@ -25,14 +25,14 @@ from kayman.schemas.event import (
 )
 from kayman.schemas.transaction import TransactionBase
 
-TAG_NAME = "Payment"
+TAG_NAME = "Event"
 tag = {
     "name": TAG_NAME,
-    "description": "Create and edit payment records",
+    "description": "Create and edit event records",
 }
 
-payment_router = APIRouter(
-    prefix="/payments",
+event_router = APIRouter(
+    prefix="/events",
     tags=[TAG_NAME],
     dependencies=[Depends(get_client)],
     responses={404: {"description": "Not found"}},
@@ -44,11 +44,11 @@ EXAMPLES = {
             {
                 "summary": "Expense",
                 "value": {
-                    "payment": {
+                    "event": {
                         "type": "Expense",
                         "timestamp": "2022-09-08T08:07:08.000",
                         "timezone": "Asia/Taipei",
-                        "description": "Some payment description",
+                        "description": "Some event description",
                     },
                     "transactions": [
                         {
@@ -92,11 +92,11 @@ EXAMPLES = {
             {
                 "summary": "Multi-currency Expense",
                 "value": {
-                    "payment": {
+                    "event": {
                         "type": "Expense",
                         "timestamp": "2022-09-08T08:07:08.000",
                         "timezone": "Asia/Taipei",
-                        "description": "Some payment description",
+                        "description": "Some event description",
                     },
                     "transactions": [
                         {
@@ -126,11 +126,11 @@ EXAMPLES = {
             {
                 "summary": "Income",
                 "value": {
-                    "payment": {
+                    "event": {
                         "type": "Income",
                         "timestamp": "2022-09-08T08:07:08.000",
                         "timezone": "Asia/Taipei",
-                        "description": "Some payment description",
+                        "description": "Some event description",
                     },
                     "transactions": [
                         {
@@ -174,11 +174,11 @@ EXAMPLES = {
             {
                 "summary": "Transfer with fee",
                 "value": {
-                    "payment": {
+                    "event": {
                         "type": "Transfer",
                         "timestamp": "2022-09-08T08:07:08.000",
                         "timezone": "Asia/Taipei",
-                        "description": "Some payment description",
+                        "description": "Some event description",
                     },
                     "transactions": [
                         {
@@ -213,11 +213,11 @@ EXAMPLES = {
             {
                 "summary": "Exchange currency with fee",
                 "value": {
-                    "payment": {
+                    "event": {
                         "type": "Exchange",
                         "timestamp": "2022-09-08T08:07:08.000",
                         "timezone": "Asia/Taipei",
-                        "description": "Some payment description",
+                        "description": "Some event description",
                     },
                     "transactions": [
                         {
@@ -252,11 +252,11 @@ EXAMPLES = {
 }
 
 
-@payment_router.post("", name="Create Payment", response_model=PaymentReadDetailed)
+@event_router.post("", name="Create Event", response_model=EventReadDetailed)
 def create(
     *,
     session: Session = Depends(get_session),
-    body: PaymentCreateDetailed = Body(openapi_examples=EXAMPLES["create"]),
+    body: EventCreateDetailed = Body(openapi_examples=EXAMPLES["create"]),
 ) -> EventBase:
     # Validate total
     try:
@@ -265,7 +265,7 @@ def create(
         raise HTTPException(status_code=400, detail=err.args[0]) from err
 
     # Store event
-    db_event = create_event(session, body.payment, commit=False)
+    db_event = create_event(session, body.event, commit=False)
     event_id = EventRead.model_validate(db_event).id
 
     # Store entries
@@ -302,7 +302,7 @@ def create(
     # Read the new event
     new_event = read_event(session, event_id)
     if new_event is None:
-        raise HTTPException(status_code=500, detail="Failed to create payment")
+        raise HTTPException(status_code=500, detail="Failed to create event")
 
     # Commit all changes
     session.commit()
@@ -310,27 +310,25 @@ def create(
     return new_event
 
 
-@payment_router.get(
-    "/{payment_id}", name="Read Payment", response_model=PaymentReadDetailed
-)
-def read(*, session: Session = Depends(get_session), payment_id: int) -> EventBase:
-    event = read_event(session, payment_id)
+@event_router.get("/{event_id}", name="Read Event", response_model=EventReadDetailed)
+def read(*, session: Session = Depends(get_session), event_id: int) -> EventBase:
+    event = read_event(session, event_id)
     if event is None:
-        raise HTTPException(status_code=404, detail="Payment not found")
+        raise HTTPException(status_code=404, detail="Event not found")
     return event
 
 
-@payment_router.get("", name="Read Payments", response_model=list[PaymentReadDetailed])
+@event_router.get("", name="Read Events", response_model=list[EventReadDetailed])
 def reads(
     *,
     session: Session = Depends(get_session),
-    payment_date: date | None = None,
+    event_date: date | None = None,
     category_id: int | None = None,
 ) -> Sequence[EventBase]:
-    return read_events(session, payment_date, category_id)
+    return read_events(session, event_date, category_id)
 
 
-@payment_router.patch("", name="Update Payment", response_model=EventRead)
+@event_router.patch("", name="Update Event", response_model=EventRead)
 def update(*, session: Session = Depends(get_session), event: Event) -> EventBase:
     session.merge(event)
     session.commit()
@@ -338,10 +336,10 @@ def update(*, session: Session = Depends(get_session), event: Event) -> EventBas
     return event
 
 
-@payment_router.delete("/{id}", name="Delete Payment")
+@event_router.delete("/{id}", name="Delete Event")
 def delete(*, session: Session = Depends(get_session), id: int) -> None:
     event = session.get(Event, id)
     if event is None:
-        raise HTTPException(status_code=404, detail="Payment not found")
+        raise HTTPException(status_code=404, detail="Event not found")
     session.delete(event)
     session.commit()

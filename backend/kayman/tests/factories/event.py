@@ -2,7 +2,7 @@ import factory
 from factory.alchemy import SQLAlchemyModelFactory
 
 from kayman.schemas import Event
-from kayman.schemas.api_models import PaymentCreateDetailed
+from kayman.schemas.api_models import EventCreateDetailed
 from kayman.schemas.event import EventType
 
 
@@ -48,6 +48,6 @@ class EventFactory(SQLAlchemyModelFactory):
             transactions=transactions,
         )
 
-        return PaymentCreateDetailed(
-            payment=event, entries=entries, transactions=transactions
+        return EventCreateDetailed(
+            event=event, entries=entries, transactions=transactions
         )

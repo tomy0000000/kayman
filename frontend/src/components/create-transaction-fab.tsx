@@ -78,7 +78,7 @@ export function CreateTransactionFab({
     },
     onSuccess: () => {
       toast.success('Transaction created')
-      queryClient.invalidateQueries({ queryKey: ['payments'] })
+      queryClient.invalidateQueries({ queryKey: ['events'] })
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
       reset()
       setOpen(false)

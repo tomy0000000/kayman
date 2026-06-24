@@ -11,16 +11,16 @@ from kayman.schemas.event import (
 from kayman.schemas.transaction import TransactionCreate, TransactionRead
 
 
-class PaymentReadDetailed(EventRead):
+class EventReadDetailed(EventRead):
     """Includes transactions and entries."""
 
     transactions: list[TransactionRead]
     entries: list[PaymentEntryRead]
 
 
-class PaymentCreateDetailed(SQLModel):
+class EventCreateDetailed(SQLModel):
     """Includes transactions and entries."""
 
-    payment: EventCreate
+    event: EventCreate
     transactions: list[TransactionCreate]
     entries: list[PaymentEntryCreate]
