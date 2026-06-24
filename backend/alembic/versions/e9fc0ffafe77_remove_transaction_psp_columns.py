@@ -27,9 +27,7 @@ def upgrade():
 
 
 def downgrade():
-    op.add_column(
-        "transaction", sa.Column("psp_id", sa.Integer(), nullable=True)
-    )
+    op.add_column("transaction", sa.Column("psp_id", sa.Integer(), nullable=True))
     op.add_column(
         "transaction", sa.Column("psp_reconcile", sa.Boolean(), nullable=True)
     )

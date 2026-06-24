@@ -32,7 +32,7 @@ def upgrade():
     connection.execute(sa.text("UPDATE payment_entry SET currency_code = 'USD'"))
 
     # Make the new column non-nullable
-    op.alter_column('payment_entry', 'currency_code', nullable=False)
+    op.alter_column("payment_entry", "currency_code", nullable=False)
 
     # Add constraints
     op.create_foreign_key(
@@ -62,4 +62,4 @@ def downgrade():
     connection.execute(sa.text("UPDATE payment SET total = 0.0"))
 
     # Make the new column non-nullable
-    op.alter_column('payment', 'total', nullable=False)
+    op.alter_column("payment", "total", nullable=False)

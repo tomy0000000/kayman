@@ -22,10 +22,6 @@ def upgrade():
 
 
 def downgrade():
-    op.add_column(
-        "transaction", sa.Column("reconcile", sa.Boolean(), nullable=True)
-    )
-    op.execute(
-        "UPDATE transaction SET reconcile = (reconciled_at IS NOT NULL)"
-    )
+    op.add_column("transaction", sa.Column("reconcile", sa.Boolean(), nullable=True))
+    op.execute("UPDATE transaction SET reconcile = (reconciled_at IS NOT NULL)")
     op.alter_column("transaction", "reconcile", nullable=False)
