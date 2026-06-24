@@ -8,6 +8,7 @@ from kayman.schemas._custom_types import SATimezone
 
 if TYPE_CHECKING:
     from kayman.schemas.currency import Currency
+    from kayman.schemas.statement import Statement
     from kayman.schemas.transaction import Transaction
 
 
@@ -22,6 +23,7 @@ class Account(AccountBase, table=True):
     balance: Decimal
     timezone: TimeZoneName = Field(sa_column=Column(SATimezone(), nullable=False))
     currency: "Currency" = Relationship(back_populates="accounts")
+    statements: list["Statement"] = Relationship(back_populates="account")
     transactions: list["Transaction"] = Relationship(back_populates="account")
 
 
