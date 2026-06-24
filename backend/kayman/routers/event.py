@@ -252,8 +252,13 @@ EXAMPLES = {
 }
 
 
-@event_router.post("", name="Create Event", response_model=EventReadDetailed)
-def create(
+@event_router.post(
+    "/legacy",
+    name="Create Event (Legacy)",
+    response_model=EventReadDetailed,
+    deprecated=True,
+)
+def legacy_create(
     *,
     session: Session = Depends(get_session),
     body: EventCreateDetailed = Body(openapi_examples=EXAMPLES["create"]),
