@@ -11,17 +11,18 @@ from kayman.schemas.event import (
 )
 
 
-def create_event(
-    session: Session, event: EventCreate, commit: bool = True
-) -> EventBase:
-    db_event = Event.model_validate(event)
-    session.add(db_event)
+def create_events(
+    session: Session, events: Sequence[EventCreate], commit: bool = True
+) -> Sequence[EventBase]:
+    db_events = [Event.model_validate(event) for event in events]
+    session.add_all(db_events)
     if commit:
         session.commit()
-        session.refresh(db_event)
+        for db_event in db_events:
+            session.refresh(db_event)
     else:
         session.flush()
-    return db_event
+    return db_events
 
 
 def read_event(session: Session, event_id: int) -> Event | None:

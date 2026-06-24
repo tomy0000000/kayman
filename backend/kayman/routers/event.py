@@ -8,7 +8,7 @@ from sqlmodel import Session
 from kayman.auth import get_client
 from kayman.core.db import get_session
 from kayman.crud.event import (
-    create_event,
+    create_events,
     read_event,
     read_events,
 )
@@ -270,8 +270,8 @@ def legacy_create(
         raise HTTPException(status_code=400, detail=err.args[0]) from err
 
     # Store event
-    db_event = create_event(session, body.event, commit=False)
-    event_id = EventRead.model_validate(db_event).id
+    db_event = create_events(session, [body.event], commit=False)
+    event_id = EventRead.model_validate(db_event[0]).id
 
     # Store entries
     entries = []

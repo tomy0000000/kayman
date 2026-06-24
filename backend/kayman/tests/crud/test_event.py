@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlmodel import Session
 
-from kayman.crud.event import create_event, read_event, read_events
+from kayman.crud.event import create_events, read_event, read_events
 from kayman.tests.factories import (
     CategoryFactory,
     EventFactory,
@@ -10,9 +10,9 @@ from kayman.tests.factories import (
 )
 
 
-def test_create_event(session: Session, session_2: Session):
+def test_create_events_1_event(session: Session, session_2: Session):
     event = EventFactory.build()
-    db_event = create_event(session, event)
+    db_event = create_events(session, [event])[0]
     db_read_event = read_event(session_2, db_event.id)
 
     assert db_read_event.id is not None
@@ -22,11 +22,28 @@ def test_create_event(session: Session, session_2: Session):
     assert db_read_event.type == event.type
 
 
-def test_create_event_no_commit(session: Session, session_2: Session):
+def test_create_events_n_events(session: Session):
+    events = EventFactory.build_batch(10)
+    db_events = create_events(session, events)
+
+    assert len(db_events) == 10
+    for db_event, event in zip(db_events, events, strict=False):
+        assert db_event.id is not None
+        assert db_event.description == event.description
+        assert db_event.timestamp == event.timestamp
+        assert db_event.timezone == event.timezone
+        assert db_event.type == event.type
+
+
+def test_create_events_empty(session: Session):
+    assert create_events(session, []) == []
+
+
+def test_create_events_no_commit(session: Session, session_2: Session):
     event = EventFactory.build()
 
     # The event should be created in the session
-    session_event = create_event(session, event, commit=False)
+    session_event = create_events(session, [event], commit=False)[0]
     assert session_event.id is not None  # Auto int should be set
     assert session_event.description == event.description
     assert session_event.timestamp == event.timestamp
