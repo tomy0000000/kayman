@@ -64,6 +64,7 @@ class PaymentEntryBase(SQLModel):
 
 
 class PaymentEntry(PaymentEntryBase, table=True):
+    __tablename__ = "payment_entry"
     __table_args__ = (
         UniqueConstraint(
             "payment_id", "index", name="payment_entry_payment_id_index_key"
