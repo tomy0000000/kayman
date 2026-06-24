@@ -20,6 +20,7 @@ from kayman.schemas.api_models import EventCreateDetailed, EventReadDetailed
 from kayman.schemas.event import (
     Event,
     EventBase,
+    EventCreate,
     EventRead,
     PaymentEntryBase,
 )
@@ -37,6 +38,12 @@ event_router = APIRouter(
     dependencies=[Depends(get_client)],
     responses={404: {"description": "Not found"}},
 )
+
+
+@event_router.post("", name="Create Event", response_model=EventRead)
+def create(*, session: Session = Depends(get_session), event: EventCreate) -> EventBase:
+    return create_events(session, [event])[0]
+
 
 EXAMPLES = {
     "create": {
