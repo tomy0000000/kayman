@@ -4,7 +4,7 @@ from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from kayman.schemas.account import Account
-    from kayman.schemas.payment import PaymentEntry
+    from kayman.schemas.event import PaymentEntry
 
 
 class Currency(SQLModel, table=True):

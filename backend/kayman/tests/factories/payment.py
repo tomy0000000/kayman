@@ -1,14 +1,14 @@
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
 
-from kayman.schemas import Payment
+from kayman.schemas import Event
 from kayman.schemas.api_models import PaymentCreateDetailed
-from kayman.schemas.payment import PaymentType
+from kayman.schemas.event import PaymentType
 
 
 class PaymentFactory(SQLAlchemyModelFactory):
     class Meta:
-        model = Payment
+        model = Event
         sqlalchemy_session_persistence = "commit"
 
     description = factory.Faker("sentence")

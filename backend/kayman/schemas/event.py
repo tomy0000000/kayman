@@ -31,7 +31,7 @@ class PaymentType(enum.Enum):
 #
 
 
-class PaymentBase(SQLModel):
+class EventBase(SQLModel):
     type: PaymentType = Field(
         sa_column=Column(sqlmodel.Enum(PaymentType), nullable=False)
     )
@@ -43,7 +43,7 @@ class PaymentBase(SQLModel):
     description: str | None = None
 
 
-class Payment(PaymentBase, table=True):
+class Event(EventBase, table=True):
     id: int | None = Field(primary_key=True, default=None)
     # Auto calculated for Expense or Income
     # Manually logged for Transfer or Exchange
@@ -51,11 +51,11 @@ class Payment(PaymentBase, table=True):
     entries: list["PaymentEntry"] = Relationship(back_populates="payment")
 
 
-class PaymentCreate(PaymentBase):
+class EventCreate(EventBase):
     pass
 
 
-class PaymentRead(PaymentBase):
+class EventRead(EventBase):
     id: int
 
 
@@ -65,7 +65,7 @@ class PaymentRead(PaymentBase):
 
 
 class PaymentEntryBase(SQLModel):
-    payment_id: int = Field(foreign_key="payment.id")
+    payment_id: int = Field(foreign_key="event.id")
     category_id: int = Field(foreign_key="category.id")
     amount: Decimal
     quantity: int
@@ -81,7 +81,7 @@ class PaymentEntry(PaymentEntryBase, table=True):
         ),
     )
     id: int | None = Field(primary_key=True, default=None)
-    payment: Payment = Relationship(back_populates="entries")
+    payment: Event = Relationship(back_populates="entries")
     category: "Category" = Relationship(back_populates="entries")
     currency: "Currency" = Relationship(back_populates="entries")
 

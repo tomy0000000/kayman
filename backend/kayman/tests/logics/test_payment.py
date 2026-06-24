@@ -1,7 +1,7 @@
 import pytest
 
 from kayman.logics.payment import validate_total
-from kayman.schemas.payment import PaymentType
+from kayman.schemas.event import PaymentType
 from kayman.tests.factories import PaymentFactory
 
 

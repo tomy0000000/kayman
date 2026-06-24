@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from sqlmodel import Session
 
-from kayman.schemas.payment import PaymentEntry, PaymentEntryBase
+from kayman.schemas.event import PaymentEntry, PaymentEntryBase
 
 
 def create_payment_entries(

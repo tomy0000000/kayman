@@ -2,16 +2,16 @@
 
 from sqlmodel import SQLModel
 
-from kayman.schemas.payment import (
-    PaymentCreate,
+from kayman.schemas.event import (
+    EventCreate,
+    EventRead,
     PaymentEntryCreate,
     PaymentEntryRead,
-    PaymentRead,
 )
 from kayman.schemas.transaction import TransactionCreate, TransactionRead
 
 
-class PaymentReadDetailed(PaymentRead):
+class PaymentReadDetailed(EventRead):
     """Includes transactions and entries."""
 
     transactions: list[TransactionRead]
@@ -21,6 +21,6 @@ class PaymentReadDetailed(PaymentRead):
 class PaymentCreateDetailed(SQLModel):
     """Includes transactions and entries."""
 
-    payment: PaymentCreate
+    payment: EventCreate
     transactions: list[TransactionCreate]
     entries: list[PaymentEntryCreate]

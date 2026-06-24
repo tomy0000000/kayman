@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from kayman.schemas.api_models import PaymentCreateDetailed
-from kayman.schemas.payment import PaymentType
+from kayman.schemas.event import PaymentType
 
 
 def validate_total(details: PaymentCreateDetailed) -> None:

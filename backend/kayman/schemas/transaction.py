@@ -8,12 +8,12 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, UniqueCons
 
 if TYPE_CHECKING:
     from kayman.schemas.account import Account
-    from kayman.schemas.payment import Payment
+    from kayman.schemas.event import Event
 
 
 class TransactionBase(SQLModel):
     account_id: int = Field(foreign_key="account.id")
-    payment_id: int | None = Field(foreign_key="payment.id", default=None)
+    payment_id: int | None = Field(foreign_key="event.id", default=None)
     amount: Decimal
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
@@ -37,7 +37,7 @@ class Transaction(TransactionBase, table=True):
     )
     id: int | None = Field(primary_key=True, default=None)
     account: "Account" = Relationship(back_populates="transactions")
-    payment: Optional["Payment"] = Relationship(back_populates="transactions")
+    payment: Optional["Event"] = Relationship(back_populates="transactions")
 
 
 class TransactionCreate(TransactionBase):
