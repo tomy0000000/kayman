@@ -14,27 +14,16 @@ if TYPE_CHECKING:
     from kayman.schemas.currency import Currency
     from kayman.schemas.transaction import Transaction
 
-#
-# Payment Category
-#
 
-
-class PaymentType(enum.Enum):
+class EventType(enum.Enum):
     Expense = "Expense"
     Income = "Income"
     Transfer = "Transfer"
     Exchange = "Exchange"
 
 
-#
-# Payment
-#
-
-
 class EventBase(SQLModel):
-    type: PaymentType = Field(
-        sa_column=Column(sqlmodel.Enum(PaymentType), nullable=False)
-    )
+    type: EventType = Field(sa_column=Column(sqlmodel.Enum(EventType), nullable=False))
     timestamp: datetime = Field(
         sa_column=Column(DateTime(timezone=True), nullable=False),
         title="Local timestamp, or timezone-aware timestamp",

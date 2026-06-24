@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from kayman.schemas.api_models import PaymentCreateDetailed
-from kayman.schemas.event import PaymentType
+from kayman.schemas.event import EventType
 
 
 def validate_total(details: PaymentCreateDetailed) -> None:
@@ -10,7 +10,7 @@ def validate_total(details: PaymentCreateDetailed) -> None:
         return
 
     # Payment type of transfer or exchange is not checked
-    if details.payment.type in (PaymentType.Transfer, PaymentType.Exchange):
+    if details.payment.type in (EventType.Transfer, EventType.Exchange):
         return
 
     entries_total = Decimal(
@@ -20,14 +20,14 @@ def validate_total(details: PaymentCreateDetailed) -> None:
         sum([transaction.amount for transaction in details.transactions])
     )
 
-    if details.payment.type is PaymentType.Expense:
+    if details.payment.type is EventType.Expense:
         if entries_total != -transactions_total:
             raise ValueError(
                 f"Entries total ({entries_total}) and "
                 f"transactions total ({-transactions_total}) do not match"
             )
 
-    if details.payment.type is PaymentType.Income:
+    if details.payment.type is EventType.Income:
         if entries_total != transactions_total:
             raise ValueError(
                 f"Entries total ({entries_total}) and "
