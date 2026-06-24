@@ -29,7 +29,7 @@ function HomePage() {
         client,
         query: { event_date: eventDate }
       })
-      if (response.error) throw new Error('Failed to fetch payments')
+      if (response.error) throw new Error('Failed to fetch events')
       if (!response.data) throw new Error('No data returned')
       return response.data
     }
@@ -38,7 +38,7 @@ function HomePage() {
   useEffect(() => {
     if (!isError) return
     console.error(error)
-    toast.error('Failed to fetch payments', {
+    toast.error('Failed to fetch events', {
       description:
         error instanceof Error ? error.message : 'An unknown error occurred'
     })
@@ -57,7 +57,7 @@ function HomePage() {
 
       <ScrollArea className="h-full w-full rounded-md">
         <hgroup className="p-4 pb-0">
-          <h1 className="text-lg font-semibold">Payments</h1>
+          <h1 className="text-lg font-semibold">Events</h1>
           <h2 className="text-neutral-500">{date?.toLocaleDateString()}</h2>
         </hgroup>
         <div className="px-4">
@@ -69,7 +69,7 @@ function HomePage() {
           )}
           {events?.length === 0 && (
             <p className="text-center text-sm leading-10 text-neutral-500">
-              No payments
+              No events
             </p>
           )}
           {events?.map((event) => {
