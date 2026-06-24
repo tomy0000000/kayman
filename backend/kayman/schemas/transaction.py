@@ -37,7 +37,7 @@ class Transaction(TransactionBase, table=True):
     )
     id: int | None = Field(primary_key=True, default=None)
     account: "Account" = Relationship(back_populates="transactions")
-    payment: Optional["Event"] = Relationship(back_populates="transactions")
+    event: Optional["Event"] = Relationship(back_populates="transactions")
 
 
 class TransactionCreate(TransactionBase):

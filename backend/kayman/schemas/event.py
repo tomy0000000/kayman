@@ -36,8 +36,8 @@ class Event(EventBase, table=True):
     id: int | None = Field(primary_key=True, default=None)
     # Auto calculated for Expense or Income
     # Manually logged for Transfer or Exchange
-    transactions: list["Transaction"] = Relationship(back_populates="payment")
-    entries: list["PaymentEntry"] = Relationship(back_populates="payment")
+    transactions: list["Transaction"] = Relationship(back_populates="event")
+    entries: list["PaymentEntry"] = Relationship(back_populates="event")
 
 
 class EventCreate(EventBase):
@@ -70,7 +70,7 @@ class PaymentEntry(PaymentEntryBase, table=True):
         ),
     )
     id: int | None = Field(primary_key=True, default=None)
-    payment: Event = Relationship(back_populates="entries")
+    event: Event = Relationship(back_populates="entries")
     category: "Category" = Relationship(back_populates="entries")
     currency: "Currency" = Relationship(back_populates="entries")
 
