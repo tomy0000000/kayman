@@ -289,7 +289,7 @@ def create(
             TransactionBase.model_validate(
                 transaction,
                 update={
-                    "payment_id": event_id,
+                    "event_id": event_id,
                     "index": transaction_index,
                 },
             )

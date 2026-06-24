@@ -15,7 +15,7 @@ class TransactionFactory(SQLAlchemyModelFactory):
     description = factory.Faker("sentence")
     index = factory.Sequence(lambda n: n)
     event = factory.SubFactory("kayman.tests.factories.event.EventFactory")
-    payment_id = factory.SelfAttribute("event.id")
+    event_id = factory.SelfAttribute("event.id")
     created_at = factory.Faker("date_time")
     posted_at = factory.Faker("date_time")
     reconciled_at = factory.Faker("date_time")

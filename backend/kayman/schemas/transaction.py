@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 class TransactionBase(SQLModel):
     account_id: int = Field(foreign_key="account.id")
-    payment_id: int | None = Field(foreign_key="event.id", default=None)
+    event_id: int | None = Field(foreign_key="event.id", default=None)
     amount: Decimal
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
@@ -31,9 +31,7 @@ class TransactionBase(SQLModel):
 
 class Transaction(TransactionBase, table=True):
     __table_args__ = (
-        UniqueConstraint(
-            "payment_id", "index", name="transaction_payment_id_index_key"
-        ),
+        UniqueConstraint("event_id", "index", name="transaction_event_id_index_key"),
     )
     id: int | None = Field(primary_key=True, default=None)
     account: "Account" = Relationship(back_populates="transactions")
