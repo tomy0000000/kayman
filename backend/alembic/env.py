@@ -1,6 +1,8 @@
+import os
 from logging.config import fileConfig
 
 from alembic import context
+from alembic.script import ScriptDirectory
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
@@ -29,6 +31,24 @@ target_metadata = SQLModel.metadata
 # ... etc.
 
 
+def process_revision_directives(context, revision, directives):
+    """Name new revisions with a zero-padded sequence prefix.
+
+    Continues from the highest numeric filename prefix already in
+    versions/ (e.g. 0035 -> 0036) and sets it as the revision id, so
+    with file_template = %(rev)s_%(slug)s the file is named 0036_<slug>.py
+    and its internal revision id matches.
+    """
+    if not directives:
+        return
+    max_seq = 0
+    for rev in ScriptDirectory.from_config(config).walk_revisions():
+        prefix = os.path.basename(rev.path).split("_", 1)[0]
+        if prefix.isdigit():
+            max_seq = max(max_seq, int(prefix))
+    directives[0].rev_id = f"{max_seq + 1:04d}"
+
+
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
 
@@ -46,6 +66,7 @@ def run_migrations_offline():
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        process_revision_directives=process_revision_directives,
     )
 
     with context.begin_transaction():
@@ -67,7 +88,11 @@ def run_migrations_online():
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            process_revision_directives=process_revision_directives,
+        )
 
         with context.begin_transaction():
             context.run_migrations()
