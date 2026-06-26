@@ -1,25 +1,54 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown } from 'lucide-react'
+import {
+  ArrowLeftRight,
+  type LucideIcon,
+  Repeat,
+  TrendingDown,
+  TrendingUp
+} from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
 import { FabForm } from '@/components/fab-form'
 import { FabSheet } from '@/components/fab-sheet'
 import { TimePicker } from '@/components/time-picker'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { type EventCreate, type EventType, createEvent } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
-import { toLocalDateTimeInputValue } from '@/lib/utils'
+import { cn, toLocalDateTimeInputValue } from '@/lib/utils'
 
-const EVENT_TYPES: EventType[] = ['Expense', 'Income', 'Transfer', 'Exchange']
+const EVENT_TYPES: {
+  value: EventType
+  icon: LucideIcon
+  activeClass: string
+}[] = [
+  {
+    value: 'Expense',
+    icon: TrendingDown,
+    activeClass:
+      'data-active:bg-red-100 data-active:text-red-800 dark:data-active:bg-red-900/30 dark:data-active:text-red-300'
+  },
+  {
+    value: 'Income',
+    icon: TrendingUp,
+    activeClass:
+      'data-active:bg-green-100 data-active:text-green-800 dark:data-active:bg-green-900/30 dark:data-active:text-green-300'
+  },
+  {
+    value: 'Transfer',
+    icon: ArrowLeftRight,
+    activeClass:
+      'data-active:bg-blue-100 data-active:text-blue-800 dark:data-active:bg-blue-900/30 dark:data-active:text-blue-300'
+  },
+  {
+    value: 'Exchange',
+    icon: Repeat,
+    activeClass:
+      'data-active:bg-purple-100 data-active:text-purple-800 dark:data-active:bg-purple-900/30 dark:data-active:text-purple-300'
+  }
+]
 
 const browserTimezone = Intl.DateTimeFormat().resolvedOptions()
   .timeZone as EventCreate['timezone']
@@ -87,33 +116,24 @@ export function CreateEventFab({ client }: CreateEventFabProps) {
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="event-type">Type</FieldLabel>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                id="event-type"
-                type="button"
-                variant="outline"
-                className="w-full justify-between"
-              >
-                <span className="font-medium">{type}</span>
-                <ChevronDown className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              className="w-(--radix-dropdown-menu-trigger-width)"
-            >
-              {EVENT_TYPES.map((eventType) => (
-                <DropdownMenuItem
-                  key={eventType}
-                  onSelect={() => setType(eventType)}
+          <FieldLabel>Type</FieldLabel>
+          <Tabs
+            value={type}
+            onValueChange={(value) => setType(value as EventType)}
+          >
+            <TabsList className="w-full">
+              {EVENT_TYPES.map(({ value, icon: Icon, activeClass }) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className={cn('gap-1 px-1 text-xs', activeClass)}
                 >
-                  {eventType}
-                </DropdownMenuItem>
+                  <Icon />
+                  {value}
+                </TabsTrigger>
               ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </TabsList>
+          </Tabs>
         </Field>
 
         <Field>
