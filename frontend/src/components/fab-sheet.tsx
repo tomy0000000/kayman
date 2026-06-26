@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react'
 import { useHotkeys } from 'react-hotkeys-hook'
 
 import { Button } from '@/components/ui/button'
+import { Kbd } from '@/components/ui/kbd'
 import {
   Sheet,
   SheetContent,
@@ -48,12 +49,7 @@ export function FabSheet({
         </TooltipTrigger>
         <TooltipContent side="left">
           {label}
-          <kbd
-            data-slot="kbd"
-            className="bg-background/15 ml-1 px-1.5 py-0.5 font-sans text-[10px] font-medium"
-          >
-            {hotkey.toUpperCase()}
-          </kbd>
+          <Kbd>{hotkey.toUpperCase()}</Kbd>
         </TooltipContent>
       </Tooltip>
       <SheetContent side="right" className="flex flex-col">
