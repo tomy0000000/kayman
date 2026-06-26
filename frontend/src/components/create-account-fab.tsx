@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
+import { FabForm } from '@/components/fab-form'
 import { FabSheet } from '@/components/fab-sheet'
 import { TimezoneCombobox } from '@/components/timezone-combobox'
 import { Button } from '@/components/ui/button'
@@ -12,14 +13,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel
-} from '@/components/ui/field'
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { SheetFooter } from '@/components/ui/sheet'
 import {
   type AccountCreate,
   type AccountRead,
@@ -82,8 +77,7 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
     }
   })
 
-  const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleCreate = () => {
     if (currencyCode == null) return
     mutate({
       name,
@@ -94,88 +88,74 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
 
   return (
     <FabSheet open={open} onOpenChange={setOpen} hotkey="n" label="New account">
-      <form
-        onSubmit={handleSubmit}
-        className="flex min-h-0 flex-1 flex-col gap-4"
+      <FabForm
+        onSubmit={handleCreate}
+        isPending={isPending}
+        disabled={!name || currencyCode == null}
       >
-        <FieldGroup className="flex-1 overflow-y-auto px-4">
-          <Field>
-            <FieldLabel htmlFor="account-name">Name</FieldLabel>
-            <Input
-              id="account-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Account name"
-              required
-            />
-          </Field>
+        <Field>
+          <FieldLabel htmlFor="account-name">Name</FieldLabel>
+          <Input
+            id="account-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Account name"
+            required
+          />
+        </Field>
 
-          <Field>
-            <FieldLabel htmlFor="account-currency">Currency</FieldLabel>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  id="account-currency"
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-between"
-                >
-                  {selectedCurrency ? (
-                    <span className="flex items-center gap-2">
-                      <span className="font-medium">
-                        {selectedCurrency.code}
-                      </span>
-                      <span className="text-muted-foreground text-xs">
-                        {selectedCurrency.name}
-                      </span>
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">
-                      Select currency
-                    </span>
-                  )}
-                  <ChevronDown className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                className="max-h-72 w-(--radix-dropdown-menu-trigger-width) overflow-y-auto"
+        <Field>
+          <FieldLabel htmlFor="account-currency">Currency</FieldLabel>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                id="account-currency"
+                type="button"
+                variant="outline"
+                className="w-full justify-between"
               >
-                {currencies?.map((currency) => (
-                  <DropdownMenuItem
-                    key={currency.code}
-                    onSelect={() => setCurrencyCode(currency.code)}
-                  >
-                    <span className="leading-none">{currency.code}</span>
-                    <span className="text-muted-foreground ml-auto text-xs leading-none">
-                      {currency.name}
+                {selectedCurrency ? (
+                  <span className="flex items-center gap-2">
+                    <span className="font-medium">{selectedCurrency.code}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {selectedCurrency.name}
                     </span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </Field>
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">Select currency</span>
+                )}
+                <ChevronDown className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              className="max-h-72 w-(--radix-dropdown-menu-trigger-width) overflow-y-auto"
+            >
+              {currencies?.map((currency) => (
+                <DropdownMenuItem
+                  key={currency.code}
+                  onSelect={() => setCurrencyCode(currency.code)}
+                >
+                  <span className="leading-none">{currency.code}</span>
+                  <span className="text-muted-foreground ml-auto text-xs leading-none">
+                    {currency.name}
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </Field>
 
-          <Field>
-            <FieldLabel htmlFor="account-timezone">Timezone</FieldLabel>
-            <TimezoneCombobox
-              id="account-timezone"
-              value={timezone}
-              onValueChange={setTimezone}
-            />
-            <FieldDescription>Will be stored as {timezone}</FieldDescription>
-          </Field>
-        </FieldGroup>
-
-        <SheetFooter>
-          <Button
-            type="submit"
-            disabled={isPending || !name || currencyCode == null}
-          >
-            {isPending ? 'Creating...' : 'Create'}
-          </Button>
-        </SheetFooter>
-      </form>
+        <Field>
+          <FieldLabel htmlFor="account-timezone">Timezone</FieldLabel>
+          <TimezoneCombobox
+            id="account-timezone"
+            value={timezone}
+            onValueChange={setTimezone}
+          />
+          <FieldDescription>Will be stored as {timezone}</FieldDescription>
+        </Field>
+      </FabForm>
     </FabSheet>
   )
 }
