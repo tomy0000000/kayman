@@ -40,7 +40,9 @@
     "amount": "-3000",
     "created_at": "2026-02-06T10:00:00-05:00",
     "description": "February rent",
+    "event_id": 1,
     "id": 5,
+    "index": 0,
     "posted_at": "2026-02-07T10:00:00-05:00",
     "reconciled_at": "2026-02-09T10:00:00-05:00"
   },
@@ -67,7 +69,9 @@
     "amount": "-200",
     "created_at": "2026-02-08T12:30:00+08:00",
     "description": "Lunch at the noodle place",
+    "event_id": 6,
     "id": 8,
+    "index": 0,
     "posted_at": "2026-02-09T12:30:00+08:00",
     "reconciled_at": "2026-02-11T12:30:00+08:00"
   },
@@ -82,10 +86,12 @@
   },
   {
     "account_id": 1,
-    "amount": "-1650",
+    "amount": "-650",
     "created_at": "2026-02-11T18:00:00+08:00",
     "description": "Weekly groceries",
+    "event_id": 7,
     "id": 10,
+    "index": 0,
     "posted_at": "2026-02-12T18:00:00+08:00",
     "reconciled_at": "2026-02-14T18:00:00+08:00"
   },
@@ -94,7 +100,9 @@
     "amount": "-5000",
     "created_at": "2026-02-13T19:30:00+08:00",
     "description": "Dinner with friends",
+    "event_id": 2,
     "id": 11,
+    "index": 0,
     "posted_at": "2026-02-14T19:30:00+08:00",
     "reconciled_at": "2026-02-16T19:30:00+08:00"
   },
@@ -112,7 +120,9 @@
     "amount": "-20000",
     "created_at": "2026-02-15T15:00:00+08:00",
     "description": "AirPods Pro",
+    "event_id": 3,
     "id": 13,
+    "index": 0,
     "posted_at": "2026-02-16T15:00:00+08:00",
     "reconciled_at": "2026-02-18T15:00:00+08:00"
   },
@@ -130,7 +140,9 @@
     "amount": "-1500",
     "created_at": "2026-02-20T10:00:00-05:00",
     "description": "Apple One annual",
+    "event_id": 4,
     "id": 15,
+    "index": 0,
     "posted_at": "2026-02-21T10:00:00-05:00",
     "reconciled_at": "2026-02-23T10:00:00-05:00"
   },
@@ -148,8 +160,43 @@
     "amount": "-100",
     "created_at": "2026-02-27T09:00:00-08:00",
     "description": "Specialty coffee",
+    "event_id": 5,
     "id": 17,
+    "index": 0,
     "posted_at": "2026-02-28T09:00:00-08:00",
     "reconciled_at": null
+  },
+  {
+    "account_id": 3,
+    "amount": "-1000",
+    "created_at": "2026-02-11T18:00:00+08:00",
+    "description": "Weekly groceries",
+    "event_id": 7,
+    "id": 18,
+    "index": 1,
+    "posted_at": "2026-02-12T18:00:00+08:00",
+    "reconciled_at": "2026-02-14T18:00:00+08:00"
+  },
+  {
+    "account_id": 7,
+    "amount": "5",
+    "created_at": "2026-02-22T09:00:00-08:00",
+    "description": "Clipper card load",
+    "event_id": 8,
+    "id": 19,
+    "index": 0,
+    "posted_at": "2026-02-23T09:00:00-08:00",
+    "reconciled_at": "2026-02-24T09:00:00-08:00"
+  },
+  {
+    "account_id": 6,
+    "amount": "-8",
+    "created_at": "2026-02-22T09:00:00-08:00",
+    "description": "Clipper card ($5 value + $3 fee)",
+    "event_id": 8,
+    "id": 20,
+    "index": 1,
+    "posted_at": "2026-02-23T09:00:00-08:00",
+    "reconciled_at": "2026-02-24T09:00:00-08:00"
   }
 ]

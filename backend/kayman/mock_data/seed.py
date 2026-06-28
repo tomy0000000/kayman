@@ -16,6 +16,7 @@ from kayman.mock_data import load_records
 from kayman.schemas.account import Account
 from kayman.schemas.category import Category
 from kayman.schemas.currency import Currency
+from kayman.schemas.event import Event
 from kayman.schemas.transaction import Transaction
 
 if TYPE_CHECKING:
@@ -63,6 +64,13 @@ def seed(session: Session, logger: Logger) -> None:
     session.commit()
     _resync_id_sequence(session, "account")
     logger.success(f"Accounts seeded: {len(accounts)}")
+
+    events = load_records("events", Event, datetime_fields=["timestamp"])
+    for event in sorted(events, key=lambda e: e.id or 0):
+        session.add(event)
+    session.commit()
+    _resync_id_sequence(session, "event")
+    logger.success(f"Events seeded: {len(events)}")
 
     transactions = load_records(
         "transactions",

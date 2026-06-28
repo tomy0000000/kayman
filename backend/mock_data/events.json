@@ -1,0 +1,79 @@
+[
+  {
+    "description": "February rent",
+    "id": 1,
+    "timestamp": "2026-02-06T10:00:00-05:00",
+    "timezone": "America/New_York",
+    "type": "Expense"
+  },
+  {
+    "description": "Dinner with friends",
+    "id": 2,
+    "timestamp": "2026-02-13T19:30:00+08:00",
+    "timezone": "Asia/Taipei",
+    "type": "Expense"
+  },
+  {
+    "description": "AirPods Pro",
+    "id": 3,
+    "timestamp": "2026-02-15T15:00:00+08:00",
+    "timezone": "Asia/Taipei",
+    "type": "Expense"
+  },
+  {
+    "description": "Apple One annual",
+    "id": 4,
+    "timestamp": "2026-02-20T10:00:00-05:00",
+    "timezone": "America/New_York",
+    "type": "Expense"
+  },
+  {
+    "description": "Specialty coffee",
+    "id": 5,
+    "timestamp": "2026-02-27T09:00:00-08:00",
+    "timezone": "America/Los_Angeles",
+    "type": "Expense"
+  },
+  {
+    "description": "Lunch at the noodle place",
+    "id": 6,
+    "timestamp": "2026-02-08T12:30:00+08:00",
+    "timezone": "Asia/Taipei",
+    "type": "Expense"
+  },
+  {
+    "description": "Weekly groceries",
+    "id": 7,
+    "timestamp": "2026-02-11T18:00:00+08:00",
+    "timezone": "Asia/Taipei",
+    "type": "Expense"
+  },
+  {
+    "description": "Clipper card load",
+    "id": 8,
+    "timestamp": "2026-02-22T09:00:00-08:00",
+    "timezone": "America/Los_Angeles",
+    "type": "Expense"
+  },
+  {
+    "description": "Team lunch (awaiting reimbursement)",
+    "id": 9,
+    "timestamp": "2026-02-25T12:30:00+08:00",
+    "timezone": "Asia/Taipei",
+    "type": "Expense"
+  },
+  {
+    "description": "Concert tickets",
+    "id": 10,
+    "timestamp": "2026-02-26T19:00:00-05:00",
+    "timezone": "America/New_York",
+    "type": "Expense"
+  },
+  {
+    "description": "New mechanical keyboard",
+    "id": 11,
+    "timestamp": "2026-02-28T11:00:00-08:00",
+    "timezone": "America/Los_Angeles",
+    "type": "Expense"
+  }
+]
