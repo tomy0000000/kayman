@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from datetime import datetime
+from typing import Literal
 
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
@@ -46,5 +47,6 @@ def reads(
     account_id: int | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
+    event_id: int | Literal["empty"] | None = None,
 ) -> Sequence[TransactionBase]:
-    return get_transactions(session, account_id, start, end)
+    return get_transactions(session, account_id, start, end, event_id=event_id)
