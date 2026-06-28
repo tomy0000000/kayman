@@ -2,7 +2,8 @@ import { Badge } from '@/components/ui/badge'
 import { type TransactionStatus } from '@/lib/client'
 import { cn } from '@/lib/utils'
 
-interface TransactionBadgeProps extends React.ComponentProps<typeof Badge> {
+interface TransactionStatusBadgeProps
+  extends React.ComponentProps<typeof Badge> {
   status: TransactionStatus
 }
 
@@ -15,11 +16,11 @@ const statusClass: Record<TransactionStatus, string> = {
     'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
 }
 
-function TransactionBadge({
+function TransactionStatusBadge({
   status,
   className,
   ...props
-}: TransactionBadgeProps) {
+}: TransactionStatusBadgeProps) {
   return (
     <Badge className={cn(statusClass[status], className)} {...props}>
       {status.toLowerCase()}
@@ -27,4 +28,4 @@ function TransactionBadge({
   )
 }
 
-export { TransactionBadge }
+export { TransactionStatusBadge }

@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { Amount } from '@/components/amount'
 import { CreateTransactionFab } from '@/components/create-transaction-fab'
 import { DatePickerWithRange } from '@/components/date-range-picker'
-import { TransactionBadge } from '@/components/transaction-badge'
+import { TransactionStatusBadge } from '@/components/transaction-status-badge'
 import { Separator } from '@/components/ui/separator'
 import {
   readAccount,
@@ -159,7 +159,7 @@ function AccountTransactionPage() {
                 </div>
 
                 {/* Status */}
-                <TransactionBadge status={transaction.status} />
+                <TransactionStatusBadge status={transaction.status} />
 
                 {/* Amount + running balance */}
                 <div className="flex w-24 shrink-0 flex-col items-end">
