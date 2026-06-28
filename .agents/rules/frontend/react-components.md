@@ -7,7 +7,9 @@ paths:
 
 ## Props interface at the top
 
-Any component that takes props declares its props as an `interface <ComponentName>Props` at the top of the file, above the component itself. Destructure from the typed parameter:
+Any component that takes props declares its props as an `interface <ComponentName>Props` at the top of the file, above the components themselves. This applies to every component in the file, exported or not. Destructure from the typed parameter.
+
+When a file has multiple components, list the interfaces in the same order as the component functions that use them:
 
 ```tsx
 interface AccountCardProps {
@@ -15,10 +17,16 @@ interface AccountCardProps {
   onEdit: (id: number) => void
 }
 
+interface AccountBadgeProps {
+  status: AccountStatus
+}
+
 export function AccountCard({ accountId, onEdit }: AccountCardProps) { ... }
+
+function AccountBadge({ status }: AccountBadgeProps) { ... }
 ```
 
-Why: keeps the public shape readable without scrolling, and gives a stable name to import for tests or wrappers.
+Why: keeps the props shapes readable without scrolling, and gives each a stable name to import for tests or wrappers. Matching the interface order to the component order makes the pairing obvious at a glance.
 
 ## One public component per file
 
