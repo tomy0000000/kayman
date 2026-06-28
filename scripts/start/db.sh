@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-#MISE description="Start PostgreSQL database for local development, DO NOT use this in production, data will NOT persist!"
+#MISE description="Start PostgreSQL container for local development, DO NOT use this in production, data will NOT persist!"
 
 CONTAINER_NAME="kayman-db"
 ENV_FILE="instance/local.env"
@@ -14,16 +14,8 @@ if ! docker info >/dev/null 2>&1; then
     done
 fi
 
-# Check if db is already running
-if docker ps --format '{{.Names}}' | grep -qx "${CONTAINER_NAME}"; then
-    echo "${CONTAINER_NAME} is already running"
-    exit 0
-fi
-
-# Remove stopped container with the same name, if any
-if docker ps -a --format '{{.Names}}' | grep -qx "${CONTAINER_NAME}"; then
-    docker rm "${CONTAINER_NAME}" >/dev/null
-fi
+# Remove any existing container with the same name (running or stopped)
+docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
 
 # Start container
 docker run \

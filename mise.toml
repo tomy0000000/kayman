@@ -12,5 +12,6 @@ includes = ["scripts", "backend/scripts", "frontend/scripts"]
 description = "Start all dev servers"
 depends = ["start:backend", "start:frontend"]
 
-[tasks."start:db-dev.sh"]
-depends_post = "db:upgrade"
+[tasks."setup:db"]
+description = "Setup empty database for local development, DO NOT use this in production, data will NOT persist!"
+run = ["mise run start:db", "mise run db:upgrade"]
