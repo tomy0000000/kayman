@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Literal
 
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from kayman.schemas.transaction import Transaction, TransactionBase
 
@@ -30,12 +30,17 @@ def get_transactions(
     account_id: int | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
+    event_id: int | Literal["empty"] | None = None,
     order_by: TransactionOrderBy | None = None,
     descending: bool = False,
 ) -> Sequence[Transaction]:
     scalar = select(Transaction)
     if account_id:
         scalar = scalar.where(Transaction.account_id == account_id)
+    if event_id == "empty":
+        scalar = scalar.where(col(Transaction.event_id).is_(None))
+    elif event_id is not None:
+        scalar = scalar.where(Transaction.event_id == event_id)
     if start is not None:
         scalar = scalar.where(Transaction.created_at >= start)
     if end is not None:

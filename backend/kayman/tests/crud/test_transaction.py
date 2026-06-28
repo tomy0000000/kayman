@@ -117,6 +117,27 @@ def test_get_transactions_by_account(session: Session):
     assert len(get_transactions(session, account_id=account_2.id)) == 1
 
 
+def test_get_transactions_by_event(session: Session):
+    event_1 = EventFactory()
+    event_2 = EventFactory()
+    TransactionFactory(event=event_1)
+    TransactionFactory(event=event_2)
+
+    assert len(get_transactions(session, event_id=event_1.id)) == 1
+    assert len(get_transactions(session, event_id=event_2.id)) == 1
+
+
+def test_get_transactions_by_empty_event(session: Session):
+    event = EventFactory()
+    TransactionFactory(event=event)
+    without_event = TransactionFactory(event=None, event_id=None)
+
+    results = get_transactions(session, event_id="empty")
+
+    assert len(results) == 1
+    assert {txn.id for txn in results} == {without_event.id}
+
+
 def test_get_transactions_start_is_inclusive(session: Session):
     account = AccountFactory()
     start = datetime(2026, 1, 1, tzinfo=UTC)
