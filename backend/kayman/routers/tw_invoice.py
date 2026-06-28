@@ -26,8 +26,7 @@ tag = {
     "description": "Store replica from MOF E-Invoice platform",
     "externalDocs": {
         "description": "電子發票應用API規格",
-        "url": "https://www.einvoice.nat.gov.tw/home/DownLoad"
-        "?fileName=1510206773173_0.pdf",
+        "url": "https://www.einvoice.nat.gov.tw/download/ptl003w/AC20000002",
     },
 }
 
@@ -63,7 +62,7 @@ def create_or_update(
             session.expunge(db_invoice)
         else:
             # Update existing invoice
-            new_invoice_data = invoice.dict(exclude_unset=True)
+            new_invoice_data = invoice.model_dump(exclude_unset=True)
             modified = {}
             for key in new_invoice_data:
                 if getattr(db_invoice, key, None) != new_invoice_data[key]:
@@ -74,7 +73,7 @@ def create_or_update(
             session.add(db_invoice)
             session.commit()
             modified["number"] = invoice.number
-            updated.append(InvoiceUpdated.parse_obj(modified))
+            updated.append(InvoiceUpdated.model_validate(modified))
     response = InvoiceWriteResponse(created=created, updated=updated)
     return response
 
@@ -133,7 +132,7 @@ def create_or_update_details(
             session.expunge(db_detail)
         else:
             # Update existing detail
-            new_detail_data = detail.dict(exclude_unset=True)
+            new_detail_data = detail.model_dump(exclude_unset=True)
             modified = {}
             for key in new_detail_data:
                 if getattr(db_detail, key, None) != new_detail_data[key]:
@@ -145,7 +144,7 @@ def create_or_update_details(
             session.commit()
             modified["invoice_number"] = number
             modified["row_number"] = detail.row_number
-            updated.append(InvoiceDetailUpdated.parse_obj(modified))
+            updated.append(InvoiceDetailUpdated.model_validate(modified))
     response = InvoiceDetailWriteResponse(created=created, updated=updated)
     return response
 

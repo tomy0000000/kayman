@@ -46,7 +46,7 @@ def create(
     except IntegrityError as err:
         raise PydanticCustomError(
             "currency_not_found",
-            f"Currency with code: {account.currency_code} does not exist",
+            "Currency does not exist",
             {"loc": ("body", "currency_code")},
         ) from err
 
@@ -57,7 +57,7 @@ def read(*, session: Session = Depends(get_session), account_id: int) -> Account
     if account is None:
         raise PydanticCustomError(
             "account_not_found",
-            f"Account with id: {account_id} does not exist",
+            "Account does not exist",
             {"loc": ("path", "account_id")},
         )
     return account
@@ -83,7 +83,7 @@ def read_transactions_with_balance(
     if read_account(session, account_id) is None:
         raise PydanticCustomError(
             "account_not_found",
-            f"Account with id: {account_id} does not exist",
+            "Account does not exist",
             {"loc": ("path", "account_id")},
         )
     return get_transactions_with_running_balance(session, account_id, start, end)

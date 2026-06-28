@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from kayman.auth import get_client
 from kayman.core.db import get_session
@@ -43,10 +43,7 @@ def create(
 )
 def reads(*, session: Session = Depends(get_session)) -> Sequence[CategoryBase]:
     categories = session.exec(
-        select(Category).where(
-            # https://github.com/fastapi/sqlmodel/issues/109
-            Category.parent_id == None,  # noqa E711 Comparison to `None` should be `cond is None`.
-        )
+        select(Category).where(col(Category.parent_id).is_(None))
     ).all()
     return categories
 
