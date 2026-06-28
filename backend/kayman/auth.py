@@ -18,7 +18,7 @@ PROD_CLIENTS_DIR = Path("/etc/secrets")
 CLIENTS_JSON = "clients.json"
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
 
 
 def setup_clients(app: FastAPI) -> None:
