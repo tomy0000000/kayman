@@ -1,18 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, Info } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Info } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
+import { AccountSelect } from '@/components/account-select'
 import { FabForm } from '@/components/fab-form'
 import { FabSheet } from '@/components/fab-sheet'
 import { TimePicker } from '@/components/time-picker'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
 import { Field, FieldLabel } from '@/components/ui/field'
 import {
   InputGroup,
@@ -26,46 +20,34 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip'
 import {
+  type AccountRead,
   type TransactionCreate,
-  createTransaction,
-  readAccounts
+  createTransaction
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
 import { toLocalDateTimeInputValue } from '@/lib/utils'
 
 export function CreateTransactionFab({
   client,
-  accountId: initialAccountId
+  account
 }: {
   client: Client
-  accountId?: number
+  account?: AccountRead
 }) {
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState('')
-  const [accountId, setAccountId] = useState<number | null>(
-    initialAccountId ?? null
-  )
+  const [pickedAccount, setPickedAccount] = useState<AccountRead | null>(null)
   const [createdAtLocal, setCreatedAtLocal] = useState(() =>
     toLocalDateTimeInputValue(new Date())
   )
 
-  const { data: accounts } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: async () => {
-      const response = await readAccounts({ client })
-      if (response.error) throw new Error('Failed to fetch accounts')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    },
-    enabled: open
-  })
-
-  const selectedAccount = accounts?.find((a) => a.id === accountId)
+  // A user pick wins; otherwise fall back to the account passed in.
+  const selectedAccount = pickedAccount ?? account ?? null
 
   const reset = () => {
     setAmount('')
-    setAccountId(initialAccountId ?? null)
+    setPickedAccount(null)
     setCreatedAtLocal(toLocalDateTimeInputValue(new Date()))
   }
 
@@ -93,9 +75,9 @@ export function CreateTransactionFab({
   })
 
   const handleCreate = () => {
-    if (accountId == null) return
+    if (selectedAccount == null) return
     mutate({
-      account_id: accountId,
+      account_id: selectedAccount.id,
       amount,
       created_at: new Date(createdAtLocal).toISOString()
     })
@@ -111,48 +93,16 @@ export function CreateTransactionFab({
       <FabForm
         onSubmit={handleCreate}
         isPending={isPending}
-        disabled={accountId == null || amount === ''}
+        disabled={selectedAccount == null || amount === ''}
       >
         <Field>
           <FieldLabel htmlFor="txn-account">Account</FieldLabel>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                id="txn-account"
-                type="button"
-                variant="outline"
-                className="w-full justify-between"
-              >
-                {selectedAccount ? (
-                  <span className="flex items-center gap-2">
-                    <span className="font-medium">{selectedAccount.name}</span>
-                    <span className="text-muted-foreground text-xs">
-                      {selectedAccount.currency_code}
-                    </span>
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">Select account</span>
-                )}
-                <ChevronDown className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              className="w-(--radix-dropdown-menu-trigger-width)"
-            >
-              {accounts?.map((account) => (
-                <DropdownMenuItem
-                  key={account.id}
-                  onSelect={() => setAccountId(account.id)}
-                >
-                  <span className="leading-none">{account.name}</span>
-                  <span className="text-muted-foreground ml-auto text-xs leading-none">
-                    {account.currency_code}
-                  </span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <AccountSelect
+            id="txn-account"
+            client={client}
+            value={selectedAccount}
+            onValueChange={setPickedAccount}
+          />
         </Field>
 
         <Field>

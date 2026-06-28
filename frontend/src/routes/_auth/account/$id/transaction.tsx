@@ -182,7 +182,7 @@ function AccountTransactionPage() {
         })}
       </div>
 
-      <CreateTransactionFab client={client} accountId={accountId} />
+      <CreateTransactionFab client={client} account={account} />
     </>
   )
 }
