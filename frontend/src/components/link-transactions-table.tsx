@@ -210,6 +210,9 @@ export function LinkTransactionsTable({
     }
   })
 
+  // TanStack Table manages its own memoization; the React Compiler bail-out
+  // for `useReactTable` is expected and safe here.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data ?? EMPTY_TRANSACTIONS,
     columns,

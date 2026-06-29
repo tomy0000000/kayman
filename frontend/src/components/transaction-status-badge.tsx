@@ -2,8 +2,9 @@ import { Badge } from '@/components/ui/badge'
 import { type TransactionStatus } from '@/lib/client'
 import { cn } from '@/lib/utils'
 
-interface TransactionStatusBadgeProps
-  extends React.ComponentProps<typeof Badge> {
+interface TransactionStatusBadgeProps extends React.ComponentProps<
+  typeof Badge
+> {
   status: TransactionStatus
 }
 
