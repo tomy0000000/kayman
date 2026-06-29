@@ -4,8 +4,8 @@ This file provides guidance to work on Kayman.
 
 For app-specific guidance, see:
 
-- [`backend/CLAUDE.md`](backend/CLAUDE.md): FastAPI server (Python, `uv`)
-- [`frontend/CLAUDE.md`](frontend/CLAUDE.md): React/Vite SPA (TypeScript, `pnpm`)
+- [`backend/AGENTS.md`](backend/AGENTS.md): FastAPI server (Python, `uv`)
+- [`frontend/AGENTS.md`](frontend/AGENTS.md): React/Vite SPA (TypeScript, `pnpm`)
 
 Historical design notes and context for past decisions live in [`.agents/docs/`](.agents/docs/). Check there when a current convention's rationale isn't obvious from the code.
 
@@ -21,31 +21,9 @@ Historical design notes and context for past decisions live in [`.agents/docs/`]
 
 ## Common commands
 
-Run from the repo root. All custom tasks go through `mise run <task>`. Use `mise tasks` to list everything.
+Run from the repo root. All custom tasks go through `mise run <task>`. For the complete list of available tasks and their usage, see [`.agents/rules/tasks.md`](.agents/rules/tasks.md). Those are the only tasks that exist: don't invent task names or usages.
 
-### One-time setup
-
-```bash
-mise install                   # install pinned node/pnpm/python/uv
-mise run setup:dotenv          # generate instance/local.env with random secrets
-mise run start:db-dev          # start a postgres container named kayman-db
-mise run db:upgrade            # apply alembic migrations
-```
-
-### Dev servers
-
-```bash
-mise run start                 # backend + frontend in parallel
-mise run start:backend         # uvicorn with --reload on :8000 (serves /api and the built SPA at /)
-mise run start:frontend        # vite dev server
-```
-
-### Docker
-
-```bash
-mise run build:docker          # builds docker image (multi-stage: frontend build → python runtime)
-mise run preview:docker        # run the image against the development environment
-```
+When debugging in Chrome, the base URL is always `localhost:5173` for the frontend and `localhost:8000` for the backend.
 
 ## End-to-end request flow
 

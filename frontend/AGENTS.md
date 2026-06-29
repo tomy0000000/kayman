@@ -15,25 +15,13 @@ Guidance for the Kayman frontend. See the repo-root `CLAUDE.md` for cross-cuttin
 
 ## Common commands
 
-Run from the repo root. Tasks change into `frontend/` automatically.
-
-```bash
-mise run start:frontend        # vite dev server
-mise run lint:frontend         # eslint
-mise run format:frontend       # prettier -w .
-mise run build:frontend        # tsc -b && vite build
-```
+Run from the repo root. For the complete list of available tasks and their usage, see [`.agents/rules/tasks.md`](../.agents/rules/tasks.md). Those are the only tasks that exist: don't invent task names or usages.
 
 There is no frontend test suite.
 
 ### Codegen
 
-The API client and route tree are generated, not hand-written.
-
-```bash
-mise run build:openapi-client  # regenerate src/lib/client/ from the backend's OpenAPI spec
-mise run build:router          # regenerate src/routeTree.gen.ts
-```
+The API client and route tree are generated, not hand-written. Use `build:openapi-client` to regenerate `src/lib/client/` from the backend's OpenAPI spec, and `build:router` to regenerate `src/routeTree.gen.ts`.
 
 Regenerate the client whenever backend routes or schemas change. The router tree is also generated automatically by the `tanstackRouter` Vite plugin during dev.
 

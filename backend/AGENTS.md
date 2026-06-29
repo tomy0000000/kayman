@@ -13,16 +13,7 @@ Guidance for the Kayman backend. See the repo-root `CLAUDE.md` for cross-cutting
 
 ## Common commands
 
-Run from the repo root. Tasks change into `backend/` automatically.
-
-```bash
-mise run start:backend         # uvicorn with --reload on :8000 (serves /api and the built SPA at /)
-mise run lint:backend          # mypy + ruff check + ruff format --check
-mise run format:backend        # ruff format
-mise run test:backend          # pytest with coverage (xml + html + term)
-mise run db:upgrade            # alembic upgrade head
-mise run build:openapi-spec -- /tmp/openapi.json   # dump OpenAPI spec
-```
+Run from the repo root. For the complete list of available tasks and their usage, see [`.agents/rules/tasks.md`](../.agents/rules/tasks.md). Those are the only tasks that exist: don't invent task names or usages.
 
 Run a single test: `cd backend && uv run pytest kayman/tests/path/to/test_x.py::test_name`.
 
