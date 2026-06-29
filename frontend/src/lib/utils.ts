@@ -23,6 +23,13 @@ export function endExclusive(date: Date | undefined): string | null {
   return next.toISOString()
 }
 
+export function formatDateTime(value: string | Date): string {
+  return new Date(value).toLocaleString(browserLocale, {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  })
+}
+
 export function toLocalDateTimeInputValue(date: Date) {
   const offsetMs = date.getTimezoneOffset() * 60_000
   return new Date(date.getTime() - offsetMs).toISOString().slice(0, 19)
