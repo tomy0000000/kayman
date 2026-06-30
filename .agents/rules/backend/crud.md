@@ -12,11 +12,22 @@ Pure query/persistence helpers over SQLModel. No business logic, no orchestratio
 - Place helpers in `crud/<entity>.py` by the entity the caller is asking about. Cross-table reads are fine.
 - Naming follows the entity too: `read_account_balance` (in `account.py`) even though it sums `Transaction.amount`.
 
+## Order functions CRUD, then internal
+
+- Within a module, define functions in this order: `create`, `read`, `update`, `delete`, then internal helpers (leading-underscore functions like `_verify_account_ids`).
+- **Why:** a predictable order makes any `crud/<entity>.py` scannable. The public CRUD surface reads top to bottom; private helpers live at the bottom out of the way.
+
 ## Reads return collections, never a single row
 
 - Every read helper is plural: `read_categories`, not `read_category`. There is exactly one read function per entity.
 - A caller that wants a single row passes a narrowing filter and asserts `len(result) == 1` itself. Don't add a singular convenience wrapper.
 - **Why:** one read path per entity means one place to maintain filtering, ordering, and locking. Singular wrappers drift from the plural version and double the surface area.
+
+## Creates are batch, never a single row
+
+- Every create helper is plural and accepts a `Sequence` of inputs: `create_transactions`, not `create_transaction`. Build the rows with `Model.model_validate(...)` and `session.add_all(...)`. See `create_transactions` in `crud/transaction.py`.
+- A caller creating one row passes a one-element sequence and unpacks the single result itself. Don't add a singular convenience wrapper.
+- **Why:** one write path per entity means one place to maintain the `commit`/`flush` decision (see Signatures), the `model_validate` conversion, and the refresh-after-commit loop. Batch inserts via `add_all` are also a single round trip. Singular wrappers drift from the plural version and double the surface area.
 
 ## Push ordering and filtering down here
 
