@@ -9,11 +9,18 @@ from kayman.schemas.account import Account, AccountBase, AccountCreate, AccountU
 from kayman.schemas.transaction import Transaction
 
 
-def create_account(session: Session, account: AccountCreate) -> AccountBase:
-    session.add(account)
-    session.commit()
-    session.refresh(account)
-    return account
+def create_accounts(
+    session: Session, accounts: Sequence[AccountCreate], commit: bool = True
+) -> Sequence[AccountBase]:
+    db_accounts = [Account.model_validate(account) for account in accounts]
+    session.add_all(db_accounts)
+    if commit:
+        session.commit()
+        for db_account in db_accounts:
+            session.refresh(db_account)
+    else:
+        session.flush()
+    return db_accounts
 
 
 def read_account(session: Session, account_id: int) -> Account | None:

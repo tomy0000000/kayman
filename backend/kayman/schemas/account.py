@@ -20,7 +20,7 @@ class AccountBase(SQLModel):
 
 class Account(AccountBase, table=True):
     id: int | None = Field(primary_key=True, default=None)
-    balance: Decimal
+    balance: Decimal = Field(default=0)
     timezone: TimeZoneName = Field(sa_column=Column(SATimezone(), nullable=False))
     currency: "Currency" = Relationship(back_populates="accounts")
     statements: list["Statement"] = Relationship(back_populates="account")

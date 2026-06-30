@@ -9,7 +9,7 @@ from sqlmodel import Session
 from kayman.auth import get_client
 from kayman.core.db import get_session
 from kayman.crud.account import (
-    create_account,
+    create_accounts,
     read_account,
     read_accounts,
     update_accounts,
@@ -42,7 +42,7 @@ def create(
     *, session: Session = Depends(get_session), account: AccountCreate
 ) -> AccountBase:
     try:
-        return create_account(session, account)
+        return create_accounts(session, [account])[0]
     except IntegrityError as err:
         raise PydanticCustomError(
             "currency_not_found",

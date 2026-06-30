@@ -9,26 +9,74 @@ from sqlmodel import Session
 
 from kayman.crud.account import (
     _verify_account_ids,
-    create_account,
+    create_accounts,
     read_account,
     read_account_balance,
     read_accounts,
     update_account_balances,
     update_accounts,
 )
-from kayman.schemas.account import Account
+from kayman.schemas.account import Account, AccountCreate
 from kayman.tests.factories import AccountFactory, TransactionFactory
 
 
-def test_create_account(session: Session):
-    account = AccountFactory.build(balance=0)
-    db_account = create_account(session, account)
+def test_create_accounts_1_account(session: Session, session_2: Session):
+    account = AccountCreate.model_validate(AccountFactory.build())
+    db_account = create_accounts(session, [account])[0]
+    db_read_account = read_account(session_2, db_account.id)
 
-    assert db_account.id is not None
-    assert db_account.name == account.name
-    assert db_account.currency_code == account.currency_code
-    assert db_account.timezone == account.timezone
-    assert db_account.balance == 0
+    assert db_read_account.id is not None
+    assert db_read_account.name == account.name
+    assert db_read_account.currency_code == account.currency_code
+    assert db_read_account.timezone == account.timezone
+    assert db_read_account.balance == 0
+
+
+def test_create_accounts_n_accounts(session: Session):
+    accounts = [
+        AccountCreate.model_validate(account)
+        for account in AccountFactory.build_batch(10)
+    ]
+    db_accounts = create_accounts(session, accounts)
+
+    assert len(db_accounts) == 10
+    for db_account, account in zip(db_accounts, accounts, strict=True):
+        assert db_account.id is not None
+        assert db_account.name == account.name
+        assert db_account.currency_code == account.currency_code
+        assert db_account.timezone == account.timezone
+        assert db_account.balance == 0
+
+
+def test_create_accounts_empty(session: Session):
+    assert create_accounts(session, []) == []
+
+
+def test_create_accounts_no_commit(session: Session, session_2: Session):
+    account = AccountCreate.model_validate(AccountFactory.build())
+
+    # The account should be created in the session
+    session_account = create_accounts(session, [account], commit=False)[0]
+    assert session_account.id is not None  # Auto int should be set
+    assert session_account.name == account.name
+    assert session_account.currency_code == account.currency_code
+    assert session_account.timezone == account.timezone
+    assert session_account.balance == 0
+
+    # The account should not be visible to other sessions (yet)
+    assert read_account(session_2, session_account.id) is None
+
+    # Commit the account from main session
+    session.commit()
+
+    # The account should now be visible to other sessions
+    session_2_account = read_account(session_2, session_account.id)
+    assert session_2_account is not None
+    assert session_2_account.id == session_account.id
+    assert session_2_account.name == session_account.name
+    assert session_2_account.currency_code == session_account.currency_code
+    assert session_2_account.timezone == session_account.timezone
+    assert session_2_account.balance == 0
 
 
 def test_read_account(session: Session):
