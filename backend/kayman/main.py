@@ -11,6 +11,7 @@ from kayman.util import (
     SPAStaticFiles,
     custom_generate_unique_id,
     lifespan,
+    setup_exception_handlers,
     setup_logger,
 )
 
@@ -54,3 +55,6 @@ app.mount(
 
 # Override the OpenAPI generation to customize operationId
 override_openapi(app)
+
+# Log unhandled exceptions through loguru and return a clean 500
+setup_exception_handlers(app)
