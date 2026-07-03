@@ -62,14 +62,12 @@ export function CreateEventFab({ client }: CreateEventFabProps) {
   const [open, setOpen] = useState(false)
   const [type, setType] = useState<EventType>('Expense')
   const [description, setDescription] = useState('')
-  const [timestampLocal, setTimestampLocal] = useState(() =>
-    toLocalDateTimeInputValue(new Date())
-  )
+  const [timestamp, setTimestamp] = useState(() => new Date())
 
   const reset = () => {
     setType('Expense')
     setDescription('')
-    setTimestampLocal(toLocalDateTimeInputValue(new Date()))
+    setTimestamp(new Date())
   }
 
   const { mutate, isPending } = useMutation({
@@ -97,7 +95,7 @@ export function CreateEventFab({ client }: CreateEventFabProps) {
   const handleCreate = () =>
     mutate({
       type,
-      timestamp: timestampLocal,
+      timestamp: toLocalDateTimeInputValue(timestamp),
       timezone: browserTimezone,
       description: description.trim() || null
     })
@@ -140,8 +138,8 @@ export function CreateEventFab({ client }: CreateEventFabProps) {
           <FieldLabel htmlFor="event-timestamp">Timestamp</FieldLabel>
           <TimePicker
             id="event-timestamp"
-            value={timestampLocal}
-            onChange={setTimestampLocal}
+            value={timestamp}
+            onChange={setTimestamp}
           />
         </Field>
       </FabForm>

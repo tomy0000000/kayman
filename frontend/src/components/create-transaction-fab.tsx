@@ -1,13 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Info } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { AccountSelect } from '@/components/account-select'
 import { FabForm } from '@/components/fab-form'
 import { FabSheet } from '@/components/fab-sheet'
 import { TimePicker } from '@/components/time-picker'
-import { Field, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import {
   InputGroup,
   InputGroupAddon,
@@ -15,17 +14,14 @@ import {
   InputGroupText
 } from '@/components/ui/input-group'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from '@/components/ui/tooltip'
-import {
   type AccountRead,
   type TransactionCreate,
   createTransaction
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
-import { toLocalDateTimeInputValue } from '@/lib/utils'
+import { formatZonedDateTime, toZonedISOString } from '@/lib/utils'
+
+const CLIENT_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
 
 export function CreateTransactionFab({
   client,
@@ -38,17 +34,23 @@ export function CreateTransactionFab({
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState('')
   const [pickedAccount, setPickedAccount] = useState<AccountRead | null>(null)
-  const [createdAtLocal, setCreatedAtLocal] = useState(() =>
-    toLocalDateTimeInputValue(new Date())
-  )
+  const [createdAt, setCreatedAt] = useState(() => new Date())
 
   // A user pick wins; otherwise fall back to the account passed in.
   const selectedAccount = pickedAccount ?? account ?? null
 
+  const zonedCreatedAt = useMemo(
+    () =>
+      selectedAccount
+        ? toZonedISOString(createdAt, selectedAccount.timezone)
+        : null,
+    [createdAt, selectedAccount]
+  )
+
   const reset = () => {
     setAmount('')
     setPickedAccount(null)
-    setCreatedAtLocal(toLocalDateTimeInputValue(new Date()))
+    setCreatedAt(new Date())
   }
 
   const { mutate, isPending } = useMutation({
@@ -75,11 +77,11 @@ export function CreateTransactionFab({
   })
 
   const handleCreate = () => {
-    if (selectedAccount == null) return
+    if (selectedAccount == null || zonedCreatedAt == null) return
     mutate({
       account_id: selectedAccount.id,
       amount,
-      created_at: new Date(createdAtLocal).toISOString()
+      created_at: zonedCreatedAt
     })
   }
 
@@ -132,26 +134,17 @@ export function CreateTransactionFab({
             className="flex items-center gap-1.5"
           >
             Timestamp
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="About timestamp"
-                  className="text-muted-foreground"
-                >
-                  <Info className="size-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                Timestamp will be converted to account's timezone before save
-              </TooltipContent>
-            </Tooltip>
           </FieldLabel>
           <TimePicker
             id="txn-created-at"
-            value={createdAtLocal}
-            onChange={setCreatedAtLocal}
+            value={createdAt}
+            onChange={setCreatedAt}
           />
+          {selectedAccount && selectedAccount.timezone != CLIENT_TIMEZONE && (
+            <FieldDescription>
+              {`= ${formatZonedDateTime(createdAt, selectedAccount.timezone)} in ${selectedAccount.timezone}`}
+            </FieldDescription>
+          )}
         </Field>
       </FabForm>
     </FabSheet>

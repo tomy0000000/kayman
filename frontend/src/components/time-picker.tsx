@@ -23,31 +23,34 @@ import {
 
 interface TimePickerProps {
   id: string
-  value: string
-  onChange: (value: string) => void
+  value: Date
+  onChange: (value: Date) => void
 }
 
 function pad(n: number) {
   return String(n).padStart(2, '0')
 }
 
-function formatDatePart(date: Date) {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-}
-
 function formatTimePart(date: Date) {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
 }
 
-function parseValue(value: string) {
-  const [datePart, timePart = ''] = value.split('T')
-  const [y, m, d] = datePart.split('-').map(Number)
-  return { date: new Date(y, m - 1, d), time: timePart }
+function withDate(value: Date, picked: Date) {
+  const next = new Date(value)
+  next.setFullYear(picked.getFullYear(), picked.getMonth(), picked.getDate())
+  return next
+}
+
+function withTime(value: Date, time: string) {
+  const [h = 0, m = 0, s = 0] = time.split(':').map(Number)
+  const next = new Date(value)
+  next.setHours(h, m, s, 0)
+  return next
 }
 
 export function TimePicker({ id, value, onChange }: TimePickerProps) {
   const [open, setOpen] = useState(false)
-  const { date, time } = parseValue(value)
+  const time = formatTimePart(value)
 
   return (
     <InputGroup>
@@ -55,7 +58,7 @@ export function TimePicker({ id, value, onChange }: TimePickerProps) {
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <InputGroupButton className="w-full justify-between">
-              {format(date, 'PP')}
+              {format(value, 'PP')}
               <ChevronDownIcon />
             </InputGroupButton>
           </PopoverTrigger>
@@ -66,12 +69,12 @@ export function TimePicker({ id, value, onChange }: TimePickerProps) {
           >
             <Calendar
               mode="single"
-              selected={date}
+              selected={value}
               captionLayout="dropdown"
-              defaultMonth={date}
+              defaultMonth={value}
               onSelect={(picked) => {
                 if (!picked) return
-                onChange(`${formatDatePart(picked)}T${time}`)
+                onChange(withDate(value, picked))
                 setOpen(false)
               }}
             />
@@ -83,7 +86,7 @@ export function TimePicker({ id, value, onChange }: TimePickerProps) {
         id={id}
         step="1"
         value={time}
-        onChange={(e) => onChange(`${formatDatePart(date)}T${e.target.value}`)}
+        onChange={(e) => onChange(withTime(value, e.target.value))}
         required
         className="[&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
       />
@@ -95,23 +98,18 @@ export function TimePicker({ id, value, onChange }: TimePickerProps) {
             </InputGroupButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onSelect={() => {
-                const now = new Date()
-                onChange(`${formatDatePart(now)}T${formatTimePart(now)}`)
-              }}
-            >
+            <DropdownMenuItem onSelect={() => onChange(new Date())}>
               Now
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={() => onChange(`${formatDatePart(date)}T00:00:00`)}
+              onSelect={() => onChange(withTime(value, '00:00:00'))}
             >
               Midnight
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() => {
                 const [h = '00', m = '00'] = time.split(':')
-                onChange(`${formatDatePart(date)}T${h}:${m}:00`)
+                onChange(withTime(value, `${h}:${m}:00`))
               }}
             >
               :00 second
