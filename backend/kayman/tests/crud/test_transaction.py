@@ -2,10 +2,15 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import patch
 
+import pytest
 from sqlmodel import Session
 
-from kayman.crud.transaction import create_transactions, read_transactions
-from kayman.schemas.transaction import Transaction, TransactionBase
+from kayman.crud.transaction import (
+    create_transactions,
+    read_transactions,
+    update_transactions,
+)
+from kayman.schemas.transaction import Transaction, TransactionBase, TransactionUpdate
 from kayman.tests.factories import AccountFactory, EventFactory, TransactionFactory
 
 
@@ -265,3 +270,101 @@ def test_read_transactions_for_update(session: Session):
         args = mock_exec.call_args[0]
         statement = str(args[0])
         assert "FOR UPDATE" in statement
+
+
+def test_update_transactions(session: Session):
+    txn = TransactionFactory(amount=Decimal("100.00"), description="old")
+
+    updated = update_transactions(
+        session,
+        [txn],
+        [TransactionUpdate(amount=Decimal("150.00"), description="new")],
+    )
+
+    assert len(updated) == 1
+    assert updated[0].id == txn.id
+    assert updated[0].amount == Decimal("150.00")
+    assert updated[0].description == "new"
+
+
+def test_update_transactions_no_commit(session: Session, session_2: Session):
+    txn = TransactionFactory(amount=Decimal("100.00"))
+
+    updated = update_transactions(
+        session,
+        [txn],
+        [TransactionUpdate(amount=Decimal("200.00"))],
+        commit=False,
+    )
+    assert updated[0].amount == Decimal("200.00")
+
+    # Not yet visible to other sessions until commit.
+    other = session_2.get(Transaction, txn.id)
+    assert other.amount == Decimal("100.00")
+
+
+def test_update_transactions_length_mismatch(session: Session):
+    txn = TransactionFactory()
+
+    with pytest.raises(ValueError, match="same length"):
+        update_transactions(session, [txn], [])
+
+
+@pytest.mark.parametrize(
+    ("field", "make_value", "commit"),
+    [
+        # FK fields need a fresh row created at test time, hence a callable.
+        ("account_id", lambda: AccountFactory().id, True),
+        ("event_id", lambda: EventFactory().id, True),
+        ("amount", lambda: Decimal("123.45"), True),
+        ("description", lambda: "new description", True),
+        ("index", lambda: 9999, True),
+        # Datetime fields use commit=False: SQLite drops tzinfo on the
+        # post-commit refresh, so keep the in-memory tz-aware value to compare.
+        ("created_at", lambda: datetime(2026, 6, 1, tzinfo=UTC), False),
+        ("posted_at", lambda: datetime(2026, 6, 2, tzinfo=UTC), False),
+        ("reconciled_at", lambda: datetime(2026, 6, 3, tzinfo=UTC), False),
+    ],
+    ids=[
+        "account_id",
+        "event_id",
+        "amount",
+        "description",
+        "index",
+        "created_at",
+        "posted_at",
+        "reconciled_at",
+    ],
+)
+def test_update_transaction_field(session: Session, field, make_value, commit):
+    txn = TransactionFactory(amount=Decimal("100.00"))
+    new_value = make_value()
+
+    updated = update_transactions(
+        session,
+        [txn],
+        [TransactionUpdate(**{field: new_value})],
+        commit=commit,
+    )
+
+    assert len(updated) == 1
+    assert getattr(updated[0], field) == new_value
+
+
+def test_update_transaction_explicit_none_clears_field(session: Session):
+    # The factory sets posted_at and description to non-null values.
+    txn = TransactionFactory(amount=Decimal("100.00"))
+    original_description = txn.description
+    assert txn.posted_at is not None
+
+    # Passing posted_at=None explicitly marks it "set", so exclude_unset keeps it
+    # and the column is cleared. description is omitted, so it stays untouched.
+    updated = update_transactions(
+        session,
+        [txn],
+        [TransactionUpdate(posted_at=None)],
+    )
+
+    assert len(updated) == 1
+    assert updated[0].posted_at is None
+    assert updated[0].description == original_description

@@ -63,3 +63,14 @@ class TransactionRead(TransactionBase):
 
 class TransactionReadWithBalance(TransactionRead):
     running_balance: Decimal
+
+
+class TransactionUpdate(SQLModel):
+    account_id: int | None = None
+    event_id: int | None = None
+    amount: Decimal | None = None
+    created_at: datetime | None = None
+    posted_at: datetime | None = None
+    description: str | None = None
+    reconciled_at: datetime | None = None
+    index: int | None = None

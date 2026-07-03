@@ -4,7 +4,7 @@ from typing import Literal
 
 from sqlmodel import Session, col, select
 
-from kayman.schemas.transaction import Transaction, TransactionBase
+from kayman.schemas.transaction import Transaction, TransactionBase, TransactionUpdate
 
 TransactionOrderBy = Literal["created_at", "posted_at", "amount", "id"]
 
@@ -56,3 +56,26 @@ def read_transactions(
         scalar = scalar.with_for_update()
     txns = session.exec(scalar).all()
     return txns
+
+
+def update_transactions(
+    session: Session,
+    db_txns: Sequence[Transaction],
+    transactions: Sequence[TransactionUpdate],
+    commit: bool = True,
+) -> Sequence[Transaction]:
+    if len(db_txns) != len(transactions):
+        raise ValueError("db_txns and transactions must have the same length")
+
+    for db_txn, txn in zip(db_txns, transactions, strict=True):
+        db_txn.sqlmodel_update(txn.model_dump(exclude_unset=True))
+
+    session.add_all(db_txns)
+    if commit:
+        session.commit()
+        for db_txn in db_txns:
+            session.refresh(db_txn)
+    else:
+        session.flush()
+
+    return db_txns
