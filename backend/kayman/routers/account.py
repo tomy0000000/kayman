@@ -21,7 +21,7 @@ from kayman.schemas.account import (
     AccountRead,
     AccountUpdate,
 )
-from kayman.schemas.transaction import TransactionWithBalanceRead
+from kayman.schemas.transaction import TransactionReadWithBalance
 
 TAG_NAME = "Account"
 tag = {
@@ -71,7 +71,7 @@ def reads(*, session: Session = Depends(get_session)) -> Sequence[AccountBase]:
 @account_router.get(
     "/{account_id}/transactions",
     name="Read Account Transactions With Running Balance",
-    response_model=list[TransactionWithBalanceRead],
+    response_model=list[TransactionReadWithBalance],
 )
 def read_transactions_with_balance(
     *,
@@ -79,7 +79,7 @@ def read_transactions_with_balance(
     account_id: int,
     start: datetime | None = None,
     end: datetime | None = None,
-) -> list[TransactionWithBalanceRead]:
+) -> list[TransactionReadWithBalance]:
     if read_account(session, account_id) is None:
         raise PydanticCustomError(
             "account_not_found",

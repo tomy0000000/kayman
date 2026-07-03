@@ -5,7 +5,7 @@ from sqlmodel import Session
 
 from kayman.crud.account import read_account_balance
 from kayman.crud.transaction import get_transactions
-from kayman.schemas.transaction import TransactionWithBalanceRead
+from kayman.schemas.transaction import TransactionReadWithBalance
 
 
 def get_transactions_with_running_balance(
@@ -13,7 +13,7 @@ def get_transactions_with_running_balance(
     account_id: int,
     start: datetime | None = None,
     end: datetime | None = None,
-) -> list[TransactionWithBalanceRead]:
+) -> list[TransactionReadWithBalance]:
     opening = (
         read_account_balance(session, account_id, at=start)
         if start is not None
@@ -21,11 +21,11 @@ def get_transactions_with_running_balance(
     )
     txns = get_transactions(session, account_id, start, end, order_by="created_at")
     running = opening
-    results: list[TransactionWithBalanceRead] = []
+    results: list[TransactionReadWithBalance] = []
     for txn in txns:
         running += txn.amount
         results.append(
-            TransactionWithBalanceRead.model_validate(
+            TransactionReadWithBalance.model_validate(
                 txn, update={"running_balance": running}
             )
         )

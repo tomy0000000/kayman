@@ -61,5 +61,5 @@ class TransactionRead(TransactionBase):
         return TransactionStatus.PENDING
 
 
-class TransactionWithBalanceRead(TransactionRead):
+class TransactionReadWithBalance(TransactionRead):
     running_balance: Decimal
