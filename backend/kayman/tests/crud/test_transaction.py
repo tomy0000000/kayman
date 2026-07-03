@@ -107,6 +107,16 @@ def test_read_transactions_all(session: Session):
     assert len(read_transactions(session)) == 10
 
 
+def test_read_transactions_by_id(session: Session):
+    txn_1 = TransactionFactory()
+    TransactionFactory()
+
+    results = read_transactions(session, transaction_id=txn_1.id)
+
+    assert len(results) == 1
+    assert results[0].id == txn_1.id
+
+
 def test_read_transactions_by_account(session: Session):
     account_1 = AccountFactory()
     account_2 = AccountFactory()

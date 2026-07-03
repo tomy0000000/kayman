@@ -19,7 +19,9 @@ def get_transactions_with_running_balance(
         if start is not None
         else Decimal(0)
     )
-    txns = read_transactions(session, account_id, start, end, order_by="created_at")
+    txns = read_transactions(
+        session, account_id=account_id, start=start, end=end, order_by="created_at"
+    )
     running = opening
     results: list[TransactionReadWithBalance] = []
     for txn in txns:

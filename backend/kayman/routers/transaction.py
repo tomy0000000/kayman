@@ -44,9 +44,17 @@ def create(
 def reads(
     *,
     session: Session = Depends(get_session),
+    transaction_id: int | None = None,
     account_id: int | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
     event_id: int | Literal["empty"] | None = None,
 ) -> Sequence[TransactionBase]:
-    return read_transactions(session, account_id, start, end, event_id=event_id)
+    return read_transactions(
+        session,
+        transaction_id=transaction_id,
+        account_id=account_id,
+        start=start,
+        end=end,
+        event_id=event_id,
+    )

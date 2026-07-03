@@ -27,6 +27,7 @@ def create_transactions(
 
 def read_transactions(
     session: Session,
+    transaction_id: int | None = None,
     account_id: int | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
@@ -35,6 +36,8 @@ def read_transactions(
     descending: bool = False,
 ) -> Sequence[Transaction]:
     scalar = select(Transaction)
+    if transaction_id is not None:
+        scalar = scalar.where(Transaction.id == transaction_id)
     if account_id:
         scalar = scalar.where(Transaction.account_id == account_id)
     if event_id == "empty":
