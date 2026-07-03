@@ -7,7 +7,7 @@ from sqlmodel import Session
 
 from kayman.auth import get_client
 from kayman.core.db import get_session
-from kayman.crud.transaction import create_transactions, get_transactions
+from kayman.crud.transaction import create_transactions, read_transactions
 from kayman.logics.account import update_balances_with_transactions
 from kayman.schemas.transaction import (
     TransactionBase,
@@ -49,4 +49,4 @@ def reads(
     end: datetime | None = None,
     event_id: int | Literal["empty"] | None = None,
 ) -> Sequence[TransactionBase]:
-    return get_transactions(session, account_id, start, end, event_id=event_id)
+    return read_transactions(session, account_id, start, end, event_id=event_id)

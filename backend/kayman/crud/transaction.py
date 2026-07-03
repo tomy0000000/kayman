@@ -25,7 +25,7 @@ def create_transactions(
     return db_txns
 
 
-def get_transactions(
+def read_transactions(
     session: Session,
     account_id: int | None = None,
     start: datetime | None = None,

@@ -4,7 +4,7 @@ from decimal import Decimal
 from sqlmodel import Session
 
 from kayman.crud.account import read_account_balance
-from kayman.crud.transaction import get_transactions
+from kayman.crud.transaction import read_transactions
 from kayman.schemas.transaction import TransactionReadWithBalance
 
 
@@ -19,7 +19,7 @@ def get_transactions_with_running_balance(
         if start is not None
         else Decimal(0)
     )
-    txns = get_transactions(session, account_id, start, end, order_by="created_at")
+    txns = read_transactions(session, account_id, start, end, order_by="created_at")
     running = opening
     results: list[TransactionReadWithBalance] = []
     for txn in txns:
