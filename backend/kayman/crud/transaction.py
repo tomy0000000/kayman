@@ -34,6 +34,7 @@ def read_transactions(
     event_id: int | Literal["empty"] | None = None,
     order_by: TransactionOrderBy | None = None,
     descending: bool = False,
+    for_update: bool = False,
 ) -> Sequence[Transaction]:
     scalar = select(Transaction)
     if transaction_id is not None:
@@ -51,5 +52,7 @@ def read_transactions(
     if order_by is not None:
         column = getattr(Transaction, order_by)
         scalar = scalar.order_by(column.desc() if descending else column.asc())
+    if for_update:
+        scalar = scalar.with_for_update()
     txns = session.exec(scalar).all()
     return txns

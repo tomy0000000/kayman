@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from decimal import Decimal
+from unittest.mock import patch
 
 from sqlmodel import Session
 
@@ -253,3 +254,13 @@ def test_read_transactions_descending_without_order_by_is_unsorted(session: Sess
     results = read_transactions(session, account_id=account.id, descending=True)
 
     assert len(results) == 3
+
+
+def test_read_transactions_for_update(session: Session):
+    TransactionFactory()
+
+    with patch.object(session, "exec", wraps=session.exec) as mock_exec:
+        read_transactions(session, for_update=True)
+        args = mock_exec.call_args[0]
+        statement = str(args[0])
+        assert "FOR UPDATE" in statement
