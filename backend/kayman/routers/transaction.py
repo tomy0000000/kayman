@@ -52,7 +52,7 @@ def reads(
 ) -> Sequence[TransactionBase]:
     return read_transactions(
         session,
-        transaction_id=transaction_id,
+        transaction_ids=[transaction_id] if transaction_id is not None else None,
         account_id=account_id,
         start=start,
         end=end,
