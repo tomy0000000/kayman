@@ -62,6 +62,10 @@ Only add `Update` when the resource supports PATCH.
 
 ## Changing schema fields
 
+The staged dances below apply to a field that has **already shipped**. Creating a
+model or its fields for the first time is a single additive migration and follows
+[`dev-process.md`](dev-process.md) instead.
+
 Any field change touches three things together: the SQLModel class, an Alembic migration, and the matching `tests/factories/*.py` + `tests/crud/*.py`. Generate migrations with `uv run alembic revision --autogenerate -m "..."` and review the output before committing.
 
 ### Adding a field
