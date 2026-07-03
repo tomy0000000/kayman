@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Minus, Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -10,6 +11,7 @@ import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput,
   InputGroupText
 } from '@/components/ui/input-group'
@@ -33,6 +35,7 @@ export function CreateTransactionFab({
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState('')
+  const [negative, setNegative] = useState(false)
   const [pickedAccount, setPickedAccount] = useState<AccountRead | null>(null)
   const [createdAt, setCreatedAt] = useState(() => new Date())
 
@@ -49,6 +52,7 @@ export function CreateTransactionFab({
 
   const reset = () => {
     setAmount('')
+    setNegative(false)
     setPickedAccount(null)
     setCreatedAt(new Date())
   }
@@ -80,7 +84,7 @@ export function CreateTransactionFab({
     if (selectedAccount == null || zonedCreatedAt == null) return
     mutate({
       account_id: selectedAccount.id,
-      amount,
+      amount: negative ? `-${amount}` : amount,
       created_at: zonedCreatedAt
     })
   }
@@ -111,6 +115,16 @@ export function CreateTransactionFab({
           <FieldLabel htmlFor="txn-amount">Amount</FieldLabel>
           <InputGroup>
             <InputGroupAddon>
+              <InputGroupButton
+                size="icon-xs"
+                aria-pressed={negative}
+                aria-label={
+                  negative ? 'Make amount positive' : 'Make amount negative'
+                }
+                onClick={() => setNegative((v) => !v)}
+              >
+                {negative ? <Minus /> : <Plus />}
+              </InputGroupButton>
               <InputGroupText>$</InputGroupText>
             </InputGroupAddon>
             <InputGroupInput
@@ -119,7 +133,7 @@ export function CreateTransactionFab({
               inputMode="decimal"
               placeholder="0.00"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => setAmount(e.target.value.replace(/-/g, ''))}
               required
             />
             <InputGroupAddon align="inline-end">
