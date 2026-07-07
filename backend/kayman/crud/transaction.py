@@ -61,22 +61,22 @@ def read_transactions(
 
 def update_transactions(
     session: Session,
-    db_txns: Sequence[Transaction],
-    transactions: Sequence[TransactionUpdate],
+    previous_txns: Sequence[Transaction],
+    updates: Sequence[TransactionUpdate],
     commit: bool = True,
 ) -> Sequence[Transaction]:
-    if len(db_txns) != len(transactions):
-        raise ValueError("db_txns and transactions must have the same length")
+    if len(previous_txns) != len(updates):
+        raise ValueError("previous_txns and updates must have the same length")
 
-    for db_txn, txn in zip(db_txns, transactions, strict=True):
+    for db_txn, txn in zip(previous_txns, updates, strict=True):
         db_txn.sqlmodel_update(txn.model_dump(exclude_unset=True))
 
-    session.add_all(db_txns)
+    session.add_all(previous_txns)
     if commit:
         session.commit()
-        for db_txn in db_txns:
+        for db_txn in previous_txns:
             session.refresh(db_txn)
     else:
         session.flush()
 
-    return db_txns
+    return previous_txns
