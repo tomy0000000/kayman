@@ -5,11 +5,12 @@ import { type DateRange } from 'react-day-picker'
 import { toast } from 'sonner'
 
 import { Amount } from '@/components/amount'
-import { CreateTransactionFab } from '@/components/create-transaction-fab'
 import { DatePickerWithRange } from '@/components/date-range-picker'
+import { TransactionFab } from '@/components/transaction-fab'
 import { TransactionStatusBadge } from '@/components/transaction-status-badge'
 import { Separator } from '@/components/ui/separator'
 import {
+  type TransactionReadWithBalance,
   readAccount,
   readAccountTransactionsWithRunningBalance
 } from '@/lib/client'
@@ -23,6 +24,15 @@ function AccountTransactionPage() {
   const { client } = Route.useRouteContext()
   const { id } = Route.useParams()
   const accountId = Number(id)
+
+  const [fabOpen, setFabOpen] = useState(false)
+  const [editingTransaction, setEditingTransaction] =
+    useState<TransactionReadWithBalance | null>(null)
+
+  const handleFabOpenChange = (open: boolean) => {
+    setFabOpen(open)
+    if (open) setEditingTransaction(null)
+  }
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const start = dateRange?.from?.toISOString() ?? null
@@ -182,7 +192,13 @@ function AccountTransactionPage() {
         })}
       </div>
 
-      <CreateTransactionFab client={client} account={account} />
+      <TransactionFab
+        client={client}
+        account={account}
+        open={fabOpen}
+        onOpenChange={handleFabOpenChange}
+        editingTransaction={editingTransaction}
+      />
     </>
   )
 }
