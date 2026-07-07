@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from datetime import datetime
 from typing import Literal
 
@@ -27,7 +27,7 @@ def create_transactions(
 
 def read_transactions(
     session: Session,
-    transaction_ids: list[int] | None = None,
+    transaction_ids: Collection[int] | None = None,
     account_id: int | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
@@ -49,9 +49,10 @@ def read_transactions(
         scalar = scalar.where(Transaction.created_at >= start)
     if end is not None:
         scalar = scalar.where(Transaction.created_at < end)
-    if order_by is not None:
-        column = getattr(Transaction, order_by)
-        scalar = scalar.order_by(column.desc() if descending else column.asc())
+    column = (
+        getattr(Transaction, order_by) if order_by is not None else col(Transaction.id)
+    )
+    scalar = scalar.order_by(column.desc() if descending else column.asc())
     if for_update:
         scalar = scalar.with_for_update()
     txns = session.exec(scalar).all()

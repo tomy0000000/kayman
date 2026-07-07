@@ -253,13 +253,26 @@ def test_read_transactions_order_by_posted_at(session: Session):
     assert [txn.id for txn in results] == [first.id, second.id, third.id]
 
 
-def test_read_transactions_descending_without_order_by_is_unsorted(session: Session):
+def test_read_transactions_without_order_by_defaults_to_id_ascending(session: Session):
     account = AccountFactory()
-    TransactionFactory.create_batch(3, account=account)
+    first, second, third = TransactionFactory.create_batch(3, account=account)
+
+    results = read_transactions(session, account_id=account.id)
+
+    assert len(results) == 3
+    assert [txn.id for txn in results] == [first.id, second.id, third.id]
+
+
+def test_read_transactions_descending_without_order_by_is_id_descending(
+    session: Session,
+):
+    account = AccountFactory()
+    first, second, third = TransactionFactory.create_batch(3, account=account)
 
     results = read_transactions(session, account_id=account.id, descending=True)
 
     assert len(results) == 3
+    assert [txn.id for txn in results] == [third.id, second.id, first.id]
 
 
 def test_read_transactions_for_update(session: Session):
