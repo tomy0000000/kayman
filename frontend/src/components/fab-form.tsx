@@ -9,6 +9,7 @@ interface FabFormProps {
   onSubmit: () => void
   isPending: boolean
   disabled?: boolean
+  isEditing?: boolean
   children: React.ReactNode
 }
 
@@ -16,6 +17,7 @@ export function FabForm({
   onSubmit,
   isPending,
   disabled = false,
+  isEditing = false,
   children
 }: FabFormProps) {
   const submit = () => {
@@ -33,6 +35,10 @@ export function FabForm({
     preventDefault: true
   })
 
+  const { label, pendingLabel } = isEditing
+    ? { label: 'Save', pendingLabel: 'Saving...' }
+    : { label: 'Create', pendingLabel: 'Creating...' }
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -45,10 +51,10 @@ export function FabForm({
       <SheetFooter>
         <Button type="submit" disabled={isPending || disabled}>
           {isPending ? (
-            'Creating...'
+            pendingLabel
           ) : (
             <>
-              Create{' '}
+              {label}{' '}
               <KbdGroup>
                 <Kbd>⌘</Kbd>
                 <Kbd>↵</Kbd>
