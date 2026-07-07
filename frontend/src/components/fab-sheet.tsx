@@ -3,13 +3,7 @@ import { useHotkeys } from 'react-hotkeys-hook'
 
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger
-} from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import {
   Tooltip,
   TooltipContent,
@@ -53,9 +47,6 @@ export function FabSheet({
         </TooltipContent>
       </Tooltip>
       <SheetContent side="right" className="flex flex-col">
-        <SheetHeader>
-          <SheetTitle>{label}</SheetTitle>
-        </SheetHeader>
         {children}
       </SheetContent>
     </Sheet>

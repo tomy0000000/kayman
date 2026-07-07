@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
   type AccountCreate,
   type AccountRead,
@@ -88,6 +89,9 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
 
   return (
     <FabSheet open={open} onOpenChange={setOpen} hotkey="n" label="New account">
+      <SheetHeader>
+        <SheetTitle>New account</SheetTitle>
+      </SheetHeader>
       <FabForm
         onSubmit={handleCreate}
         isPending={isPending}

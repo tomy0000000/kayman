@@ -14,6 +14,7 @@ import { FabSheet } from '@/components/fab-sheet'
 import { TimePicker } from '@/components/time-picker'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { type EventCreate, type EventType, createEvent } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
@@ -102,6 +103,9 @@ export function CreateEventFab({ client }: CreateEventFabProps) {
 
   return (
     <FabSheet open={open} onOpenChange={setOpen} hotkey="n" label="New event">
+      <SheetHeader>
+        <SheetTitle>New event</SheetTitle>
+      </SheetHeader>
       <FabForm onSubmit={handleCreate} isPending={isPending}>
         <Field>
           <FieldLabel htmlFor="event-description">Description</FieldLabel>

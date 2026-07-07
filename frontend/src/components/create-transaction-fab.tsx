@@ -15,6 +15,7 @@ import {
   InputGroupInput,
   InputGroupText
 } from '@/components/ui/input-group'
+import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
   type AccountRead,
   type TransactionCreate,
@@ -96,6 +97,9 @@ export function CreateTransactionFab({
       hotkey="n"
       label="New transaction"
     >
+      <SheetHeader>
+        <SheetTitle>New transaction</SheetTitle>
+      </SheetHeader>
       <FabForm
         onSubmit={handleCreate}
         isPending={isPending}
