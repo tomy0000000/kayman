@@ -1,14 +1,15 @@
+from collections.abc import Sequence
 from decimal import Decimal
 
 from sqlmodel import Session
 
 from kayman.crud.account import update_account_balances
-from kayman.schemas.transaction import TransactionCreate
+from kayman.schemas.transaction import TransactionBase
 
 
 def update_balances_with_transactions(
     session: Session,
-    transactions: list[TransactionCreate],
+    transactions: Sequence[TransactionBase],
     commit: bool = True,
 ) -> None:
     # Create a map of account_id -> amount
