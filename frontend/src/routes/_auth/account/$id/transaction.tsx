@@ -145,8 +145,21 @@ function AccountTransactionPage() {
 
               {/* Row — first row gets snap-start too so scrollTop=0 is a valid snap point */}
               <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  setEditingTransaction(transaction)
+                  setFabOpen(true)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setEditingTransaction(transaction)
+                    setFabOpen(true)
+                  }
+                }}
                 className={cn(
-                  'flex items-start gap-3 text-sm',
+                  'hover:bg-muted focus-visible:ring-ring flex cursor-pointer items-start gap-3 rounded-md py-1 text-sm focus-visible:ring-2 focus-visible:outline-none',
                   index === 0 && 'snap-start'
                 )}
               >

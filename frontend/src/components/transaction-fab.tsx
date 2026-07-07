@@ -20,7 +20,8 @@ import {
   type AccountRead,
   type TransactionCreate,
   type TransactionRead,
-  createTransaction
+  createTransaction,
+  updateTransactions
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
 import { formatZonedDateTime, toZonedISOString } from '@/lib/utils'
@@ -105,27 +106,35 @@ function TransactionFabBody({
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (body: TransactionCreate) => {
-      const response = await createTransaction({ client, body })
-      if (response.error) throw new Error('Failed to create transaction')
+      const response = isEditing
+        ? await updateTransactions({
+            client,
+            body: [{ ...body, id: editingTransaction.id }]
+          })
+        : await createTransaction({ client, body })
+      if (response.error)
+        throw new Error(
+          `Failed to ${isEditing ? 'update' : 'create'} transaction`
+        )
       if (!response.data) throw new Error('No data returned')
       return response.data
     },
     onSuccess: () => {
-      toast.success('Transaction created')
+      toast.success(`Transaction ${isEditing ? 'updated' : 'created'}`)
       queryClient.invalidateQueries({ queryKey: ['events'] })
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
       onClose()
     },
     onError: (error) => {
       console.error(error)
-      toast.error('Failed to create transaction', {
+      toast.error(`Failed to ${isEditing ? 'update' : 'create'} transaction`, {
         description:
           error instanceof Error ? error.message : 'An unknown error occurred'
       })
     }
   })
 
-  const handleCreate = () => {
+  const handleSubmit = () => {
     if (selectedAccount == null || zonedCreatedAt == null) return
     mutate({
       account_id: selectedAccount.id,
@@ -136,10 +145,9 @@ function TransactionFabBody({
 
   return (
     <FabForm
-      onSubmit={handleCreate}
+      onSubmit={handleSubmit}
       isPending={isPending}
-      // Editing has no backend endpoint yet, so save stays disabled.
-      disabled={isEditing || selectedAccount == null || amount === ''}
+      disabled={selectedAccount == null || amount === ''}
       isEditing={isEditing}
     >
       <Field>
@@ -201,12 +209,6 @@ function TransactionFabBody({
           </FieldDescription>
         )}
       </Field>
-
-      {isEditing && (
-        <FieldDescription>
-          Editing transactions isn&apos;t available yet.
-        </FieldDescription>
-      )}
     </FabForm>
   )
 }
