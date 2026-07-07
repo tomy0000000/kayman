@@ -291,7 +291,7 @@ def test_update_transactions(session: Session):
     updated = update_transactions(
         session,
         [txn],
-        [TransactionUpdate(amount=Decimal("150.00"), description="new")],
+        [TransactionUpdate(id=txn.id, amount=Decimal("150.00"), description="new")],
     )
 
     assert len(updated) == 1
@@ -306,7 +306,7 @@ def test_update_transactions_no_commit(session: Session, session_2: Session):
     updated = update_transactions(
         session,
         [txn],
-        [TransactionUpdate(amount=Decimal("200.00"))],
+        [TransactionUpdate(id=txn.id, amount=Decimal("200.00"))],
         commit=False,
     )
     assert updated[0].amount == Decimal("200.00")
@@ -356,7 +356,7 @@ def test_update_transaction_field(session: Session, field, make_value, commit):
     updated = update_transactions(
         session,
         [txn],
-        [TransactionUpdate(**{field: new_value})],
+        [TransactionUpdate(id=txn.id, **{field: new_value})],
         commit=commit,
     )
 
@@ -375,7 +375,7 @@ def test_update_transaction_explicit_none_clears_field(session: Session):
     updated = update_transactions(
         session,
         [txn],
-        [TransactionUpdate(posted_at=None)],
+        [TransactionUpdate(id=txn.id, posted_at=None)],
     )
 
     assert len(updated) == 1

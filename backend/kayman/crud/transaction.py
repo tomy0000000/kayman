@@ -69,7 +69,7 @@ def update_transactions(
         raise ValueError("previous_txns and updates must have the same length")
 
     for db_txn, txn in zip(previous_txns, updates, strict=True):
-        db_txn.sqlmodel_update(txn.model_dump(exclude_unset=True))
+        db_txn.sqlmodel_update(txn.model_dump(exclude_unset=True, exclude={"id"}))
 
     session.add_all(previous_txns)
     if commit:

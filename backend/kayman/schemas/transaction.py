@@ -66,6 +66,7 @@ class TransactionReadWithBalance(TransactionRead):
 
 
 class TransactionUpdate(SQLModel):
+    id: int
     account_id: int | None = None
     event_id: int | None = None
     amount: Decimal | None = None
