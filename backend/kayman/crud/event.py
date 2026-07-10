@@ -7,7 +7,7 @@ from kayman.schemas.event import (
     Event,
     EventBase,
     EventCreate,
-    PaymentEntry,
+    EventEntry,
 )
 
 
@@ -36,8 +36,6 @@ def read_events(
     if event_date:
         scalar = scalar.where(func.date(Event.timestamp) == event_date)
     if category_id:
-        scalar = scalar.join(PaymentEntry).where(
-            PaymentEntry.category_id == category_id
-        )
+        scalar = scalar.join(EventEntry).where(EventEntry.category_id == category_id)
     events = session.exec(scalar).all()
     return events

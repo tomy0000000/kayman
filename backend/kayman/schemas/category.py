@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from kayman.schemas.event import PaymentEntry
+    from kayman.schemas.event import EventEntry
 
 
 class CategoryBase(SQLModel):
@@ -15,7 +15,7 @@ class CategoryBase(SQLModel):
 
 class Category(CategoryBase, table=True):
     id: int | None = Field(primary_key=True, default=None)
-    entries: list["PaymentEntry"] = Relationship(back_populates="category")
+    entries: list["EventEntry"] = Relationship(back_populates="category")
     parent_category: Optional["Category"] = Relationship(
         back_populates="sub_categories",
         sa_relationship_kwargs={"remote_side": "Category.id"},

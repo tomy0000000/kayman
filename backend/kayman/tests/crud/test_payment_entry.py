@@ -1,7 +1,7 @@
 from sqlmodel import Session
 
 from kayman.crud.payment_entry import create_payment_entries
-from kayman.schemas.event import PaymentEntry, PaymentEntryBase
+from kayman.schemas.event import EventEntry, EventEntryBase
 from kayman.tests.factories import EventFactory
 
 
@@ -10,7 +10,7 @@ def test_create_payment_entries(session: Session):
     payment_entries = []
     for entry_index, entry in enumerate(entry_creates):
         payment_entries.append(
-            PaymentEntryBase.model_validate(
+            EventEntryBase.model_validate(
                 entry,
                 update={
                     "payment_id": 1,
@@ -35,7 +35,7 @@ def test_create_payment_entries(session: Session):
 
 def test_create_payment_entries_no_commit(session: Session, session_2: Session):
     entry_create = EventFactory.build_details().entries[0]
-    payment_entry = PaymentEntryBase.model_validate(
+    payment_entry = EventEntryBase.model_validate(
         entry_create,
         update={
             "payment_id": 1,
@@ -59,14 +59,14 @@ def test_create_payment_entries_no_commit(session: Session, session_2: Session):
     assert session_entry.quantity == payment_entry.quantity
 
     # The entry should not be visible to other sessions (yet)
-    session_2_entry = session_2.get(PaymentEntry, session_entry.id)
+    session_2_entry = session_2.get(EventEntry, session_entry.id)
     assert session_2_entry is None
 
     # Commit the entry from main session
     session.commit()
 
     # The entry should now be visible to other sessions
-    session_2_entry = session_2.get(PaymentEntry, session_entry.id)
+    session_2_entry = session_2.get(EventEntry, session_entry.id)
     assert session_2_entry is not None
     assert session_2_entry.id == session_entry.id
     assert session_2_entry.amount == session_entry.amount

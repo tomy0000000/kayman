@@ -16,7 +16,7 @@ from kayman.schemas.category import (
 TAG_NAME = "Category"
 tag = {
     "name": TAG_NAME,
-    "description": "Create and manage payment entry categories",
+    "description": "Create and manage event entry categories",
 }
 
 category_router = APIRouter(

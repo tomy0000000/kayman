@@ -21,8 +21,8 @@ from kayman.schemas.event import (
     Event,
     EventBase,
     EventCreate,
+    EventEntryBase,
     EventRead,
-    PaymentEntryBase,
 )
 from kayman.schemas.transaction import TransactionBase
 
@@ -284,7 +284,7 @@ def legacy_create(
     entries = []
     for entry_index, entry_create in enumerate(body.entries):
         entries.append(
-            PaymentEntryBase.model_validate(
+            EventEntryBase.model_validate(
                 entry_create,
                 update={
                     "payment_id": event_id,

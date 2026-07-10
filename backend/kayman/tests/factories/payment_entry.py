@@ -1,12 +1,12 @@
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
 
-from kayman.schemas import PaymentEntry
+from kayman.schemas import EventEntry
 
 
 class PaymentEntryFactory(SQLAlchemyModelFactory):
     class Meta:
-        model = PaymentEntry
+        model = EventEntry
         sqlalchemy_session_persistence = "commit"
 
     amount = factory.Faker("pydecimal", left_digits=5, right_digits=2)

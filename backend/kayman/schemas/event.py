@@ -37,7 +37,7 @@ class Event(EventBase, table=True):
     # Auto calculated for Expense or Income
     # Manually logged for Transfer or Exchange
     transactions: list["Transaction"] = Relationship(back_populates="event")
-    entries: list["PaymentEntry"] = Relationship(back_populates="event")
+    entries: list["EventEntry"] = Relationship(back_populates="event")
 
 
 class EventCreate(EventBase):
@@ -49,11 +49,11 @@ class EventRead(EventBase):
 
 
 #
-# PaymentEntry
+# EventEntry
 #
 
 
-class PaymentEntryBase(SQLModel):
+class EventEntryBase(SQLModel):
     payment_id: int = Field(foreign_key="event.id")
     category_id: int = Field(foreign_key="category.id")
     amount: Decimal
@@ -63,11 +63,11 @@ class PaymentEntryBase(SQLModel):
     index: int
 
 
-class PaymentEntry(PaymentEntryBase, table=True):
-    __tablename__ = "payment_entry"
+class EventEntry(EventEntryBase, table=True):
+    __tablename__ = "event_entry"
     __table_args__ = (
         UniqueConstraint(
-            "payment_id", "index", name="payment_entry_payment_id_index_key"
+            "payment_id", "index", name="event_entry_payment_id_index_key"
         ),
     )
     id: int | None = Field(primary_key=True, default=None)
@@ -76,7 +76,7 @@ class PaymentEntry(PaymentEntryBase, table=True):
     currency: "Currency" = Relationship(back_populates="entries")
 
 
-class PaymentEntryCreate(SQLModel):
+class EventEntryCreate(SQLModel):
     category_id: int
     amount: Decimal
     quantity: int
@@ -84,6 +84,6 @@ class PaymentEntryCreate(SQLModel):
     description: str | None = None
 
 
-class PaymentEntryRead(PaymentEntryBase):
+class EventEntryRead(EventEntryBase):
     id: int
     payment_id: int

@@ -2,15 +2,15 @@ from collections.abc import Sequence
 
 from sqlmodel import Session
 
-from kayman.schemas.event import PaymentEntry, PaymentEntryBase
+from kayman.schemas.event import EventEntry, EventEntryBase
 
 
 def create_payment_entries(
     session: Session,
-    entries: list[PaymentEntryBase],
+    entries: list[EventEntryBase],
     commit: bool = True,
-) -> Sequence[PaymentEntryBase]:
-    db_entries = [PaymentEntry.model_validate(entry) for entry in entries]
+) -> Sequence[EventEntryBase]:
+    db_entries = [EventEntry.model_validate(entry) for entry in entries]
     session.add_all(db_entries)
     if commit:
         session.commit()
