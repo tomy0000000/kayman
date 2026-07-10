@@ -1,14 +1,25 @@
 import os
 from collections.abc import Generator
+from typing import Any
 from uuid import uuid4
 
 import pytest
 from factory.alchemy import SQLAlchemyModelFactory
 from fastapi.testclient import TestClient
+from sqlalchemy import event as sa_event
+from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
 from kayman.main import app
+
+
+def _enable_sqlite_fk(engine: Engine) -> None:
+    """Enforce foreign keys on SQLite, which defaults them off per connection."""
+
+    @sa_event.listens_for(engine, "connect")
+    def _set_sqlite_pragma(dbapi_connection: Any, *_: Any) -> None:
+        dbapi_connection.execute("PRAGMA foreign_keys=ON")
 
 
 @pytest.fixture(scope="function")
@@ -31,6 +42,7 @@ def session(db_uri) -> Generator[Session, None, None]:
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+    _enable_sqlite_fk(engine)
     SQLModel.metadata.create_all(engine)
     session = Session(engine)
 
@@ -53,6 +65,7 @@ def session_2(db_uri) -> Generator[Session, None, None]:
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+    _enable_sqlite_fk(engine)
     session = Session(engine)
 
     yield session
