@@ -15,11 +15,14 @@ from kayman.tests.factories import AccountFactory, EventFactory, TransactionFact
 
 
 def test_create_transactions_1_txn(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
     txn_create = EventFactory.build_details().transactions[0]
     txn = TransactionBase.model_validate(
         txn_create,
         update={
-            "event_id": 1,
+            "account_id": account.id,
+            "event_id": event.id,
             "index": 0,
         },
     )
@@ -37,6 +40,8 @@ def test_create_transactions_1_txn(session: Session):
 
 
 def test_create_transactions_n_txn(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
     txn_creates = EventFactory.build_details(transaction_num=10).transactions
     txns = []
     for txn_index, txn_create in enumerate(txn_creates):
@@ -44,7 +49,8 @@ def test_create_transactions_n_txn(session: Session):
             TransactionBase.model_validate(
                 txn_create,
                 update={
-                    "event_id": 1,
+                    "account_id": account.id,
+                    "event_id": event.id,
                     "index": txn_index,
                 },
             )
@@ -65,11 +71,14 @@ def test_create_transactions_n_txn(session: Session):
 
 
 def test_create_transactions_no_commit(session: Session, session_2: Session):
+    account = AccountFactory()
+    event = EventFactory()
     txn_create = EventFactory.build_details().transactions[0]
     txn = TransactionBase.model_validate(
         txn_create,
         update={
-            "event_id": 1,
+            "account_id": account.id,
+            "event_id": event.id,
             "index": 0,
         },
     )
