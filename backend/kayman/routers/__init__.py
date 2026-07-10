@@ -6,6 +6,7 @@ from kayman.routers import (
     category,
     currency,
     event,
+    event_entry,
     transaction,
     tw_invoice,
 )
@@ -16,6 +17,7 @@ routers = [
     currency.currency_router,
     category.category_router,
     event.event_router,
+    event_entry.event_entry_router,
     transaction.txn_router,
     tw_invoice.invoice_router,
 ]
@@ -26,6 +28,7 @@ tags: list[dict[str, Any]] = [
     currency.tag,
     category.tag,
     event.tag,
+    event_entry.tag,
     transaction.tag,
     tw_invoice.tag,
 ]
