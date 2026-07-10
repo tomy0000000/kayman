@@ -11,12 +11,19 @@ import { toast } from 'sonner'
 
 import { FabForm } from '@/components/fab-form'
 import { FabSheet } from '@/components/fab-sheet'
+import { type SelectedTransaction } from '@/components/link-transactions-table'
+import { LinkedTransactionsField } from '@/components/linked-transactions-field'
 import { TimePicker } from '@/components/time-picker'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { type EventCreate, type EventType, createEvent } from '@/lib/client'
+import {
+  type EventCreate,
+  type EventType,
+  createEvent,
+  updateTransactions
+} from '@/lib/client'
 import type { Client } from '@/lib/client/client'
 import { cn, toLocalDateTimeInputValue } from '@/lib/utils'
 
@@ -64,11 +71,15 @@ export function CreateEventFab({ client }: CreateEventFabProps) {
   const [type, setType] = useState<EventType>('Expense')
   const [description, setDescription] = useState('')
   const [timestamp, setTimestamp] = useState(() => new Date())
+  const [linkedTransactions, setLinkedTransactions] = useState<
+    SelectedTransaction[]
+  >([])
 
   const reset = () => {
     setType('Expense')
     setDescription('')
     setTimestamp(new Date())
+    setLinkedTransactions([])
   }
 
   const { mutate, isPending } = useMutation({
@@ -76,11 +87,25 @@ export function CreateEventFab({ client }: CreateEventFabProps) {
       const response = await createEvent({ client, body })
       if (response.error) throw new Error('Failed to create event')
       if (!response.data) throw new Error('No data returned')
-      return response.data
+      const event = response.data
+
+      if (linkedTransactions.length > 0) {
+        const linkResponse = await updateTransactions({
+          client,
+          body: linkedTransactions.map(({ transaction }) => ({
+            id: transaction.id,
+            event_id: event.id
+          }))
+        })
+        if (linkResponse.error) throw new Error('Failed to link transactions')
+      }
+
+      return event
     },
     onSuccess: () => {
       toast.success('Event created')
       queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
       reset()
       setOpen(false)
     },
@@ -144,6 +169,15 @@ export function CreateEventFab({ client }: CreateEventFabProps) {
             id="event-timestamp"
             value={timestamp}
             onChange={setTimestamp}
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel>Transactions</FieldLabel>
+          <LinkedTransactionsField
+            client={client}
+            value={linkedTransactions}
+            onChange={setLinkedTransactions}
           />
         </Field>
       </FabForm>
