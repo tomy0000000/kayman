@@ -33,6 +33,8 @@ The SQLAlchemy table. Add here:
 - `__table_args__` (constraints, indexes)
 - `sa_column` overrides when the column needs a custom SQL type (timezone-aware `DateTime`, `SATimezone`, SQL `Enum`, etc.). Re-declare the field here with the same name and type, with the `sa_column=` kwarg.
 
+Never name a relationship after a `dict` method (`items`, `keys`, `values`, `get`, ...). SQLModel's `model_validate` copies relationships off the source object with `getattr`, so validating from a plain dict (as the mock-data loader does) picks up the builtin method instead of data and crashes with `Incompatible collection type`.
+
 ## `<Name>Create(<Name>Base)`
 
 ```python
@@ -108,7 +110,7 @@ A pure widening (`varchar(50) → varchar(255)`, `int → bigint`) needs no tran
 
 ## Composite API models
 
-Cross-aggregate request/response wrappers live in `schemas/api_models.py` as plain `SQLModel` subclasses composing the per-aggregate `Create`/`Read` models (e.g. `PaymentCreateDetailed`, `PaymentReadDetailed`). Don't put them in the aggregate module.
+Cross-aggregate request/response wrappers live in `schemas/api_models.py` as plain `SQLModel` subclasses composing the per-aggregate `Create`/`Read` models (e.g. `EventCreateDetailed`, `EventReadDetailed`). Don't put them in the aggregate module.
 
 ## Reference examples
 
@@ -119,5 +121,5 @@ Cross-aggregate request/response wrappers live in `schemas/api_models.py` as pla
 
 These predate the rule. New work should follow the rule above; touch these when convenient.
 
-- `schemas/payment.py:34-42`: `PaymentBase` declares `type`, `timestamp`, `timezone` with `sa_column=Column(...)`. Move those `sa_column` overrides to the `Payment` table class; keep `PaymentBase` data-only.
-- `schemas/payment.py:68-96`: `PaymentEntryBase` includes server-derived `payment_id` and `index`, forcing `PaymentEntryCreate(SQLModel)` to drop Base inheritance. Move both fields to the `PaymentEntry` table class.
+- `schemas/event.py:25-32`: `EventBase` declares `type`, `timestamp`, `timezone` with `sa_column=Column(...)`. Move those `sa_column` overrides to the `Event` table class; keep `EventBase` data-only.
+- `schemas/event_entry.py:12-43`: `EventEntryBase` includes server-derived `event_id` and `index`, forcing `EventEntryCreate(SQLModel)` to drop Base inheritance. Move both fields to the `EventEntry` table class.

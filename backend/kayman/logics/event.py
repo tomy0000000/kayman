@@ -5,11 +5,11 @@ from kayman.schemas.event import EventType
 
 
 def validate_total(details: EventCreateDetailed) -> None:
-    # Skip check if this is a multi-curreny payment
+    # Skip check if this is a multi-curreny event
     if len({entry.currency_code for entry in details.entries}) > 1:
         return
 
-    # Payment type of transfer or exchange is not checked
+    # Event type of transfer or exchange is not checked
     if details.event.type in (EventType.Transfer, EventType.Exchange):
         return
 
