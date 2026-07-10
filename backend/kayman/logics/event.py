@@ -4,6 +4,7 @@ from kayman.schemas.api_models import EventCreateDetailed
 from kayman.schemas.event import EventType
 
 
+# TODO: unused after legacy_create removal, remove once confirmed obsolete
 def validate_total(details: EventCreateDetailed) -> None:
     # Skip check if this is a multi-curreny event
     if len({entry.currency_code for entry in details.entries}) > 1:
