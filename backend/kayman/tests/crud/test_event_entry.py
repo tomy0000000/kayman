@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
 from kayman.crud.event_entry import create_event_entries
-from kayman.schemas.event_entry import EventEntry, EventEntryBase
+from kayman.schemas.event_entry import EventEntry, EventEntryCreate
 from kayman.tests.factories import (
     CategoryFactory,
     CurrencyFactory,
@@ -17,7 +17,7 @@ def test_create_event_entries(session: Session):
     category = CategoryFactory()
     currency = CurrencyFactory()
     entries = [
-        EventEntryBase.model_validate(entry)
+        EventEntryCreate.model_validate(entry)
         for entry in EventEntryFactory.build_batch(
             3,
             event_id=event.id,
@@ -48,7 +48,7 @@ def test_create_event_entries_no_commit(session: Session, session_2: Session):
     event = EventFactory()
     category = CategoryFactory()
     currency = CurrencyFactory()
-    entry = EventEntryBase.model_validate(
+    entry = EventEntryCreate.model_validate(
         EventEntryFactory.build(
             event_id=event.id,
             category_id=category.id,
@@ -79,7 +79,7 @@ def test_create_event_entries_no_commit(session: Session, session_2: Session):
 def test_create_event_entries_event_not_found(session: Session):
     category = CategoryFactory()
     currency = CurrencyFactory()
-    entry = EventEntryBase.model_validate(
+    entry = EventEntryCreate.model_validate(
         EventEntryFactory.build(
             event_id=999999,
             category_id=category.id,

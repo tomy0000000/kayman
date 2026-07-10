@@ -22,9 +22,13 @@ class EventFactory(SQLAlchemyModelFactory):
         from kayman.tests.factories.event_entry import EventEntryFactory
         from kayman.tests.factories.transaction import TransactionFactory
 
-        # Create entries and transactions
+        # Create entries and transactions. event_id is a placeholder: these are
+        # never persisted, but EventEntryCreate (validated inside
+        # EventCreateDetailed) requires it.
         entries_currency = CurrencyFactory.build()
-        entries = EventEntryFactory.build_batch(entry_num, currency=entries_currency)
+        entries = EventEntryFactory.build_batch(
+            entry_num, currency=entries_currency, event_id=0
+        )
         transactions = TransactionFactory.build_batch(transaction_num)
 
         # Calculate totals

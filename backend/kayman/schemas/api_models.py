@@ -14,6 +14,7 @@ class EventReadDetailed(EventRead):
     entries: list[EventEntryRead]
 
 
+# TODO: test-only after legacy_create removal, remove once validate_total is gone
 class EventCreateDetailed(SQLModel):
     """Includes transactions and entries."""
 

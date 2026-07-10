@@ -2,12 +2,12 @@ from collections.abc import Sequence
 
 from sqlmodel import Session
 
-from kayman.schemas.event_entry import EventEntry, EventEntryBase
+from kayman.schemas.event_entry import EventEntry, EventEntryBase, EventEntryCreate
 
 
 def create_event_entries(
     session: Session,
-    entries: list[EventEntryBase],
+    entries: Sequence[EventEntryCreate],
     commit: bool = True,
 ) -> Sequence[EventEntryBase]:
     db_entries = [EventEntry.model_validate(entry) for entry in entries]

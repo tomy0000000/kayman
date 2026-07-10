@@ -30,12 +30,8 @@ class EventEntry(EventEntryBase, table=True):
     currency: "Currency" = Relationship(back_populates="entries")
 
 
-class EventEntryCreate(SQLModel):
-    category_id: int
-    amount: Decimal
-    quantity: int
-    currency_code: str
-    description: str | None = None
+class EventEntryCreate(EventEntryBase):
+    pass
 
 
 class EventEntryRead(EventEntryBase):
