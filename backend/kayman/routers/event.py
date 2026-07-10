@@ -287,7 +287,7 @@ def legacy_create(
             EventEntryBase.model_validate(
                 entry_create,
                 update={
-                    "payment_id": event_id,
+                    "event_id": event_id,
                     "index": entry_index,
                 },
             )

@@ -54,7 +54,7 @@ class EventRead(EventBase):
 
 
 class EventEntryBase(SQLModel):
-    payment_id: int = Field(foreign_key="event.id")
+    event_id: int = Field(foreign_key="event.id")
     category_id: int = Field(foreign_key="category.id")
     amount: Decimal
     quantity: int
@@ -66,9 +66,7 @@ class EventEntryBase(SQLModel):
 class EventEntry(EventEntryBase, table=True):
     __tablename__ = "event_entry"
     __table_args__ = (
-        UniqueConstraint(
-            "payment_id", "index", name="event_entry_payment_id_index_key"
-        ),
+        UniqueConstraint("event_id", "index", name="event_entry_event_id_index_key"),
     )
     id: int | None = Field(primary_key=True, default=None)
     event: Event = Relationship(back_populates="entries")
@@ -86,4 +84,4 @@ class EventEntryCreate(SQLModel):
 
 class EventEntryRead(EventEntryBase):
     id: int
-    payment_id: int
+    event_id: int

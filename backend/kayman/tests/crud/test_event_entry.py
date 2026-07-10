@@ -13,7 +13,7 @@ def test_create_event_entries(session: Session):
             EventEntryBase.model_validate(
                 entry,
                 update={
-                    "payment_id": 1,
+                    "event_id": 1,
                     "index": entry_index,
                 },
             )
@@ -29,7 +29,7 @@ def test_create_event_entries(session: Session):
         assert db_entry.description == event_entries[i].description
         assert db_entry.index == event_entries[i].index
         assert db_entry.id is not None
-        assert db_entry.payment_id == event_entries[i].payment_id
+        assert db_entry.event_id == event_entries[i].event_id
         assert db_entry.quantity == event_entries[i].quantity
 
 
@@ -38,7 +38,7 @@ def test_create_event_entries_no_commit(session: Session, session_2: Session):
     event_entry = EventEntryBase.model_validate(
         entry_create,
         update={
-            "payment_id": 1,
+            "event_id": 1,
             "index": 0,
         },
     )
@@ -55,7 +55,7 @@ def test_create_event_entries_no_commit(session: Session, session_2: Session):
     assert session_entry.currency_code == event_entry.currency_code
     assert session_entry.description == event_entry.description
     assert session_entry.index == event_entry.index
-    assert session_entry.payment_id == event_entry.payment_id
+    assert session_entry.event_id == event_entry.event_id
     assert session_entry.quantity == event_entry.quantity
 
     # The entry should not be visible to other sessions (yet)
@@ -74,5 +74,5 @@ def test_create_event_entries_no_commit(session: Session, session_2: Session):
     assert session_2_entry.currency_code == session_entry.currency_code
     assert session_2_entry.description == session_entry.description
     assert session_2_entry.index == session_entry.index
-    assert session_2_entry.payment_id == session_entry.payment_id
+    assert session_2_entry.event_id == session_entry.event_id
     assert session_2_entry.quantity == session_entry.quantity

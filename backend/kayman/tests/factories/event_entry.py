@@ -15,7 +15,7 @@ class EventEntryFactory(SQLAlchemyModelFactory):
     description = factory.Faker("sentence")
     index = factory.Sequence(lambda n: n)
     event = factory.SubFactory("kayman.tests.factories.event.EventFactory")
-    payment_id = factory.SelfAttribute("event.id")
+    event_id = factory.SelfAttribute("event.id")
     quantity = factory.Faker("random_int", min=1, max=10)
     currency = factory.SubFactory("kayman.tests.factories.currency.CurrencyFactory")
     currency_code = factory.SelfAttribute("currency.code")
