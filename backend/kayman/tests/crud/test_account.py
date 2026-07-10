@@ -17,11 +17,14 @@ from kayman.crud.account import (
     update_accounts,
 )
 from kayman.schemas.account import Account, AccountCreate
-from kayman.tests.factories import AccountFactory, TransactionFactory
+from kayman.tests.factories import AccountFactory, CurrencyFactory, TransactionFactory
 
 
 def test_create_accounts_1_account(session: Session, session_2: Session):
-    account = AccountCreate.model_validate(AccountFactory.build())
+    currency = CurrencyFactory()
+    account = AccountCreate.model_validate(
+        AccountFactory.build(currency_code=currency.code)
+    )
     db_account = create_accounts(session, [account])[0]
     db_read_account = read_account(session_2, db_account.id)
 
@@ -33,9 +36,10 @@ def test_create_accounts_1_account(session: Session, session_2: Session):
 
 
 def test_create_accounts_n_accounts(session: Session):
+    currency = CurrencyFactory()
     accounts = [
         AccountCreate.model_validate(account)
-        for account in AccountFactory.build_batch(10)
+        for account in AccountFactory.build_batch(10, currency_code=currency.code)
     ]
     db_accounts = create_accounts(session, accounts)
 
@@ -53,7 +57,10 @@ def test_create_accounts_empty(session: Session):
 
 
 def test_create_accounts_no_commit(session: Session, session_2: Session):
-    account = AccountCreate.model_validate(AccountFactory.build())
+    currency = CurrencyFactory()
+    account = AccountCreate.model_validate(
+        AccountFactory.build(currency_code=currency.code)
+    )
 
     # The account should be created in the session
     session_account = create_accounts(session, [account], commit=False)[0]
@@ -217,7 +224,10 @@ def test_read_accounts_for_update(session: Session):
 
 def test_update_accounts(session: Session):
     accounts = AccountFactory.create_batch(10)
-    account_updates = AccountFactory.build_batch(10)
+    account_updates = [
+        AccountFactory.build(currency_code=account.currency_code)
+        for account in accounts
+    ]
 
     account_ids = []
     for account, account_update in zip(accounts, account_updates, strict=True):
