@@ -2,12 +2,8 @@
 
 from sqlmodel import SQLModel
 
-from kayman.schemas.event import (
-    EventCreate,
-    EventEntryCreate,
-    EventEntryRead,
-    EventRead,
-)
+from kayman.schemas.event import EventCreate, EventRead
+from kayman.schemas.event_entry import EventEntryCreate, EventEntryRead
 from kayman.schemas.transaction import TransactionCreate, TransactionRead
 
 

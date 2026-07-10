@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from sqlmodel import Session
 
-from kayman.schemas.event import EventEntry, EventEntryBase
+from kayman.schemas.event_entry import EventEntry, EventEntryBase
 
 
 def create_event_entries(

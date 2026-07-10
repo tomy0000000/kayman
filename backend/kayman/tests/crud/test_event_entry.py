@@ -1,7 +1,7 @@
 from sqlmodel import Session
 
 from kayman.crud.event_entry import create_event_entries
-from kayman.schemas.event import EventEntry, EventEntryBase
+from kayman.schemas.event_entry import EventEntry, EventEntryBase
 from kayman.tests.factories import EventFactory
 
 

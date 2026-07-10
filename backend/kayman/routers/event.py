@@ -21,9 +21,9 @@ from kayman.schemas.event import (
     Event,
     EventBase,
     EventCreate,
-    EventEntryBase,
     EventRead,
 )
+from kayman.schemas.event_entry import EventEntryBase
 from kayman.schemas.transaction import TransactionBase
 
 TAG_NAME = "Event"

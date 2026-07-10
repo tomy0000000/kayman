@@ -7,8 +7,8 @@ from kayman.schemas.event import (
     Event,
     EventBase,
     EventCreate,
-    EventEntry,
 )
+from kayman.schemas.event_entry import EventEntry
 
 
 def create_events(
