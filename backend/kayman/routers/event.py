@@ -12,7 +12,7 @@ from kayman.crud.event import (
     read_event,
     read_events,
 )
-from kayman.crud.payment_entry import create_payment_entries
+from kayman.crud.event_entry import create_event_entries
 from kayman.crud.transaction import create_transactions
 from kayman.logics.account import update_balances_with_transactions
 from kayman.logics.event import validate_total
@@ -292,7 +292,7 @@ def legacy_create(
                 },
             )
         )
-    create_payment_entries(session, entries, commit=False)
+    create_event_entries(session, entries, commit=False)
 
     # Store Transactions
     transactions = []

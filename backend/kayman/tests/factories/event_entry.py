@@ -4,7 +4,7 @@ from factory.alchemy import SQLAlchemyModelFactory
 from kayman.schemas import EventEntry
 
 
-class PaymentEntryFactory(SQLAlchemyModelFactory):
+class EventEntryFactory(SQLAlchemyModelFactory):
     class Meta:
         model = EventEntry
         sqlalchemy_session_persistence = "commit"

@@ -19,12 +19,12 @@ class EventFactory(SQLAlchemyModelFactory):
     @classmethod
     def build_details(cls, type=EventType.Expense, entry_num=1, transaction_num=1):
         from kayman.tests.factories.currency import CurrencyFactory
-        from kayman.tests.factories.payment_entry import PaymentEntryFactory
+        from kayman.tests.factories.event_entry import EventEntryFactory
         from kayman.tests.factories.transaction import TransactionFactory
 
         # Create entries and transactions
         entries_currency = CurrencyFactory.build()
-        entries = PaymentEntryFactory.build_batch(entry_num, currency=entries_currency)
+        entries = EventEntryFactory.build_batch(entry_num, currency=entries_currency)
         transactions = TransactionFactory.build_batch(transaction_num)
 
         # Calculate totals

@@ -5,8 +5,8 @@ from sqlmodel import Session
 from kayman.crud.event import create_events, read_event, read_events
 from kayman.tests.factories import (
     CategoryFactory,
+    EventEntryFactory,
     EventFactory,
-    PaymentEntryFactory,
 )
 
 
@@ -93,14 +93,14 @@ def test_read_events_by_category(session: Session):
     category_3 = CategoryFactory()
     event_1 = EventFactory(
         entries=[
-            PaymentEntryFactory(category=category_1),
-            PaymentEntryFactory(category=category_2),
+            EventEntryFactory(category=category_1),
+            EventEntryFactory(category=category_2),
         ]
     )
     event_2 = EventFactory(
         entries=[
-            PaymentEntryFactory(category=category_1),
-            PaymentEntryFactory(category=category_3),
+            EventEntryFactory(category=category_1),
+            EventEntryFactory(category=category_3),
         ]
     )
 

@@ -5,7 +5,7 @@ from sqlmodel import Session
 from kayman.schemas.event import EventEntry, EventEntryBase
 
 
-def create_payment_entries(
+def create_event_entries(
     session: Session,
     entries: list[EventEntryBase],
     commit: bool = True,
