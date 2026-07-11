@@ -1,7 +1,5 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Minus, Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 import { AccountSelect } from '@/components/account-select'
 import { FabForm } from '@/components/fab-form'
@@ -19,9 +17,7 @@ import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
   type AccountRead,
   type TransactionCreate,
-  type TransactionRead,
-  createTransaction,
-  updateTransactions
+  type TransactionRead
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
 import { CLIENT_TIMEZONE } from '@/lib/constants'
@@ -33,13 +29,16 @@ interface TransactionFabProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   editingTransaction: TransactionRead | null
+  onSubmit: (body: TransactionCreate) => void
+  isPending: boolean
 }
 
 interface TransactionFabBodyProps {
   client: Client
   account?: AccountRead
   editingTransaction: TransactionRead | null
-  onClose: () => void
+  onSubmit: (body: TransactionCreate) => void
+  isPending: boolean
 }
 
 export function TransactionFab({
@@ -47,7 +46,9 @@ export function TransactionFab({
   account,
   open,
   onOpenChange,
-  editingTransaction
+  editingTransaction,
+  onSubmit,
+  isPending
 }: TransactionFabProps) {
   return (
     <FabSheet
@@ -67,7 +68,8 @@ export function TransactionFab({
         client={client}
         account={account}
         editingTransaction={editingTransaction}
-        onClose={() => onOpenChange(false)}
+        onSubmit={onSubmit}
+        isPending={isPending}
       />
     </FabSheet>
   )
@@ -77,9 +79,9 @@ function TransactionFabBody({
   client,
   account,
   editingTransaction,
-  onClose
+  onSubmit,
+  isPending
 }: TransactionFabBodyProps) {
-  const queryClient = useQueryClient()
   const isEditing = editingTransaction != null
   const [amount, setAmount] = useState(() =>
     isEditing ? Math.abs(parseFloat(editingTransaction.amount)).toString() : ''
@@ -103,39 +105,9 @@ function TransactionFabBody({
     [createdAt, selectedAccount]
   )
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (body: TransactionCreate) => {
-      const response = isEditing
-        ? await updateTransactions({
-            client,
-            body: [{ ...body, id: editingTransaction.id }]
-          })
-        : await createTransaction({ client, body })
-      if (response.error)
-        throw new Error(
-          `Failed to ${isEditing ? 'update' : 'create'} transaction`
-        )
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    },
-    onSuccess: () => {
-      toast.success(`Transaction ${isEditing ? 'updated' : 'created'}`)
-      queryClient.invalidateQueries({ queryKey: ['events'] })
-      queryClient.invalidateQueries({ queryKey: ['transactions'] })
-      onClose()
-    },
-    onError: (error) => {
-      console.error(error)
-      toast.error(`Failed to ${isEditing ? 'update' : 'create'} transaction`, {
-        description:
-          error instanceof Error ? error.message : 'An unknown error occurred'
-      })
-    }
-  })
-
   const handleSubmit = () => {
     if (selectedAccount == null || zonedCreatedAt == null) return
-    mutate({
+    onSubmit({
       account_id: selectedAccount.id,
       amount: negative ? `-${amount}` : amount,
       created_at: zonedCreatedAt

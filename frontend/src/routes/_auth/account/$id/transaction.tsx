@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { Fragment, useEffect, useState } from 'react'
 import { type DateRange } from 'react-day-picker'
@@ -10,9 +10,12 @@ import { TransactionFab } from '@/components/transaction-fab'
 import { TransactionStatusBadge } from '@/components/transaction-status-badge'
 import { Separator } from '@/components/ui/separator'
 import {
+  type TransactionCreate,
   type TransactionReadWithBalance,
+  createTransaction,
   readAccount,
-  readAccountTransactionsWithRunningBalance
+  readAccountTransactionsWithRunningBalance,
+  updateTransactions
 } from '@/lib/client'
 import { cn, endExclusive, formatCurrency } from '@/lib/utils'
 
@@ -24,6 +27,7 @@ function AccountTransactionPage() {
   const { client } = Route.useRouteContext()
   const { id } = Route.useParams()
   const accountId = Number(id)
+  const queryClient = useQueryClient()
 
   const [fabOpen, setFabOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] =
@@ -33,6 +37,39 @@ function AccountTransactionPage() {
     setFabOpen(open)
     if (open) setEditingTransaction(null)
   }
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (body: TransactionCreate) => {
+      const response = editingTransaction
+        ? await updateTransactions({
+            client,
+            body: [{ ...body, id: editingTransaction.id }]
+          })
+        : await createTransaction({ client, body })
+      if (response.error)
+        throw new Error(
+          `Failed to ${editingTransaction ? 'update' : 'create'} transaction`
+        )
+      if (!response.data) throw new Error('No data returned')
+      return response.data
+    },
+    onSuccess: () => {
+      toast.success(`Transaction ${editingTransaction ? 'updated' : 'created'}`)
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      setFabOpen(false)
+    },
+    onError: (error) => {
+      console.error(error)
+      toast.error(
+        `Failed to ${editingTransaction ? 'update' : 'create'} transaction`,
+        {
+          description:
+            error instanceof Error ? error.message : 'An unknown error occurred'
+        }
+      )
+    }
+  })
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const start = dateRange?.from?.toISOString() ?? null
@@ -211,6 +248,8 @@ function AccountTransactionPage() {
         open={fabOpen}
         onOpenChange={handleFabOpenChange}
         editingTransaction={editingTransaction}
+        onSubmit={mutate}
+        isPending={isPending}
       />
     </>
   )
