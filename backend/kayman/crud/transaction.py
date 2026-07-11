@@ -4,14 +4,19 @@ from typing import Literal
 
 from sqlmodel import Session, col, select
 
-from kayman.schemas.transaction import Transaction, TransactionBase, TransactionUpdate
+from kayman.schemas.transaction import (
+    Transaction,
+    TransactionBase,
+    TransactionCreate,
+    TransactionUpdate,
+)
 
 TransactionOrderBy = Literal["created_at", "posted_at", "amount", "id"]
 
 
 def create_transactions(
     session: Session,
-    txns: Sequence[TransactionBase],
+    txns: Sequence[TransactionCreate],
     commit: bool = True,
 ) -> Sequence[TransactionBase]:
     db_txns = [Transaction.model_validate(txn) for txn in txns]
