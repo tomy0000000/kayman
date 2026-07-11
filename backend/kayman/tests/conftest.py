@@ -12,6 +12,7 @@ from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
 from kayman.main import app
+from kayman.schemas import Currency
 
 
 def _enable_sqlite_fk(engine: Engine) -> None:
@@ -72,6 +73,13 @@ def session_2(db_uri) -> Generator[Session, None, None]:
 
     session.rollback()
     session.close()
+
+
+@pytest.fixture(scope="function")
+def currency(session: Session) -> Currency:  # noqa: ARG001 (binds factory session)
+    from kayman.tests.factories import CurrencyFactory
+
+    return CurrencyFactory()
 
 
 @pytest.fixture(scope="module")

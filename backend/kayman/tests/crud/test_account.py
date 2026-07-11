@@ -17,26 +17,51 @@ from kayman.crud.account import (
     update_accounts,
 )
 from kayman.schemas.account import Account, AccountCreate
-from kayman.tests.factories import AccountFactory, CurrencyFactory, TransactionFactory
+from kayman.schemas.currency import Currency
+from kayman.tests.factories import AccountFactory, TransactionFactory
 
 
-def test_create_accounts_1_account(session: Session, session_2: Session):
-    currency = CurrencyFactory()
+def assert_account_matches(
+    actual: Account,
+    expected: Account | AccountCreate,
+    *,
+    balance: Decimal | int | None = None,
+) -> None:
+    """Assert a persisted account matches ``expected``."""
+    assert actual.name == expected.name
+    assert actual.currency_code == expected.currency_code
+    assert actual.timezone == expected.timezone
+
+    # id should be
+    # - the expected id for existing accounts
+    # - a server-assigned id for new accounts
+    if isinstance(expected, Account):
+        assert actual.id == expected.id
+    else:
+        assert actual.id is not None
+
+    # balance should be
+    # - 0 for new accounts
+    # - the expected balance for existing accounts
+    # - a custom balance if provided (e.g. a post-update value)
+    if balance is None:
+        balance = expected.balance if isinstance(expected, Account) else 0
+    assert actual.balance == balance
+
+
+def test_create_accounts_1_account(
+    session: Session, session_2: Session, currency: Currency
+):
     account = AccountCreate.model_validate(
         AccountFactory.build(currency_code=currency.code)
     )
     db_account = create_accounts(session, [account])[0]
     db_read_account = read_account(session_2, db_account.id)
 
-    assert db_read_account.id is not None
-    assert db_read_account.name == account.name
-    assert db_read_account.currency_code == account.currency_code
-    assert db_read_account.timezone == account.timezone
-    assert db_read_account.balance == 0
+    assert_account_matches(db_read_account, account)
 
 
-def test_create_accounts_n_accounts(session: Session):
-    currency = CurrencyFactory()
+def test_create_accounts_n_accounts(session: Session, currency: Currency):
     accounts = [
         AccountCreate.model_validate(account)
         for account in AccountFactory.build_batch(10, currency_code=currency.code)
@@ -45,30 +70,23 @@ def test_create_accounts_n_accounts(session: Session):
 
     assert len(db_accounts) == 10
     for db_account, account in zip(db_accounts, accounts, strict=True):
-        assert db_account.id is not None
-        assert db_account.name == account.name
-        assert db_account.currency_code == account.currency_code
-        assert db_account.timezone == account.timezone
-        assert db_account.balance == 0
+        assert_account_matches(db_account, account)
 
 
 def test_create_accounts_empty(session: Session):
     assert create_accounts(session, []) == []
 
 
-def test_create_accounts_no_commit(session: Session, session_2: Session):
-    currency = CurrencyFactory()
+def test_create_accounts_no_commit(
+    session: Session, session_2: Session, currency: Currency
+):
     account = AccountCreate.model_validate(
         AccountFactory.build(currency_code=currency.code)
     )
 
     # The account should be created in the session
     session_account = create_accounts(session, [account], commit=False)[0]
-    assert session_account.id is not None  # Auto int should be set
-    assert session_account.name == account.name
-    assert session_account.currency_code == account.currency_code
-    assert session_account.timezone == account.timezone
-    assert session_account.balance == 0
+    assert_account_matches(session_account, account)
 
     # The account should not be visible to other sessions (yet)
     assert read_account(session_2, session_account.id) is None
@@ -79,22 +97,14 @@ def test_create_accounts_no_commit(session: Session, session_2: Session):
     # The account should now be visible to other sessions
     session_2_account = read_account(session_2, session_account.id)
     assert session_2_account is not None
-    assert session_2_account.id == session_account.id
-    assert session_2_account.name == session_account.name
-    assert session_2_account.currency_code == session_account.currency_code
-    assert session_2_account.timezone == session_account.timezone
-    assert session_2_account.balance == 0
+    assert_account_matches(session_2_account, session_account)
 
 
 def test_read_account(session: Session):
     account = AccountFactory()
     db_account = read_account(session, account.id)
 
-    assert db_account.id == account.id
-    assert db_account.name == account.name
-    assert db_account.currency_code == account.currency_code
-    assert db_account.timezone == account.timezone
-    assert db_account.balance == account.balance
+    assert_account_matches(db_account, account)
 
 
 def test_read_account_not_found(session: Session):
@@ -191,11 +201,7 @@ def test_read_accounts(session: Session):
 
     assert len(db_accounts) == 10
     for account, db_account in zip(accounts, db_accounts, strict=True):
-        assert db_account.balance == account.balance
-        assert db_account.currency_code == account.currency_code
-        assert db_account.timezone == account.timezone
-        assert db_account.id == account.id
-        assert db_account.name == account.name
+        assert_account_matches(db_account, account)
 
 
 def test_read_accounts_by_ids(session: Session):
@@ -205,11 +211,7 @@ def test_read_accounts_by_ids(session: Session):
 
     assert len(db_accounts) == 5
     for account, db_account in zip(interest_accounts, db_accounts, strict=True):
-        assert db_account.balance == account.balance
-        assert db_account.currency_code == account.currency_code
-        assert db_account.timezone == account.timezone
-        assert db_account.id == account.id
-        assert db_account.name == account.name
+        assert_account_matches(db_account, account)
 
 
 def test_read_accounts_for_update(session: Session):
@@ -270,11 +272,7 @@ def test_update_account_balances(session: Session):
         balance = account_balances[account.id]
         amount = account_amounts[account.id]
 
-        assert updated_account.id == account.id
-        assert updated_account.name == account.name
-        assert updated_account.currency_code == account.currency_code
-        assert updated_account.timezone == account.timezone
-        assert updated_account.balance == balance + amount
+        assert_account_matches(updated_account, account, balance=balance + amount)
 
 
 def test_update_account_balances_no_commit(session: Session, session_2: Session):
@@ -285,19 +283,15 @@ def test_update_account_balances_no_commit(session: Session, session_2: Session)
     }
 
     updated_account = update_account_balances(session, account_amounts, commit=False)[0]
-    assert updated_account.id == account.id
-    assert updated_account.name == account.name
-    assert updated_account.currency_code == account.currency_code
-    assert updated_account.timezone == account.timezone
-    assert updated_account.balance == account_balance + account_amounts[account.id]
+    assert_account_matches(
+        updated_account,
+        account,
+        balance=account_balance + account_amounts[account.id],
+    )
 
     # The account balance should not be updated from other sessions (yet)
     session_2_account = session_2.get(Account, account.id)
-    assert session_2_account.id == account.id
-    assert session_2_account.name == account.name
-    assert session_2_account.currency_code == account.currency_code
-    assert session_2_account.timezone == account.timezone
-    assert session_2_account.balance == account_balance
+    assert_account_matches(session_2_account, account, balance=account_balance)
 
     # Commit the change from main session
     session.commit()
@@ -305,11 +299,11 @@ def test_update_account_balances_no_commit(session: Session, session_2: Session)
 
     # The account balance should now be updated from other sessions
     session_2_account = session_2.get(Account, account.id)
-    assert session_2_account.id == account.id
-    assert session_2_account.name == account.name
-    assert session_2_account.currency_code == account.currency_code
-    assert session_2_account.timezone == account.timezone
-    assert session_2_account.balance == account_balance + account_amounts[account.id]
+    assert_account_matches(
+        session_2_account,
+        account,
+        balance=account_balance + account_amounts[account.id],
+    )
 
 
 def test__verify_account_ids(session: Session):
