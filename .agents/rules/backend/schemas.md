@@ -115,7 +115,7 @@ Cross-aggregate request/response wrappers live in `schemas/api_models.py` as pla
 ## Reference examples
 
 - `account.py`, `category.py`: clean Base/table/Create/Read(/Update) sets, conforming to the tutorial.
-- `currency.py`: single-table reference data (seeded, read-only via API), no split needed.
+- `currency.py`: same Base/table/Create/Read split, but keyed by a natural string primary key (`code`) that the client supplies, so `code` stays in `CurrencyBase` and only the `primary_key=True` directive moves to the table class.
 
 ## Known deviations to fix
 

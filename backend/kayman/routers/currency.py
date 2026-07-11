@@ -6,9 +6,14 @@ from sqlmodel import Session
 
 from kayman.auth import get_client
 from kayman.core.db import get_session
-from kayman.crud.currency import create_currency, read_currencies
+from kayman.crud.currency import create_currencies, read_currencies
 from kayman.mock_data import load_records
-from kayman.schemas.currency import Currency
+from kayman.schemas.currency import (
+    Currency,
+    CurrencyBase,
+    CurrencyCreate,
+    CurrencyRead,
+)
 
 TAG_NAME = "Currency"
 tag = {
@@ -33,15 +38,15 @@ EXAMPLES = {
 }
 
 
-@currency_router.post("", name="Create Currency")
+@currency_router.post("", name="Create Currency", response_model=CurrencyRead)
 def create(
     *,
     session: Session = Depends(get_session),
-    currency: Currency = Body(openapi_examples=EXAMPLES["create"]),
-) -> Currency:
-    return create_currency(session, currency)
+    currency: CurrencyCreate = Body(openapi_examples=EXAMPLES["create"]),
+) -> CurrencyBase:
+    return create_currencies(session, [currency])[0]
 
 
-@currency_router.get("", name="Read Currencies", response_model=list[Currency])
-def reads(*, session: Session = Depends(get_session)) -> Sequence[Currency]:
+@currency_router.get("", name="Read Currencies", response_model=list[CurrencyRead])
+def reads(*, session: Session = Depends(get_session)) -> Sequence[CurrencyBase]:
     return read_currencies(session)

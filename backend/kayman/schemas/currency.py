@@ -7,9 +7,21 @@ if TYPE_CHECKING:
     from kayman.schemas.event_entry import EventEntry
 
 
-class Currency(SQLModel, table=True):
-    code: str = Field(primary_key=True)
+class CurrencyBase(SQLModel):
+    code: str
     name: str
     symbol: str
+
+
+class Currency(CurrencyBase, table=True):
+    code: str = Field(primary_key=True)
     accounts: list["Account"] = Relationship(back_populates="currency")
     entries: list["EventEntry"] = Relationship(back_populates="currency")
+
+
+class CurrencyCreate(CurrencyBase):
+    pass
+
+
+class CurrencyRead(CurrencyBase):
+    pass
