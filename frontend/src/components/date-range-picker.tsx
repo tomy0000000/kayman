@@ -30,7 +30,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn, isSameRange } from '@/lib/utils'
 
-interface DateRangePickerProps {
+interface DatePickerWithRangeProps {
   dateRange: DateRange | undefined
   setDateRange: (date: DateRange | undefined) => void
 }
@@ -160,7 +160,7 @@ const PRESETS: Preset[] = [
 export function DatePickerWithRange({
   dateRange,
   setDateRange
-}: DateRangePickerProps) {
+}: DatePickerWithRangeProps) {
   const [open, setOpen] = useState(false)
 
   return (

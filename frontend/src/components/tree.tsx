@@ -13,6 +13,13 @@ interface TreeProps {
   treeData: TreeItem[] | undefined
 }
 
+interface TreeNodeProps {
+  item: TreeItem
+  currentId: string | null
+  setCurrentId: (id: string | null) => void
+  level: number
+}
+
 export function Tree({ treeData }: TreeProps) {
   const [currentId, setCurrentId] = useState<string | null>(null)
   return (
@@ -28,13 +35,6 @@ export function Tree({ treeData }: TreeProps) {
       ))}
     </ul>
   )
-}
-
-interface TreeNodeProps {
-  item: TreeItem
-  currentId: string | null
-  setCurrentId: (id: string | null) => void
-  level: number
 }
 
 function TreeNode({ item, currentId, setCurrentId, level }: TreeNodeProps) {
