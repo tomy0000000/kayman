@@ -28,7 +28,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
+import { cn, isSameRange } from '@/lib/utils'
 
 interface DateRangePickerProps {
   dateRange: DateRange | undefined
@@ -156,13 +156,6 @@ const PRESETS: Preset[] = [
     }
   }
 ]
-
-function isSameRange(a: DateRange | undefined, b: DateRange) {
-  if (!a?.from || !a?.to) return false
-  return (
-    a.from.getTime() === b.from?.getTime() && a.to.getTime() === b.to?.getTime()
-  )
-}
 
 export function DatePickerWithRange({
   dateRange,

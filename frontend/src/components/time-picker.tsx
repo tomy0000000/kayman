@@ -20,32 +20,12 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { formatTimePart, withDate, withTime } from '@/lib/utils'
 
 interface TimePickerProps {
   id: string
   value: Date
   onChange: (value: Date) => void
-}
-
-function pad(n: number) {
-  return String(n).padStart(2, '0')
-}
-
-function formatTimePart(date: Date) {
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-}
-
-function withDate(value: Date, picked: Date) {
-  const next = new Date(value)
-  next.setFullYear(picked.getFullYear(), picked.getMonth(), picked.getDate())
-  return next
-}
-
-function withTime(value: Date, time: string) {
-  const [h = 0, m = 0, s = 0] = time.split(':').map(Number)
-  const next = new Date(value)
-  next.setHours(h, m, s, 0)
-  return next
 }
 
 export function TimePicker({ id, value, onChange }: TimePickerProps) {

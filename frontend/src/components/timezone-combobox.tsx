@@ -14,6 +14,7 @@ import {
   useComboboxAnchor
 } from '@/components/ui/combobox'
 import { InputGroupAddon } from '@/components/ui/input-group'
+import { gmtLabel, offsetMinutes } from '@/lib/utils'
 
 interface TimezoneOption {
   value: string
@@ -23,24 +24,6 @@ interface TimezoneOption {
 interface TimezoneGroup {
   value: string
   items: TimezoneOption[]
-}
-
-// "GMT-5", "GMT+5:30", or "GMT" for the zone's current offset.
-function gmtLabel(timeZone: string): string {
-  const name = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    timeZoneName: 'shortOffset'
-  })
-    .formatToParts(new Date())
-    .find((part) => part.type === 'timeZoneName')?.value
-  return name ?? 'GMT'
-}
-
-function offsetMinutes(gmt: string): number {
-  const match = gmt.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/)
-  if (!match) return 0
-  const sign = match[1] === '-' ? -1 : 1
-  return sign * (Number(match[2]) * 60 + Number(match[3] ?? 0))
 }
 
 // Grouped by IANA area ("America", "Europe", ...), each option labelled
