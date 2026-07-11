@@ -35,6 +35,7 @@ import {
   type AccountRead,
   type TransactionRead,
   type TransactionStatus,
+  readAccounts,
   readTransactions
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
@@ -196,6 +197,16 @@ export function LinkTransactionsTable({
     )
   }
 
+  const { data: accounts } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: async () => {
+      const response = await readAccounts({ client })
+      if (response.error) throw new Error('Failed to fetch accounts')
+      if (!response.data) throw new Error('No data returned')
+      return response.data
+    }
+  })
+
   const { data } = useQuery({
     queryKey: ['transactions', selectedAccount?.id, 'unlinked'],
     enabled: selectedAccount !== null,
@@ -231,7 +242,7 @@ export function LinkTransactionsTable({
   return (
     <div className="space-y-3">
       <AccountSelect
-        client={client}
+        accounts={accounts ?? []}
         value={selectedAccount}
         onValueChange={setSelectedAccount}
       />

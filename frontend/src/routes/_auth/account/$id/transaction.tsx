@@ -15,6 +15,7 @@ import {
   createTransaction,
   readAccount,
   readAccountTransactionsWithRunningBalance,
+  readAccounts,
   updateTransactions
 } from '@/lib/client'
 import { cn, endExclusive, formatCurrency } from '@/lib/utils'
@@ -87,6 +88,16 @@ function AccountTransactionPage() {
         path: { account_id: accountId }
       })
       if (response.error) throw new Error('Failed to fetch account')
+      if (!response.data) throw new Error('No data returned')
+      return response.data
+    }
+  })
+
+  const { data: accounts } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: async () => {
+      const response = await readAccounts({ client })
+      if (response.error) throw new Error('Failed to fetch accounts')
       if (!response.data) throw new Error('No data returned')
       return response.data
     }
@@ -243,7 +254,7 @@ function AccountTransactionPage() {
       </div>
 
       <TransactionFab
-        client={client}
+        accounts={accounts ?? []}
         account={account}
         open={fabOpen}
         onOpenChange={handleFabOpenChange}

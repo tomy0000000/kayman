@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
 import { ChevronsUpDown } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -15,11 +14,10 @@ import {
   ItemMedia,
   ItemTitle
 } from '@/components/ui/item'
-import { type AccountRead, readAccounts } from '@/lib/client'
-import type { Client } from '@/lib/client/client'
+import { type AccountRead } from '@/lib/client'
 
 interface AccountSelectProps {
-  client: Client
+  accounts: AccountRead[]
   value: AccountRead | null
   onValueChange: (account: AccountRead) => void
   id?: string
@@ -31,21 +29,11 @@ interface AccountItemProps {
 }
 
 export function AccountSelect({
-  client,
+  accounts,
   value,
   onValueChange,
   id
 }: AccountSelectProps) {
-  const { data: accounts } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: async () => {
-      const response = await readAccounts({ client })
-      if (response.error) throw new Error('Failed to fetch accounts')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -67,7 +55,7 @@ export function AccountSelect({
         align="start"
         className="w-(--radix-dropdown-menu-trigger-width)"
       >
-        {accounts?.map((account) => (
+        {accounts.map((account) => (
           <DropdownMenuItem
             key={account.id}
             className="p-0"

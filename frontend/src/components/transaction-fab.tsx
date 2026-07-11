@@ -19,12 +19,11 @@ import {
   type TransactionCreate,
   type TransactionRead
 } from '@/lib/client'
-import type { Client } from '@/lib/client/client'
 import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { formatZonedDateTime, toZonedISOString } from '@/lib/utils'
 
 interface TransactionFabProps {
-  client: Client
+  accounts: AccountRead[]
   account?: AccountRead
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -34,7 +33,7 @@ interface TransactionFabProps {
 }
 
 interface TransactionFabBodyProps {
-  client: Client
+  accounts: AccountRead[]
   account?: AccountRead
   editingTransaction: TransactionRead | null
   onSubmit: (body: TransactionCreate) => void
@@ -42,7 +41,7 @@ interface TransactionFabBodyProps {
 }
 
 export function TransactionFab({
-  client,
+  accounts,
   account,
   open,
   onOpenChange,
@@ -65,7 +64,7 @@ export function TransactionFab({
       {/* Keyed so the form re-initializes from the picked transaction. */}
       <TransactionFabBody
         key={editingTransaction?.id ?? 'new'}
-        client={client}
+        accounts={accounts}
         account={account}
         editingTransaction={editingTransaction}
         onSubmit={onSubmit}
@@ -76,7 +75,7 @@ export function TransactionFab({
 }
 
 function TransactionFabBody({
-  client,
+  accounts,
   account,
   editingTransaction,
   onSubmit,
@@ -125,7 +124,7 @@ function TransactionFabBody({
         <FieldLabel htmlFor="txn-account">Account</FieldLabel>
         <AccountSelect
           id="txn-account"
-          client={client}
+          accounts={accounts}
           value={selectedAccount}
           onValueChange={setPickedAccount}
         />
