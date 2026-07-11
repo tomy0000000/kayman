@@ -31,6 +31,12 @@ export function formatDateTime(value: string | Date): string {
   })
 }
 
+export function formatTime(value: string | Date): string {
+  return new Date(value).toLocaleTimeString(browserLocale, {
+    timeStyle: 'short'
+  })
+}
+
 export function toLocalDateTimeInputValue(date: Date) {
   const offsetMs = date.getTimezoneOffset() * 60_000
   return new Date(date.getTime() - offsetMs).toISOString().slice(0, 19)
