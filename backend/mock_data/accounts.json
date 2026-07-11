@@ -7,7 +7,7 @@
     "timezone": "Asia/Taipei"
   },
   {
-    "balance": "1000000",
+    "balance": "970000",
     "currency_code": "TWD",
     "id": 2,
     "name": "中國信託台幣活存",
@@ -28,14 +28,14 @@
     "timezone": "America/Los_Angeles"
   },
   {
-    "balance": "100000",
+    "balance": "104750",
     "currency_code": "USD",
     "id": 5,
     "name": "Chase Checking",
     "timezone": "America/New_York"
   },
   {
-    "balance": "-3008",
+    "balance": "-8",
     "currency_code": "USD",
     "id": 6,
     "name": "American Express Gold Card",
