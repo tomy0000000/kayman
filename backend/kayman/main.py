@@ -29,7 +29,7 @@ app = FastAPI(
     debug=settings.ENVIRONMENT == "local",
     title=settings.PROJECT_NAME,
     description="Kayman is the one-stop solution for personal finance",
-    version="0.13.1",
+    version="0.14.0",
     openapi_tags=tags,
     default_response_class=KustomJSONResponse,
     middleware=[cors_middleware],
