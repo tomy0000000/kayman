@@ -43,3 +43,12 @@ A component used in more than one route or feature belongs in `frontend/src/comp
 Pure helpers (formatters, date math, class-name builders, etc.) belong in `frontend/src/lib/utils.ts`, or a sibling module under `frontend/src/lib/` if the file grows unwieldy. A `.tsx` file should contain only its props interface and the component(s) it owns.
 
 Why: keeps component files lean and focused on rendering, and makes helpers reusable and testable without mounting React.
+
+## No data hooks in `components/`
+
+Components in `frontend/src/components/` are pure presentational: no `useQuery`, `useMutation`, `useSuspenseQuery`, or `useQueryClient`. Data and mutation handlers arrive through props.
+
+- Queries and mutations belong in route files under `frontend/src/routes/`, or in a component colocated with its route. The route fetches, then passes the data (and any submit/mutate callbacks) down as props.
+- A reusable widget that renders server data (e.g. a select populated from an API) still receives that data via props. The caller owns the query, so the cache stays deduped at the route boundary.
+
+Why: shared components render in tests without a `QueryClientProvider` or network, and each piece of data has one obvious owner instead of being fetched wherever it happens to be displayed.
