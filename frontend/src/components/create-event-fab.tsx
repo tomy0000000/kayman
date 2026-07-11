@@ -25,37 +25,14 @@ import {
   updateTransactions
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
+import { eventTypeTabActiveClass } from '@/lib/event-types'
 import { cn, toLocalDateTimeInputValue } from '@/lib/utils'
 
-const EVENT_TYPES: {
-  value: EventType
-  icon: LucideIcon
-  activeClass: string
-}[] = [
-  {
-    value: 'Expense',
-    icon: TrendingDown,
-    activeClass:
-      'data-active:bg-red-100 data-active:text-red-800 dark:data-active:bg-red-900/30 dark:data-active:text-red-300'
-  },
-  {
-    value: 'Income',
-    icon: TrendingUp,
-    activeClass:
-      'data-active:bg-green-100 data-active:text-green-800 dark:data-active:bg-green-900/30 dark:data-active:text-green-300'
-  },
-  {
-    value: 'Transfer',
-    icon: ArrowLeftRight,
-    activeClass:
-      'data-active:bg-blue-100 data-active:text-blue-800 dark:data-active:bg-blue-900/30 dark:data-active:text-blue-300'
-  },
-  {
-    value: 'Exchange',
-    icon: Repeat,
-    activeClass:
-      'data-active:bg-purple-100 data-active:text-purple-800 dark:data-active:bg-purple-900/30 dark:data-active:text-purple-300'
-  }
+const EVENT_TYPES: { value: EventType; icon: LucideIcon }[] = [
+  { value: 'Expense', icon: TrendingDown },
+  { value: 'Income', icon: TrendingUp },
+  { value: 'Transfer', icon: ArrowLeftRight },
+  { value: 'Exchange', icon: Repeat }
 ]
 
 const browserTimezone = Intl.DateTimeFormat().resolvedOptions()
@@ -149,11 +126,14 @@ export function CreateEventFab({ client }: CreateEventFabProps) {
             onValueChange={(value) => setType(value as EventType)}
           >
             <TabsList className="w-full">
-              {EVENT_TYPES.map(({ value, icon: Icon, activeClass }) => (
+              {EVENT_TYPES.map(({ value, icon: Icon }) => (
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className={cn('gap-1 px-1 text-xs', activeClass)}
+                  className={cn(
+                    'gap-1 px-1 text-xs',
+                    eventTypeTabActiveClass[value]
+                  )}
                 >
                   <Icon />
                   {value}
