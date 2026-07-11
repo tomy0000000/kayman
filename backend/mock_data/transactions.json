@@ -198,5 +198,71 @@
     "index": 1,
     "posted_at": "2026-02-23T09:00:00-08:00",
     "reconciled_at": "2026-02-24T09:00:00-08:00"
+  },
+  {
+    "account_id": 5,
+    "amount": "6500",
+    "created_at": "2026-02-25T10:00:00-05:00",
+    "description": "Payroll deposit (salary + bonus)",
+    "event_id": 12,
+    "id": 21,
+    "index": 0,
+    "posted_at": "2026-02-26T10:00:00-05:00",
+    "reconciled_at": null
+  },
+  {
+    "account_id": 5,
+    "amount": "300",
+    "created_at": "2026-02-25T10:00:00-05:00",
+    "description": "Expense reimbursement",
+    "event_id": 12,
+    "id": 22,
+    "index": 1,
+    "posted_at": "2026-02-26T10:00:00-05:00",
+    "reconciled_at": null
+  },
+  {
+    "account_id": 5,
+    "amount": "-3000",
+    "created_at": "2026-02-27T10:00:00-05:00",
+    "description": "Payment to Amex Gold",
+    "event_id": 13,
+    "id": 23,
+    "index": 0,
+    "posted_at": "2026-02-28T10:00:00-05:00",
+    "reconciled_at": null
+  },
+  {
+    "account_id": 6,
+    "amount": "3000",
+    "created_at": "2026-02-27T10:00:00-05:00",
+    "description": "Card payment received",
+    "event_id": 13,
+    "id": 24,
+    "index": 1,
+    "posted_at": "2026-02-28T10:00:00-05:00",
+    "reconciled_at": null
+  },
+  {
+    "account_id": 2,
+    "amount": "-30000",
+    "created_at": "2026-02-24T14:00:00+08:00",
+    "description": "TWD sold",
+    "event_id": 14,
+    "id": 25,
+    "index": 0,
+    "posted_at": "2026-02-25T14:00:00+08:00",
+    "reconciled_at": null
+  },
+  {
+    "account_id": 5,
+    "amount": "950",
+    "created_at": "2026-02-24T14:00:00+08:00",
+    "description": "USD bought",
+    "event_id": 14,
+    "id": 26,
+    "index": 1,
+    "posted_at": "2026-02-25T14:00:00+08:00",
+    "reconciled_at": null
   }
 ]

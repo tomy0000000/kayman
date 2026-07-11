@@ -138,5 +138,35 @@
     "id": 14,
     "index": 0,
     "quantity": 1
+  },
+  {
+    "amount": "5000",
+    "category_id": 172,
+    "currency_code": "USD",
+    "description": "Base salary",
+    "event_id": 12,
+    "id": 15,
+    "index": 0,
+    "quantity": 1
+  },
+  {
+    "amount": "1500",
+    "category_id": 173,
+    "currency_code": "USD",
+    "description": "Performance bonus",
+    "event_id": 12,
+    "id": 16,
+    "index": 1,
+    "quantity": 1
+  },
+  {
+    "amount": "300",
+    "category_id": 175,
+    "currency_code": "USD",
+    "description": "Expense reimbursement",
+    "event_id": 12,
+    "id": 17,
+    "index": 2,
+    "quantity": 1
   }
 ]

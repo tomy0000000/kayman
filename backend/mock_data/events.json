@@ -75,5 +75,26 @@
     "timestamp": "2026-02-28T11:00:00-08:00",
     "timezone": "America/Los_Angeles",
     "type": "Expense"
+  },
+  {
+    "description": "February paycheck",
+    "id": 12,
+    "timestamp": "2026-02-25T10:00:00-05:00",
+    "timezone": "America/New_York",
+    "type": "Income"
+  },
+  {
+    "description": "Amex Gold card payment",
+    "id": 13,
+    "timestamp": "2026-02-27T10:00:00-05:00",
+    "timezone": "America/New_York",
+    "type": "Transfer"
+  },
+  {
+    "description": "TWD to USD exchange",
+    "id": 14,
+    "timestamp": "2026-02-24T14:00:00+08:00",
+    "timezone": "Asia/Taipei",
+    "type": "Exchange"
   }
 ]
