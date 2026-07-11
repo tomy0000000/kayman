@@ -24,9 +24,8 @@ import {
   updateTransactions
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
+import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { formatZonedDateTime, toZonedISOString } from '@/lib/utils'
-
-const CLIENT_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
 
 interface TransactionFabProps {
   client: Client

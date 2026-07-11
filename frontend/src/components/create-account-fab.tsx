@@ -23,6 +23,7 @@ import {
   readCurrencies
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
+import { CLIENT_TIMEZONE } from '@/lib/constants'
 
 interface CreateAccountFabProps {
   client: Client
@@ -33,9 +34,7 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [currencyCode, setCurrencyCode] = useState<string | null>(null)
-  const [timezone, setTimezone] = useState(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone
-  )
+  const [timezone, setTimezone] = useState(CLIENT_TIMEZONE)
 
   const { data: currencies } = useQuery({
     queryKey: ['currencies'],
@@ -53,7 +52,7 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
   const reset = () => {
     setName('')
     setCurrencyCode(null)
-    setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
+    setTimezone(CLIENT_TIMEZONE)
   }
 
   const { mutate, isPending } = useMutation({

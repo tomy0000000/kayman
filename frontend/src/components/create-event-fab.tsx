@@ -25,6 +25,7 @@ import {
   updateTransactions
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
+import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { eventTypeTabActiveClass } from '@/lib/event-types'
 import { cn, toLocalDateTimeInputValue } from '@/lib/utils'
 
@@ -34,9 +35,6 @@ const EVENT_TYPES: { value: EventType; icon: LucideIcon }[] = [
   { value: 'Transfer', icon: ArrowLeftRight },
   { value: 'Exchange', icon: Repeat }
 ]
-
-const browserTimezone = Intl.DateTimeFormat().resolvedOptions()
-  .timeZone as EventCreate['timezone']
 
 interface CreateEventFabProps {
   client: Client
@@ -99,7 +97,7 @@ export function CreateEventFab({ client }: CreateEventFabProps) {
     mutate({
       type,
       timestamp: toLocalDateTimeInputValue(timestamp),
-      timezone: browserTimezone,
+      timezone: CLIENT_TIMEZONE as EventCreate['timezone'],
       description: description.trim() || null
     })
 
