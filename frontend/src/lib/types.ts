@@ -1,9 +1,32 @@
-import type { CategoryReadWithChildren } from '@/lib/client'
+import type { CategoryReadWithChildren, EventEntryRead } from '@/lib/client'
 
 export type TreeItem = {
   id: string
   label: string
   children?: TreeItem[]
+}
+
+// An entry row being edited in the event sheet. Amount and quantity stay
+// strings while typing; `key` is client-only and keeps a row's identity stable
+// across reorders, since a row has no id until it is created.
+export type EventEntryDraft = {
+  key: string
+  categoryId: number | null
+  amount: string
+  quantity: string
+  currencyCode: string | null
+  description: string
+}
+
+export function toEventEntryDraft(entry: EventEntryRead): EventEntryDraft {
+  return {
+    key: String(entry.id),
+    categoryId: entry.category_id,
+    amount: entry.amount,
+    quantity: String(entry.quantity),
+    currencyCode: entry.currency_code,
+    description: entry.description ?? ''
+  }
 }
 
 export function categoryToTreeItem(

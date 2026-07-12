@@ -1,0 +1,273 @@
+import { GripVertical, Receipt, X } from 'lucide-react'
+import { Reorder, useDragControls } from 'motion/react'
+import { type RefObject, useMemo, useRef } from 'react'
+
+import { CategoryCombobox } from '@/components/category-combobox'
+import { CurrencySelect } from '@/components/currency-select'
+import { Button } from '@/components/ui/button'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
+} from '@/components/ui/empty'
+import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
+import { type CategoryReadWithChildren, type CurrencyRead } from '@/lib/client'
+import { type EventEntryDraft, buildCategoryNameMap } from '@/lib/types'
+import { formatCurrency } from '@/lib/utils'
+
+interface EventEntriesFieldProps {
+  categories: CategoryReadWithChildren[]
+  currencies: CurrencyRead[]
+  value: EventEntryDraft[]
+  onChange: (value: EventEntryDraft[]) => void
+  readOnly?: boolean
+}
+
+interface EventEntryRowProps {
+  entry: EventEntryDraft
+  categories: CategoryReadWithChildren[]
+  currencies: CurrencyRead[]
+  constraints: RefObject<HTMLTableSectionElement | null>
+  onChange: (entry: EventEntryDraft) => void
+  onRemove: (key: string) => void
+}
+
+export function EventEntriesField({
+  categories,
+  currencies,
+  value,
+  onChange,
+  readOnly = false
+}: EventEntriesFieldProps) {
+  const categoryNames = useMemo(
+    () => buildCategoryNameMap(categories),
+    [categories]
+  )
+  // A row dragged past the table is clipped by the scroll container `Table`
+  // wraps it in, so keep the drag inside the body.
+  const body = useRef<HTMLTableSectionElement>(null)
+
+  const addEntry = () =>
+    onChange([
+      ...value,
+      {
+        key: crypto.randomUUID(),
+        categoryId: null,
+        amount: '',
+        quantity: '1',
+        // Entries in one event usually share a currency.
+        currencyCode: value.at(-1)?.currencyCode ?? null,
+        description: ''
+      }
+    ])
+
+  const updateEntry = (entry: EventEntryDraft) =>
+    onChange(value.map((item) => (item.key === entry.key ? entry : item)))
+
+  const removeEntry = (key: string) =>
+    onChange(value.filter((item) => item.key !== key))
+
+  if (value.length === 0) {
+    if (readOnly) return null
+    return (
+      <Empty className="border border-dashed py-8">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Receipt />
+          </EmptyMedia>
+          <EmptyTitle>No entries</EmptyTitle>
+          <EmptyDescription>
+            Itemize this event with one or more entries.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button type="button" variant="outline" size="sm" onClick={addEntry}>
+            Add entry
+          </Button>
+        </EmptyContent>
+      </Empty>
+    )
+  }
+
+  const header = (
+    <TableHeader>
+      <TableRow>
+        {!readOnly && <TableHead className="w-6 px-0" />}
+        <TableHead>Category</TableHead>
+        <TableHead className="w-28">Amount</TableHead>
+        <TableHead className="w-16">Qty</TableHead>
+        <TableHead className="w-28">Currency</TableHead>
+        <TableHead>Description</TableHead>
+        {!readOnly && <TableHead className="w-8 px-0" />}
+      </TableRow>
+    </TableHeader>
+  )
+
+  if (readOnly) {
+    return (
+      <div className="rounded-md border">
+        <Table>
+          {header}
+          <TableBody>
+            {value.map((entry) => (
+              <TableRow key={entry.key}>
+                <TableCell>
+                  {entry.categoryId != null
+                    ? categoryNames.get(entry.categoryId)
+                    : null}
+                </TableCell>
+                <TableCell>
+                  {entry.currencyCode
+                    ? formatCurrency(
+                        parseFloat(entry.amount),
+                        entry.currencyCode
+                      )
+                    : entry.amount}
+                </TableCell>
+                <TableCell>{entry.quantity}</TableCell>
+                <TableCell>{entry.currencyCode}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {entry.description}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-md border">
+        <Table>
+          {header}
+          <Reorder.Group
+            as="tbody"
+            ref={body}
+            axis="y"
+            values={value}
+            onReorder={onChange}
+            className="[&_tr:last-child]:border-0"
+          >
+            {value.map((entry) => (
+              <EventEntryRow
+                key={entry.key}
+                entry={entry}
+                categories={categories}
+                currencies={currencies}
+                constraints={body}
+                onChange={updateEntry}
+                onRemove={removeEntry}
+              />
+            ))}
+          </Reorder.Group>
+        </Table>
+      </div>
+      <Button type="button" variant="outline" size="sm" onClick={addEntry}>
+        Add entry
+      </Button>
+    </div>
+  )
+}
+
+function EventEntryRow({
+  entry,
+  categories,
+  currencies,
+  constraints,
+  onChange,
+  onRemove
+}: EventEntryRowProps) {
+  const dragControls = useDragControls()
+
+  return (
+    <Reorder.Item
+      as="tr"
+      value={entry}
+      dragListener={false}
+      dragControls={dragControls}
+      dragConstraints={constraints}
+      dragElastic={0}
+      className="relative border-b bg-background"
+    >
+      <TableCell className="px-0">
+        <span
+          aria-label="Drag to reorder"
+          className="flex cursor-grab touch-none items-center text-muted-foreground select-none active:cursor-grabbing"
+          // Suppress the compatibility mousedown, which would otherwise start a
+          // text selection that follows the drag across the page.
+          onPointerDown={(e) => {
+            e.preventDefault()
+            dragControls.start(e)
+          }}
+        >
+          <GripVertical className="size-4" />
+        </span>
+      </TableCell>
+      <TableCell>
+        <CategoryCombobox
+          categories={categories}
+          value={entry.categoryId}
+          onValueChange={(categoryId) => onChange({ ...entry, categoryId })}
+        />
+      </TableCell>
+      <TableCell>
+        <Input
+          type="number"
+          inputMode="decimal"
+          placeholder="0.00"
+          value={entry.amount}
+          onChange={(e) =>
+            onChange({ ...entry, amount: e.target.value.replace(/-/g, '') })
+          }
+        />
+      </TableCell>
+      <TableCell>
+        <Input
+          type="number"
+          min={1}
+          step={1}
+          value={entry.quantity}
+          onChange={(e) => onChange({ ...entry, quantity: e.target.value })}
+        />
+      </TableCell>
+      <TableCell>
+        <CurrencySelect
+          currencies={currencies}
+          value={entry.currencyCode}
+          onValueChange={(currencyCode) => onChange({ ...entry, currencyCode })}
+        />
+      </TableCell>
+      <TableCell>
+        <Input
+          placeholder="Optional"
+          value={entry.description}
+          onChange={(e) => onChange({ ...entry, description: e.target.value })}
+        />
+      </TableCell>
+      <TableCell className="px-0">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Remove entry"
+          onClick={() => onRemove(entry.key)}
+        >
+          <X />
+        </Button>
+      </TableCell>
+    </Reorder.Item>
+  )
+}
