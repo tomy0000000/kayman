@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 
+import { EventEntriesField } from '@/components/event-entries-field'
 import { FabForm } from '@/components/fab-form'
 import { FabSheet } from '@/components/fab-sheet'
 import { type SelectedTransaction } from '@/components/link-transactions-table'
@@ -18,13 +19,17 @@ import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   type AccountRead,
+  type CategoryReadWithChildren,
+  type CurrencyRead,
   type EventCreate,
+  type EventEntryCreate,
   type EventReadDetailed,
   type EventType
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
 import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { eventTypeTabActiveClass } from '@/lib/event-types'
+import { type EventEntryDraft, toEventEntryDraft } from '@/lib/types'
 import {
   cn,
   formatZonedDateTime,
@@ -39,27 +44,43 @@ const EVENT_TYPES: { value: EventType; icon: LucideIcon }[] = [
   { value: 'Exchange', icon: Repeat }
 ]
 
+type EventEntryPayload = Omit<EventEntryCreate, 'event_id'>
+
 interface EventFabProps {
   client: Client
   accounts: AccountRead[]
+  categories: CategoryReadWithChildren[]
+  currencies: CurrencyRead[]
   open: boolean
   onOpenChange: (open: boolean) => void
   editingEvent: EventReadDetailed | null
-  onSubmit: (body: EventCreate, linkedTransactionIds: number[]) => void
+  onSubmit: (
+    body: EventCreate,
+    linkedTransactionIds: number[],
+    entries: EventEntryPayload[]
+  ) => void
   isPending: boolean
 }
 
 interface EventFabBodyProps {
   client: Client
   accounts: AccountRead[]
+  categories: CategoryReadWithChildren[]
+  currencies: CurrencyRead[]
   editingEvent: EventReadDetailed | null
-  onSubmit: (body: EventCreate, linkedTransactionIds: number[]) => void
+  onSubmit: (
+    body: EventCreate,
+    linkedTransactionIds: number[],
+    entries: EventEntryPayload[]
+  ) => void
   isPending: boolean
 }
 
 export function EventFab({
   client,
   accounts,
+  categories,
+  currencies,
   open,
   onOpenChange,
   editingEvent,
@@ -72,6 +93,7 @@ export function EventFab({
       onOpenChange={onOpenChange}
       hotkey="n"
       label="New event"
+      className="data-[side=right]:sm:max-w-2xl"
     >
       <SheetHeader>
         <SheetTitle>{editingEvent ? 'Edit event' : 'New event'}</SheetTitle>
@@ -81,6 +103,8 @@ export function EventFab({
         key={editingEvent?.id ?? 'new'}
         client={client}
         accounts={accounts}
+        categories={categories}
+        currencies={currencies}
         editingEvent={editingEvent}
         onSubmit={onSubmit}
         isPending={isPending}
@@ -92,6 +116,8 @@ export function EventFab({
 function EventFabBody({
   client,
   accounts,
+  categories,
+  currencies,
   editingEvent,
   onSubmit,
   isPending
@@ -116,6 +142,18 @@ function EventFabBody({
       return account ? [{ transaction, account }] : []
     })
   })
+  const [entries, setEntries] = useState<EventEntryDraft[]>(() =>
+    isEditing ? editingEvent.entries.map(toEventEntryDraft) : []
+  )
+
+  // The API can only batch-create entries, so an existing event's entries are
+  // shown but not editable.
+  const incompleteEntry = entries.some(
+    (entry) =>
+      entry.categoryId == null ||
+      entry.currencyCode == null ||
+      entry.amount === ''
+  )
 
   const handleSubmit = () => {
     const body: EventCreate = isEditing
@@ -133,7 +171,15 @@ function EventFabBody({
         }
     onSubmit(
       body,
-      linkedTransactions.map((item) => item.transaction.id)
+      linkedTransactions.map((item) => item.transaction.id),
+      entries.map((entry, index) => ({
+        category_id: entry.categoryId as number,
+        amount: entry.amount,
+        quantity: parseInt(entry.quantity, 10),
+        currency_code: entry.currencyCode as string,
+        description: entry.description.trim() || null,
+        index
+      }))
     )
   }
 
@@ -141,6 +187,7 @@ function EventFabBody({
     <FabForm
       onSubmit={handleSubmit}
       isPending={isPending}
+      disabled={incompleteEntry}
       isEditing={isEditing}
     >
       <Field>
@@ -197,6 +244,17 @@ function EventFabBody({
           client={client}
           value={linkedTransactions}
           onChange={setLinkedTransactions}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel>Entries</FieldLabel>
+        <EventEntriesField
+          categories={categories}
+          currencies={currencies}
+          value={entries}
+          onChange={setEntries}
+          readOnly={isEditing}
         />
       </Field>
     </FabForm>

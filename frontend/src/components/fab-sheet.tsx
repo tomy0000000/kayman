@@ -9,12 +9,14 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
 interface FabSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   hotkey: string
   label: string
+  className?: string
   children: React.ReactNode
 }
 
@@ -23,6 +25,7 @@ export function FabSheet({
   onOpenChange,
   hotkey,
   label,
+  className,
   children
 }: FabSheetProps) {
   useHotkeys(hotkey, () => onOpenChange(true), { preventDefault: true })
@@ -46,7 +49,7 @@ export function FabSheet({
           <Kbd>{hotkey.toUpperCase()}</Kbd>
         </TooltipContent>
       </Tooltip>
-      <SheetContent side="right" className="flex flex-col">
+      <SheetContent side="right" className={cn('flex flex-col', className)}>
         {children}
       </SheetContent>
     </Sheet>

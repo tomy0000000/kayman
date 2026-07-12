@@ -8,9 +8,12 @@ import { EventsTable } from '@/components/events-table'
 import { Calendar } from '@/components/ui/calendar'
 import {
   type EventCreate,
+  type EventEntryCreate,
   type EventReadDetailed,
   createEvent,
   readAccounts,
+  readCategories,
+  readCurrencies,
   readEvents,
   updateEvent,
   updateTransactions
@@ -48,6 +51,7 @@ function HomePage() {
     }: {
       body: EventCreate
       linkedTransactionIds: number[]
+      entries: Omit<EventEntryCreate, 'event_id'>[]
     }) => {
       const response = editingEvent
         ? await updateEvent({
@@ -122,6 +126,26 @@ function HomePage() {
     }
   })
 
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const response = await readCategories({ client })
+      if (response.error) throw new Error('Failed to fetch categories')
+      if (!response.data) throw new Error('No data returned')
+      return response.data
+    }
+  })
+
+  const { data: currencies } = useQuery({
+    queryKey: ['currencies'],
+    queryFn: async () => {
+      const response = await readCurrencies({ client })
+      if (response.error) throw new Error('Failed to fetch currencies')
+      if (!response.data) throw new Error('No data returned')
+      return response.data
+    }
+  })
+
   useEffect(() => {
     if (!isError) return
     console.error(error)
@@ -156,11 +180,13 @@ function HomePage() {
       <EventFab
         client={client}
         accounts={accounts ?? []}
+        categories={categories ?? []}
+        currencies={currencies ?? []}
         open={fabOpen}
         onOpenChange={handleFabOpenChange}
         editingEvent={editingEvent}
-        onSubmit={(body, linkedTransactionIds) =>
-          mutate({ body, linkedTransactionIds })
+        onSubmit={(body, linkedTransactionIds, entries) =>
+          mutate({ body, linkedTransactionIds, entries })
         }
         isPending={isMutationPending}
       />
