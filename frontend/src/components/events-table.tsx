@@ -24,19 +24,25 @@ import {
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
 import { buildCategoryNameMap } from '@/lib/types'
-import { formatCurrency, formatTime } from '@/lib/utils'
+import { cn, formatCurrency, formatTime } from '@/lib/utils'
 
 interface EventsTableProps {
   client: Client
   events: EventReadDetailed[] | undefined
   isPending: boolean
+  onEventClick?: (event: EventReadDetailed) => void
 }
 
 // Stable reference for the empty state. A fresh `[]` per render makes
 // react-table treat `data` as changed every render and loops forever.
 const EMPTY_EVENTS: EventReadDetailed[] = []
 
-export function EventsTable({ client, events, isPending }: EventsTableProps) {
+export function EventsTable({
+  client,
+  events,
+  isPending,
+  onEventClick
+}: EventsTableProps) {
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
@@ -174,7 +180,21 @@ export function EventsTable({ client, events, isPending }: EventsTableProps) {
         <TableBody>
           {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow
+                key={row.id}
+                tabIndex={onEventClick ? 0 : undefined}
+                onClick={() => onEventClick?.(row.original)}
+                onKeyDown={(event) => {
+                  if (
+                    onEventClick &&
+                    (event.key === 'Enter' || event.key === ' ')
+                  ) {
+                    event.preventDefault()
+                    onEventClick(row.original)
+                  }
+                }}
+                className={cn(onEventClick && 'cursor-pointer')}
+              >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
