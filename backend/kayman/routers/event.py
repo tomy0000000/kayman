@@ -8,7 +8,6 @@ from kayman.auth import get_client
 from kayman.core.db import get_session
 from kayman.crud.event import (
     create_events,
-    read_event,
     read_events,
 )
 from kayman.schemas.api_models import EventReadDetailed
@@ -40,10 +39,10 @@ def create(*, session: Session = Depends(get_session), event: EventCreate) -> Ev
 
 @event_router.get("/{event_id}", name="Read Event", response_model=EventReadDetailed)
 def read(*, session: Session = Depends(get_session), event_id: int) -> EventBase:
-    event = read_event(session, event_id)
-    if event is None:
+    events = read_events(session, event_ids=[event_id])
+    if not events:
         raise HTTPException(status_code=404, detail="Event not found")
-    return event
+    return events[0]
 
 
 @event_router.get("", name="Read Events", response_model=list[EventReadDetailed])

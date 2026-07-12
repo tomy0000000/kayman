@@ -26,10 +26,6 @@ def create_events(
     return db_events
 
 
-def read_event(session: Session, event_id: int) -> Event | None:
-    return session.get(Event, event_id)
-
-
 def read_events(
     session: Session,
     event_ids: Collection[int] | None = None,

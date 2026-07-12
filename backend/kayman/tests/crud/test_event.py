@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 from sqlmodel import Session
 
-from kayman.crud.event import create_events, read_event, read_events, update_events
+from kayman.crud.event import create_events, read_events, update_events
 from kayman.schemas.event import EventType, EventUpdate
 from kayman.tests.factories import (
     CategoryFactory,
@@ -56,25 +56,21 @@ def test_create_events_no_commit(session: Session, session_2: Session):
     assert session_event.type == event.type
 
     # The event should not be visible to other sessions (yet)
-    session_2_event = read_event(session_2, session_event.id)
-    assert session_2_event is None
+    session_2_events = read_events(session_2, event_ids=[session_event.id])
+    assert len(session_2_events) == 0
 
     # Commit the event from main session
     session.commit()
 
     # The event should now be visible to other sessions
-    session_3_event = read_event(session_2, session_event.id)
-    assert session_3_event is not None
+    session_3_events = read_events(session_2, event_ids=[session_event.id])
+    assert len(session_3_events) == 1
+    session_3_event = session_3_events[0]
     assert session_3_event.id == session_event.id
     assert session_3_event.description == session_event.description
     assert session_3_event.timestamp == session_event.timestamp
     assert session_3_event.timezone == session_event.timezone
     assert session_3_event.type == session_event.type
-
-
-def test_read_event(session: Session):
-    event = EventFactory()
-    assert read_event(session, event.id) == event
 
 
 def test_read_events_by_ids(session: Session):
