@@ -1,9 +1,11 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import patch
 
+import pytest
 from sqlmodel import Session
 
-from kayman.crud.event import create_events, read_event, read_events
+from kayman.crud.event import create_events, read_event, read_events, update_events
+from kayman.schemas.event import EventType, EventUpdate
 from kayman.tests.factories import (
     CategoryFactory,
     EventEntryFactory,
@@ -162,3 +164,201 @@ def test_read_events_for_update(session: Session):
         args = mock_exec.call_args[0]
         statement = str(args[0])
         assert "FOR UPDATE" in statement
+
+
+@pytest.mark.parametrize(
+    ("field", "make_value", "commit"),
+    [
+        ("type", lambda: EventType.Income, True),
+        ("timezone", lambda: "America/New_York", True),
+        ("description", lambda: "new description", True),
+        # Datetime fields use commit=False: SQLite drops tzinfo on the
+        # post-commit refresh, so keep the in-memory tz-aware value to compare.
+        ("timestamp", lambda: datetime(2026, 6, 1, tzinfo=UTC), False),
+    ],
+    ids=[
+        "type",
+        "timezone",
+        "description",
+        "timestamp",
+    ],
+)
+def test_update_event_field(session: Session, field, make_value, commit):
+    event = EventFactory(
+        type=EventType.Expense,
+        timestamp=datetime(2025, 1, 1, 12, 0),
+        timezone="UTC",
+        description="original description",
+    )
+    originals = {
+        "type": event.type,
+        "timestamp": event.timestamp,
+        "timezone": event.timezone,
+        "description": event.description,
+    }
+    new_value = make_value()
+
+    updated = update_events(
+        session,
+        [event.id],
+        [EventUpdate(**{field: new_value})],
+        commit=commit,
+    )
+
+    assert len(updated) == 1
+    assert getattr(updated[0], field) == new_value
+    # Every field the caller did not set must be left untouched.
+    for other_field, original_value in originals.items():
+        if other_field == field:
+            continue
+        assert getattr(updated[0], other_field) == original_value
+
+
+def test_update_events_explicit_none_clears_description(session: Session):
+    event = EventFactory(description="original description")
+
+    # description=None is explicitly set, so exclude_unset keeps it and the
+    # column is nulled.
+    updated = update_events(session, [event.id], [EventUpdate(description=None)])
+
+    assert len(updated) == 1
+    assert updated[0].description is None
+
+    db_events = read_events(session, event_ids=[event.id])
+    assert len(db_events) == 1
+    assert db_events[0].description is None
+
+
+def test_update_events_omitted_description_is_untouched(session: Session):
+    event = EventFactory(type=EventType.Expense, description="original description")
+
+    # description is omitted, so exclude_unset drops it and the column survives.
+    updated = update_events(session, [event.id], [EventUpdate(type=EventType.Income)])
+
+    assert len(updated) == 1
+    assert updated[0].type == EventType.Income
+    assert updated[0].description == "original description"
+
+    db_events = read_events(session, event_ids=[event.id])
+    assert len(db_events) == 1
+    assert db_events[0].description == "original description"
+
+
+def test_update_events_n_events(session: Session):
+    event_1 = EventFactory(description="one")
+    event_2 = EventFactory(description="two")
+    event_3 = EventFactory(description="three")
+
+    updated = update_events(
+        session,
+        [event_1.id, event_2.id, event_3.id],
+        [
+            EventUpdate(description="one updated"),
+            EventUpdate(description="two updated"),
+            EventUpdate(description="three updated"),
+        ],
+    )
+
+    assert len(updated) == 3
+    descriptions = {event.id: event.description for event in updated}
+    assert descriptions == {
+        event_1.id: "one updated",
+        event_2.id: "two updated",
+        event_3.id: "three updated",
+    }
+
+
+def test_update_events_pairs_by_id_not_position(session: Session):
+    event_1 = EventFactory(description="one")
+    event_2 = EventFactory(description="two")
+    event_3 = EventFactory(description="three")
+
+    # ids are passed in reverse of the order the DB naturally returns rows in,
+    # so an implementation that zips the updates against the fetched rows by
+    # position will apply each update to the wrong event.
+    updated = update_events(
+        session,
+        [event_3.id, event_1.id],
+        [
+            EventUpdate(description="three updated"),
+            EventUpdate(description="one updated"),
+        ],
+    )
+
+    assert len(updated) == 2
+    descriptions = {event.id: event.description for event in updated}
+    assert descriptions == {
+        event_3.id: "three updated",
+        event_1.id: "one updated",
+    }
+
+    db_events = read_events(session, event_ids=[event_1.id, event_2.id, event_3.id])
+    assert len(db_events) == 3
+    db_descriptions = {event.id: event.description for event in db_events}
+    assert db_descriptions == {
+        event_1.id: "one updated",
+        event_2.id: "two",  # untouched
+        event_3.id: "three updated",
+    }
+
+
+def test_update_events_empty(session: Session):
+    updated = update_events(session, [], [])
+
+    assert len(updated) == 0
+
+
+def test_update_events_no_commit(session: Session, session_2: Session):
+    event = EventFactory(description="original description")
+
+    # The update should be applied in the session
+    session_events = update_events(
+        session,
+        [event.id],
+        [EventUpdate(description="new description")],
+        commit=False,
+    )
+    assert len(session_events) == 1
+    assert session_events[0].description == "new description"
+
+    # The update should not be visible to other sessions (yet)
+    session_2_events = read_events(session_2, event_ids=[event.id])
+    assert len(session_2_events) == 1
+    assert session_2_events[0].description == "original description"
+
+    # Commit the update from main session
+    session.commit()
+
+    # The update should now be visible to other sessions
+    session_2.expire_all()  # drop session_2's identity-map snapshot
+    session_3_events = read_events(session_2, event_ids=[event.id])
+    assert len(session_3_events) == 1
+    assert session_3_events[0].description == "new description"
+
+
+def test_update_events_missing_id(session: Session):
+    event = EventFactory(description="original description")
+    missing_id = event.id + 1000
+
+    with pytest.raises(ValueError, match=r"Event id\(s\) not found"):
+        update_events(
+            session,
+            [event.id, missing_id],
+            [
+                EventUpdate(description="new description"),
+                EventUpdate(description="never applied"),
+            ],
+        )
+
+    # Nothing should have been mutated
+    session.rollback()
+    db_events = read_events(session, event_ids=[event.id])
+    assert len(db_events) == 1
+    assert db_events[0].description == "original description"
+
+
+def test_update_events_length_mismatch(session: Session):
+    event = EventFactory()
+
+    with pytest.raises(ValueError, match="same length"):
+        update_events(session, [event.id], [])

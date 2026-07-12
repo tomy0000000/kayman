@@ -46,3 +46,10 @@ class EventCreate(EventBase):
 
 class EventRead(EventBase):
     id: int
+
+
+class EventUpdate(SQLModel):
+    type: EventType | None = None
+    timestamp: datetime | None = None
+    timezone: TimeZoneName | None = None
+    description: str | None = None
