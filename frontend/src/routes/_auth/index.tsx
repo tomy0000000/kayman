@@ -11,6 +11,7 @@ import {
   type EventEntryCreate,
   type EventReadDetailed,
   createEvent,
+  createEventEntries,
   readAccounts,
   readCategories,
   readCurrencies,
@@ -47,7 +48,8 @@ function HomePage() {
   const { mutate, isPending: isMutationPending } = useMutation({
     mutationFn: async ({
       body,
-      linkedTransactionIds
+      linkedTransactionIds,
+      entries
     }: {
       body: EventCreate
       linkedTransactionIds: number[]
@@ -79,6 +81,17 @@ function HomePage() {
         const linkResponse = await updateTransactions({ client, body: updates })
         if (linkResponse.error)
           throw new Error('Failed to update linked transactions')
+      }
+
+      // The API can only batch-create entries, so they are only sent for a new
+      // event. An existing event's entries are read-only in the sheet.
+      if (!editingEvent && entries.length > 0) {
+        const entryResponse = await createEventEntries({
+          client,
+          body: entries.map((entry) => ({ ...entry, event_id: event.id }))
+        })
+        if (entryResponse.error)
+          throw new Error('Failed to create event entries')
       }
 
       return event
