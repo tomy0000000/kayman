@@ -21,17 +21,19 @@ class EventType(enum.Enum):
 
 
 class EventBase(SQLModel):
-    type: EventType = Field(sa_column=Column(sqlmodel.Enum(EventType), nullable=False))
-    timestamp: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), nullable=False),
-        title="Local timestamp, or timezone-aware timestamp",
-    )
-    timezone: TimeZoneName = Field(sa_column=Column(SATimezone(), nullable=False))
+    type: EventType
+    timestamp: datetime
+    timezone: TimeZoneName
     description: str | None = None
 
 
 class Event(EventBase, table=True):
     id: int | None = Field(primary_key=True, default=None)
+    type: EventType = Field(sa_column=Column(sqlmodel.Enum(EventType), nullable=False))
+    timestamp: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
+    timezone: TimeZoneName = Field(sa_column=Column(SATimezone(), nullable=False))
     # Auto calculated for Expense or Income
     # Manually logged for Transfer or Exchange
     transactions: list["Transaction"] = Relationship(back_populates="event")
