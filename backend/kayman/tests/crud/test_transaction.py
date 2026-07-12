@@ -10,7 +10,12 @@ from kayman.crud.transaction import (
     read_transactions,
     update_transactions,
 )
-from kayman.schemas.transaction import Transaction, TransactionBase, TransactionUpdate
+from kayman.schemas.transaction import (
+    Transaction,
+    TransactionBase,
+    TransactionRead,
+    TransactionUpdate,
+)
 from kayman.tests.factories import AccountFactory, EventFactory, TransactionFactory
 
 
@@ -120,6 +125,17 @@ def test_read_transactions_all(session: Session):
     TransactionFactory.create_batch(10)
 
     assert len(read_transactions(session)) == 10
+
+
+def test_read_transactions_expose_account_currency_code(session: Session):
+    account = AccountFactory()
+    TransactionFactory.create_batch(3, account=account)
+
+    results = read_transactions(session, account_id=account.id)
+    reads = [TransactionRead.model_validate(txn) for txn in results]
+
+    assert len(reads) == 3
+    assert all(read.currency_code == account.currency_code for read in reads)
 
 
 def test_read_transactions_by_ids(session: Session):

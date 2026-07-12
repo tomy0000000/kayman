@@ -37,6 +37,10 @@ class Transaction(TransactionBase, table=True):
     account: "Account" = Relationship(back_populates="transactions")
     event: Optional["Event"] = Relationship(back_populates="transactions")
 
+    @property
+    def currency_code(self) -> str:
+        return self.account.currency_code
+
 
 class TransactionCreate(TransactionBase):
     pass
@@ -51,6 +55,7 @@ class TransactionStatus(enum.Enum):
 class TransactionRead(TransactionBase):
     id: int
     created_at: datetime
+    currency_code: str
 
     @computed_field
     def status(self) -> TransactionStatus:

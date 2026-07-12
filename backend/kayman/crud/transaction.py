@@ -2,6 +2,7 @@ from collections.abc import Collection, Sequence
 from datetime import datetime
 from typing import Literal
 
+from sqlalchemy.orm import selectinload
 from sqlmodel import Session, col, select
 
 from kayman.schemas.transaction import (
@@ -41,7 +42,7 @@ def read_transactions(
     descending: bool = False,
     for_update: bool = False,
 ) -> Sequence[Transaction]:
-    scalar = select(Transaction)
+    scalar = select(Transaction).options(selectinload(Transaction.account))  # type: ignore[arg-type]
     if transaction_ids:
         scalar = scalar.where(col(Transaction.id).in_(transaction_ids))
     if account_id:
