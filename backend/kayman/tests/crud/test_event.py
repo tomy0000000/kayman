@@ -1,4 +1,5 @@
 from datetime import datetime
+from unittest.mock import patch
 
 from sqlmodel import Session
 
@@ -13,8 +14,10 @@ from kayman.tests.factories import (
 def test_create_events_1_event(session: Session, session_2: Session):
     event = EventFactory.build()
     db_event = create_events(session, [event])[0]
-    db_read_event = read_event(session_2, db_event.id)
+    db_read_events = read_events(session_2, event_ids=[db_event.id])
 
+    assert len(db_read_events) == 1
+    db_read_event = db_read_events[0]
     assert db_read_event.id is not None
     assert db_read_event.description == event.description
     assert db_read_event.timestamp == event.timestamp
@@ -72,6 +75,20 @@ def test_read_event(session: Session):
     assert read_event(session, event.id) == event
 
 
+def test_read_events_by_ids(session: Session):
+    event_1 = EventFactory()
+    event_2 = EventFactory()
+    EventFactory()
+
+    single = read_events(session, event_ids=[event_1.id])
+    assert len(single) == 1
+    assert single[0].id == event_1.id
+
+    multiple = read_events(session, event_ids=[event_1.id, event_2.id])
+    assert len(multiple) == 2
+    assert {event.id for event in multiple} == {event_1.id, event_2.id}
+
+
 def test_read_events_all(session: Session):
     for _ in range(10):
         EventFactory()
@@ -117,3 +134,31 @@ def test_read_events_by_category(session: Session):
     events = read_events(session, category_id=category_3.id)
     assert len(events) == 1
     assert events[0].id == event_2.id
+
+
+def test_read_events_by_category_deduplicates(session: Session):
+    # Two entries of the same event in the same category. The join fans the
+    # event out into one row per matching entry, so distinct() must collapse it
+    # back to a single event.
+    category = CategoryFactory()
+    event = EventFactory(
+        entries=[
+            EventEntryFactory(category=category),
+            EventEntryFactory(category=category),
+        ]
+    )
+
+    events = read_events(session, category_id=category.id)
+
+    assert len(events) == 1
+    assert events[0].id == event.id
+
+
+def test_read_events_for_update(session: Session):
+    EventFactory()
+
+    with patch.object(session, "exec", wraps=session.exec) as mock_exec:
+        read_events(session, for_update=True)
+        args = mock_exec.call_args[0]
+        statement = str(args[0])
+        assert "FOR UPDATE" in statement

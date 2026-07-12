@@ -53,7 +53,7 @@ def reads(
     event_date: date | None = None,
     category_id: int | None = None,
 ) -> Sequence[EventBase]:
-    return read_events(session, event_date, category_id)
+    return read_events(session, event_date=event_date, category_id=category_id)
 
 
 @event_router.patch("", name="Update Event", response_model=EventRead)
