@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { AccountSelect } from '@/components/account-select'
 import { FabForm } from '@/components/fab-form'
 import { FabSheet } from '@/components/fab-sheet'
+import { LinkEventField } from '@/components/link-event-field'
 import { TimePicker } from '@/components/time-picker'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import {
@@ -16,6 +17,7 @@ import {
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
   type AccountRead,
+  type EventReadDetailed,
   type TransactionCreate,
   type TransactionRead
 } from '@/lib/client'
@@ -25,6 +27,7 @@ import { formatZonedDateTime, toZonedISOString } from '@/lib/utils'
 interface TransactionFabProps {
   accounts: AccountRead[]
   account?: AccountRead
+  events: EventReadDetailed[] | undefined
   open: boolean
   onOpenChange: (open: boolean) => void
   editingTransaction: TransactionRead | null
@@ -35,6 +38,7 @@ interface TransactionFabProps {
 interface TransactionFabBodyProps {
   accounts: AccountRead[]
   account?: AccountRead
+  events: EventReadDetailed[] | undefined
   editingTransaction: TransactionRead | null
   onSubmit: (body: TransactionCreate) => void
   isPending: boolean
@@ -43,6 +47,7 @@ interface TransactionFabBodyProps {
 export function TransactionFab({
   accounts,
   account,
+  events,
   open,
   onOpenChange,
   editingTransaction,
@@ -66,6 +71,7 @@ export function TransactionFab({
         key={editingTransaction?.id ?? 'new'}
         accounts={accounts}
         account={account}
+        events={events}
         editingTransaction={editingTransaction}
         onSubmit={onSubmit}
         isPending={isPending}
@@ -77,6 +83,7 @@ export function TransactionFab({
 function TransactionFabBody({
   accounts,
   account,
+  events,
   editingTransaction,
   onSubmit,
   isPending
@@ -91,6 +98,9 @@ function TransactionFabBody({
   const [pickedAccount, setPickedAccount] = useState<AccountRead | null>(null)
   const [createdAt, setCreatedAt] = useState(() =>
     isEditing ? new Date(editingTransaction.created_at) : new Date()
+  )
+  const [eventId, setEventId] = useState<number | null>(
+    editingTransaction?.event_id ?? null
   )
 
   // A user pick wins; otherwise fall back to the account passed in.
@@ -109,7 +119,8 @@ function TransactionFabBody({
     onSubmit({
       account_id: selectedAccount.id,
       amount: negative ? `-${amount}` : amount,
-      created_at: zonedCreatedAt
+      created_at: zonedCreatedAt,
+      event_id: eventId
     })
   }
 
@@ -178,6 +189,15 @@ function TransactionFabBody({
             {`= ${formatZonedDateTime(createdAt, selectedAccount.timezone)} in ${selectedAccount.timezone}`}
           </FieldDescription>
         )}
+      </Field>
+
+      <Field>
+        <FieldLabel>Event</FieldLabel>
+        <LinkEventField
+          events={events}
+          eventId={eventId}
+          onChange={setEventId}
+        />
       </Field>
     </FabForm>
   )

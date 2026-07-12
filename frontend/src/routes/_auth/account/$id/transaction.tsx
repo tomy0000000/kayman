@@ -16,6 +16,7 @@ import {
   readAccount,
   readAccountTransactionsWithRunningBalance,
   readAccounts,
+  readEvents,
   updateTransactions
 } from '@/lib/client'
 import { cn, endExclusive, formatCurrency } from '@/lib/utils'
@@ -98,6 +99,18 @@ function AccountTransactionPage() {
     queryFn: async () => {
       const response = await readAccounts({ client })
       if (response.error) throw new Error('Failed to fetch accounts')
+      if (!response.data) throw new Error('No data returned')
+      return response.data
+    }
+  })
+
+  // Backs the FAB's event field, so only fetched once the sheet opens.
+  const { data: events } = useQuery({
+    queryKey: ['events'],
+    enabled: fabOpen,
+    queryFn: async () => {
+      const response = await readEvents({ client })
+      if (response.error) throw new Error('Failed to fetch events')
       if (!response.data) throw new Error('No data returned')
       return response.data
     }
@@ -256,6 +269,7 @@ function AccountTransactionPage() {
       <TransactionFab
         accounts={accounts ?? []}
         account={account}
+        events={events}
         open={fabOpen}
         onOpenChange={handleFabOpenChange}
         editingTransaction={editingTransaction}
