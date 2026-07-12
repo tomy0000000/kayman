@@ -9,6 +9,7 @@ from kayman.core.db import get_session
 from kayman.crud.event import (
     create_events,
     read_events,
+    update_events,
 )
 from kayman.schemas.api_models import EventReadDetailed
 from kayman.schemas.event import (
@@ -16,6 +17,7 @@ from kayman.schemas.event import (
     EventBase,
     EventCreate,
     EventRead,
+    EventUpdate,
 )
 
 TAG_NAME = "Event"
@@ -55,12 +57,14 @@ def reads(
     return read_events(session, event_date=event_date, category_id=category_id)
 
 
-@event_router.patch("", name="Update Event", response_model=EventRead)
-def update(*, session: Session = Depends(get_session), event: Event) -> EventBase:
-    session.merge(event)
-    session.commit()
-    session.refresh(event)
-    return event
+@event_router.patch("/{event_id}", name="Update Event", response_model=EventRead)
+def update(
+    *, session: Session = Depends(get_session), event_id: int, event: EventUpdate
+) -> EventBase:
+    try:
+        return update_events(session, [event_id], [event])[0]
+    except ValueError as err:
+        raise HTTPException(status_code=404, detail=err.args[0]) from err
 
 
 @event_router.delete("/{id}", name="Delete Event")
