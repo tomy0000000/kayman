@@ -29,6 +29,7 @@ interface EventSheetProps {
     entries: EventEntryPayload[]
   ) => void
   isPending: boolean
+  defaultTimestamp?: string
 }
 
 // A trigger-less, create-only event sheet meant to stack over another sheet
@@ -42,7 +43,8 @@ export function EventSheet({
   categories,
   currencies,
   onSubmit,
-  isPending
+  isPending,
+  defaultTimestamp
 }: EventSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
@@ -53,7 +55,10 @@ export function EventSheet({
         <SheetHeader>
           <SheetTitle>New event</SheetTitle>
         </SheetHeader>
+        {/* Keyed so the form re-initializes its timestamp default whenever the
+            host's timestamp changes. */}
         <EventForm
+          key={defaultTimestamp}
           client={client}
           accounts={accounts}
           categories={categories}
@@ -62,6 +67,7 @@ export function EventSheet({
           onSubmit={onSubmit}
           isPending={isPending}
           hideTransactions
+          defaultTimestamp={defaultTimestamp}
         />
       </SheetContent>
     </Sheet>

@@ -263,6 +263,7 @@ function TransactionFabBody({
         currencies={currencies}
         onSubmit={handleCreateEvent}
         isPending={isCreatingEvent}
+        defaultTimestamp={createdAt}
       />
     </FabForm>
   )
