@@ -1,7 +1,7 @@
 import { Link2, X } from 'lucide-react'
 import { useState } from 'react'
 
-import { EventTypeBadge } from '@/components/event-type-badge'
+import { EventTypeBadge } from '@/components/event/event-type-badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,

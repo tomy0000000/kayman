@@ -8,7 +8,7 @@ import {
 import { useMemo } from 'react'
 
 import { Amount } from '@/components/amount'
-import { EventTypeBadge } from '@/components/event-type-badge'
+import { EventTypeBadge } from '@/components/event/event-type-badge'
 import {
   Table,
   TableBody,
