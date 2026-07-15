@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 
-import { EventEntriesField } from '@/components/event-entries-field'
+import { EventEntriesField } from '@/components/event/event-entries-field'
 import { FabForm } from '@/components/fab-form'
 import { type SelectedTransaction } from '@/components/link-transactions-table'
 import { LinkedTransactionsField } from '@/components/linked-transactions-field'
