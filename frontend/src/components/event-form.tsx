@@ -11,6 +11,7 @@ import { EventEntriesField } from '@/components/event-entries-field'
 import { FabForm } from '@/components/fab-form'
 import { type SelectedTransaction } from '@/components/link-transactions-table'
 import { LinkedTransactionsField } from '@/components/linked-transactions-field'
+import { TimezoneCombobox } from '@/components/timezone-combobox'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -69,9 +70,9 @@ export function EventForm({
   const [description, setDescription] = useState(
     editingEvent?.description ?? ''
   )
-  const timezone: EventCreate['timezone'] = isEditing
-    ? editingEvent.timezone
-    : (CLIENT_TIMEZONE as EventCreate['timezone'])
+  const [timezone, setTimezone] = useState<string>(
+    editingEvent?.timezone ?? CLIENT_TIMEZONE
+  )
   const [timestamp, setTimestamp] = useState(() =>
     isEditing
       ? editingEvent.timestamp
@@ -106,7 +107,7 @@ export function EventForm({
     const body: EventCreate = {
       type,
       timestamp,
-      timezone,
+      timezone: timezone as EventCreate['timezone'],
       description: description.trim() || null
     }
     onSubmit(
@@ -162,6 +163,15 @@ export function EventForm({
             ))}
           </TabsList>
         </Tabs>
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="event-timezone">Timezone</FieldLabel>
+        <TimezoneCombobox
+          id="event-timezone"
+          value={timezone}
+          onValueChange={setTimezone}
+        />
       </Field>
 
       <Field>
