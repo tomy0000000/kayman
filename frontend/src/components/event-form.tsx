@@ -56,6 +56,7 @@ interface EventFormProps {
     entries: EventEntryPayload[]
   ) => void
   isPending: boolean
+  hideTransactions?: boolean
 }
 
 export function EventForm({
@@ -65,7 +66,8 @@ export function EventForm({
   currencies,
   editingEvent,
   onSubmit,
-  isPending
+  isPending,
+  hideTransactions = false
 }: EventFormProps) {
   const isEditing = editingEvent != null
   const [type, setType] = useState<EventType>(editingEvent?.type ?? 'Expense')
@@ -183,14 +185,16 @@ export function EventForm({
         )}
       </Field>
 
-      <Field>
-        <FieldLabel>Transactions</FieldLabel>
-        <LinkedTransactionsField
-          client={client}
-          value={linkedTransactions}
-          onChange={setLinkedTransactions}
-        />
-      </Field>
+      {!hideTransactions && (
+        <Field>
+          <FieldLabel>Transactions</FieldLabel>
+          <LinkedTransactionsField
+            client={client}
+            value={linkedTransactions}
+            onChange={setLinkedTransactions}
+          />
+        </Field>
+      )}
 
       <Field>
         <FieldLabel>Entries</FieldLabel>
