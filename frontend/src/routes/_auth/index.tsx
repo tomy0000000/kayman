@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { EventFab } from '@/components/event-fab'
+import { EventFab } from '@/components/event/event-fab'
 import { EventsTable } from '@/components/events-table'
 import { Calendar } from '@/components/ui/calendar'
 import {
