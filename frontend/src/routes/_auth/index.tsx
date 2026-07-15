@@ -185,7 +185,7 @@ function HomePage() {
             client={client}
             events={events}
             isPending={isPending}
-            onEventClick={handleEventClick}
+            onEventEdit={handleEventClick}
           />
         </div>
       </div>

@@ -10,6 +10,12 @@ import { useMemo } from 'react'
 import { Amount } from '@/components/amount'
 import { EventTypeBadge } from '@/components/event/event-type-badge'
 import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger
+} from '@/components/ui/context-menu'
+import {
   Table,
   TableBody,
   TableCell,
@@ -24,13 +30,13 @@ import {
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
 import { buildCategoryNameMap } from '@/lib/types'
-import { cn, formatCurrency, formatTime } from '@/lib/utils'
+import { formatCurrency, formatTime } from '@/lib/utils'
 
 interface EventsTableProps {
   client: Client
   events: EventReadDetailed[] | undefined
   isPending: boolean
-  onEventClick?: (event: EventReadDetailed) => void
+  onEventEdit?: (event: EventReadDetailed) => void
 }
 
 // Stable reference for the empty state. A fresh `[]` per render makes
@@ -41,7 +47,7 @@ export function EventsTable({
   client,
   events,
   isPending,
-  onEventClick
+  onEventEdit
 }: EventsTableProps) {
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -180,27 +186,25 @@ export function EventsTable({
         <TableBody>
           {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                tabIndex={onEventClick ? 0 : undefined}
-                onClick={() => onEventClick?.(row.original)}
-                onKeyDown={(event) => {
-                  if (
-                    onEventClick &&
-                    (event.key === 'Enter' || event.key === ' ')
-                  ) {
-                    event.preventDefault()
-                    onEventClick(row.original)
-                  }
-                }}
-                className={cn(onEventClick && 'cursor-pointer')}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
+              <ContextMenu key={row.id}>
+                <ContextMenuTrigger asChild>
+                  <TableRow>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem onClick={() => onEventEdit?.(row.original)}>
+                    Edit
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
             ))
           ) : (
             <TableRow>
