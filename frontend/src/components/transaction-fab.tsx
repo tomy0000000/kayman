@@ -1,14 +1,13 @@
 import { Minus, Plus } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
 import { AccountSelect } from '@/components/account-select'
 import { EventSheet } from '@/components/event-sheet'
 import { FabForm } from '@/components/fab-form'
 import { FabSheet } from '@/components/fab-sheet'
 import { LinkEventField } from '@/components/link-event-field'
-import { TimePicker } from '@/components/time-picker'
 import { Button } from '@/components/ui/button'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { Field, FieldLabel } from '@/components/ui/field'
 import {
   InputGroup,
   InputGroupAddon,
@@ -17,6 +16,7 @@ import {
   InputGroupText
 } from '@/components/ui/input-group'
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { ZonedTimePicker } from '@/components/zoned-time-picker'
 import {
   type AccountRead,
   type CategoryReadWithChildren,
@@ -30,7 +30,7 @@ import {
 } from '@/lib/client'
 import type { Client } from '@/lib/client/client'
 import { CLIENT_TIMEZONE } from '@/lib/constants'
-import { formatZonedDateTime, toZonedISOString } from '@/lib/utils'
+import { toZonedISOString } from '@/lib/utils'
 
 type EventEntryPayload = Omit<EventEntryCreate, 'event_id'>
 
@@ -140,7 +140,9 @@ function TransactionFabBody({
   )
   const [pickedAccount, setPickedAccount] = useState<AccountRead | null>(null)
   const [createdAt, setCreatedAt] = useState(() =>
-    isEditing ? new Date(editingTransaction.created_at) : new Date()
+    isEditing
+      ? editingTransaction.created_at
+      : toZonedISOString(new Date(), CLIENT_TIMEZONE)
   )
   const [eventId, setEventId] = useState<number | null>(
     editingTransaction?.event_id ?? null
@@ -150,20 +152,12 @@ function TransactionFabBody({
   // A user pick wins; otherwise fall back to the account passed in.
   const selectedAccount = pickedAccount ?? account ?? null
 
-  const zonedCreatedAt = useMemo(
-    () =>
-      selectedAccount
-        ? toZonedISOString(createdAt, selectedAccount.timezone)
-        : null,
-    [createdAt, selectedAccount]
-  )
-
   const handleSubmit = () => {
-    if (selectedAccount == null || zonedCreatedAt == null) return
+    if (selectedAccount == null) return
     onSubmit({
       account_id: selectedAccount.id,
       amount: negative ? `-${amount}` : amount,
-      created_at: zonedCreatedAt,
+      created_at: createdAt,
       event_id: eventId
     })
   }
@@ -234,16 +228,12 @@ function TransactionFabBody({
         >
           Timestamp
         </FieldLabel>
-        <TimePicker
+        <ZonedTimePicker
           id="txn-created-at"
-          value={createdAt}
+          value={new Date(createdAt)}
+          timezone={selectedAccount?.timezone ?? CLIENT_TIMEZONE}
           onChange={setCreatedAt}
         />
-        {selectedAccount && selectedAccount.timezone != CLIENT_TIMEZONE && (
-          <FieldDescription>
-            {`= ${formatZonedDateTime(createdAt, selectedAccount.timezone)} in ${selectedAccount.timezone}`}
-          </FieldDescription>
-        )}
       </Field>
 
       <Field>
