@@ -17,6 +17,9 @@ interface FabSheetProps {
   hotkey: string
   label: string
   className?: string
+  onInteractOutside?: React.ComponentProps<
+    typeof SheetContent
+  >['onInteractOutside']
   children: React.ReactNode
 }
 
@@ -26,6 +29,7 @@ export function FabSheet({
   hotkey,
   label,
   className,
+  onInteractOutside,
   children
 }: FabSheetProps) {
   useHotkeys(hotkey, () => onOpenChange(true), { preventDefault: true })
@@ -49,7 +53,11 @@ export function FabSheet({
           <Kbd>{hotkey.toUpperCase()}</Kbd>
         </TooltipContent>
       </Tooltip>
-      <SheetContent side="right" className={cn('flex flex-col', className)}>
+      <SheetContent
+        side="right"
+        className={cn('flex flex-col', className)}
+        onInteractOutside={onInteractOutside}
+      >
         {children}
       </SheetContent>
     </Sheet>

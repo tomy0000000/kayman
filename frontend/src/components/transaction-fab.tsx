@@ -70,6 +70,8 @@ interface TransactionFabBodyProps {
   ) => Promise<EventRead>
   isPending: boolean
   isCreatingEvent: boolean
+  eventSheetOpen: boolean
+  onEventSheetOpenChange: (open: boolean) => void
 }
 
 export function TransactionFab({
@@ -87,12 +89,20 @@ export function TransactionFab({
   isPending,
   isCreatingEvent
 }: TransactionFabProps) {
+  const [eventSheetOpen, setEventSheetOpen] = useState(false)
+
   return (
     <FabSheet
       open={open}
       onOpenChange={onOpenChange}
       hotkey="n"
       label="New transaction"
+      // While the nested event sheet is open, an outside pointer-down would
+      // otherwise dismiss both non-modal sheets at once. Ignore it here so only
+      // the top (event) sheet closes, matching the Escape-key behavior.
+      onInteractOutside={(e) => {
+        if (eventSheetOpen) e.preventDefault()
+      }}
     >
       <SheetHeader>
         <SheetTitle>
@@ -113,6 +123,8 @@ export function TransactionFab({
         onCreateEvent={onCreateEvent}
         isPending={isPending}
         isCreatingEvent={isCreatingEvent}
+        eventSheetOpen={eventSheetOpen}
+        onEventSheetOpenChange={setEventSheetOpen}
       />
     </FabSheet>
   )
@@ -129,7 +141,9 @@ function TransactionFabBody({
   onSubmit,
   onCreateEvent,
   isPending,
-  isCreatingEvent
+  isCreatingEvent,
+  eventSheetOpen,
+  onEventSheetOpenChange
 }: TransactionFabBodyProps) {
   const isEditing = editingTransaction != null
   const [amount, setAmount] = useState(() =>
@@ -147,7 +161,6 @@ function TransactionFabBody({
   const [eventId, setEventId] = useState<number | null>(
     editingTransaction?.event_id ?? null
   )
-  const [eventSheetOpen, setEventSheetOpen] = useState(false)
 
   // A user pick wins; otherwise fall back to the account passed in.
   const selectedAccount = pickedAccount ?? account ?? null
@@ -169,7 +182,7 @@ function TransactionFabBody({
   ) => {
     onCreateEvent(body, linkedTransactionIds, entries).then((event) => {
       setEventId(event.id)
-      setEventSheetOpen(false)
+      onEventSheetOpenChange(false)
     })
   }
 
@@ -248,7 +261,7 @@ function TransactionFabBody({
           variant="outline"
           size="sm"
           className="self-start"
-          onClick={() => setEventSheetOpen(true)}
+          onClick={() => onEventSheetOpenChange(true)}
         >
           New event
         </Button>
@@ -256,7 +269,7 @@ function TransactionFabBody({
 
       <EventSheet
         open={eventSheetOpen}
-        onOpenChange={setEventSheetOpen}
+        onOpenChange={onEventSheetOpenChange}
         client={client}
         accounts={accounts}
         categories={categories}
