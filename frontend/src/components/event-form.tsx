@@ -11,10 +11,10 @@ import { EventEntriesField } from '@/components/event-entries-field'
 import { FabForm } from '@/components/fab-form'
 import { type SelectedTransaction } from '@/components/link-transactions-table'
 import { LinkedTransactionsField } from '@/components/linked-transactions-field'
-import { TimePicker } from '@/components/time-picker'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ZonedTimePicker } from '@/components/zoned-time-picker'
 import {
   type AccountRead,
   type CategoryReadWithChildren,
@@ -28,12 +28,7 @@ import type { Client } from '@/lib/client/client'
 import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { eventTypeTabActiveClass } from '@/lib/event-types'
 import { type EventEntryDraft, toEventEntryDraft } from '@/lib/types'
-import {
-  cn,
-  formatZonedDateTime,
-  toLocalDateTimeInputValue,
-  toZonedISOString
-} from '@/lib/utils'
+import { cn, toZonedISOString } from '@/lib/utils'
 
 const EVENT_TYPES: { value: EventType; icon: LucideIcon }[] = [
   { value: 'Expense', icon: TrendingDown },
@@ -74,8 +69,13 @@ export function EventForm({
   const [description, setDescription] = useState(
     editingEvent?.description ?? ''
   )
+  const timezone: EventCreate['timezone'] = isEditing
+    ? editingEvent.timezone
+    : (CLIENT_TIMEZONE as EventCreate['timezone'])
   const [timestamp, setTimestamp] = useState(() =>
-    isEditing ? new Date(editingEvent.timestamp) : new Date()
+    isEditing
+      ? editingEvent.timestamp
+      : toZonedISOString(new Date(), CLIENT_TIMEZONE)
   )
   const [linkedTransactions, setLinkedTransactions] = useState<
     SelectedTransaction[]
@@ -103,19 +103,12 @@ export function EventForm({
   )
 
   const handleSubmit = () => {
-    const body: EventCreate = isEditing
-      ? {
-          type,
-          timestamp: toZonedISOString(timestamp, editingEvent.timezone),
-          timezone: editingEvent.timezone,
-          description: description.trim() || null
-        }
-      : {
-          type,
-          timestamp: toLocalDateTimeInputValue(timestamp),
-          timezone: CLIENT_TIMEZONE as EventCreate['timezone'],
-          description: description.trim() || null
-        }
+    const body: EventCreate = {
+      type,
+      timestamp,
+      timezone,
+      description: description.trim() || null
+    }
     onSubmit(
       body,
       linkedTransactions.map((item) => item.transaction.id),
@@ -173,16 +166,12 @@ export function EventForm({
 
       <Field>
         <FieldLabel htmlFor="event-timestamp">Timestamp</FieldLabel>
-        <TimePicker
+        <ZonedTimePicker
           id="event-timestamp"
-          value={timestamp}
+          value={new Date(timestamp)}
+          timezone={timezone}
           onChange={setTimestamp}
         />
-        {isEditing && editingEvent.timezone != CLIENT_TIMEZONE && (
-          <FieldDescription>
-            {`= ${formatZonedDateTime(timestamp, editingEvent.timezone)} in ${editingEvent.timezone}`}
-          </FieldDescription>
-        )}
       </Field>
 
       {!hideTransactions && (

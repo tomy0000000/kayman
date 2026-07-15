@@ -38,11 +38,6 @@ export function formatTime(value: string | Date): string {
   })
 }
 
-export function toLocalDateTimeInputValue(date: Date) {
-  const offsetMs = date.getTimezoneOffset() * 60_000
-  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 19)
-}
-
 // Short rendering of the instant `date` as seen in `timeZone` (a IANA name),
 // e.g. "Jul 1 11:00" (no year, no seconds). For display only; use
 // `toZonedISOString` for anything that goes to the API.
