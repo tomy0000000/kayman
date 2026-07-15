@@ -2,7 +2,7 @@ import { Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 
 import { AccountSelect } from '@/components/account-select'
-import { EventSheet } from '@/components/event-sheet'
+import { EventSheet } from '@/components/event/event-sheet'
 import { FabForm } from '@/components/fab-form'
 import { FabSheet } from '@/components/fab-sheet'
 import { LinkEventField } from '@/components/link-event-field'
