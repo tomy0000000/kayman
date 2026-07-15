@@ -61,6 +61,7 @@ export function EventSheet({
           editingEvent={null}
           onSubmit={onSubmit}
           isPending={isPending}
+          hideTransactions
         />
       </SheetContent>
     </Sheet>
