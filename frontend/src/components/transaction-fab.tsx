@@ -2,10 +2,12 @@ import { Minus, Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { AccountSelect } from '@/components/account-select'
+import { EventSheet } from '@/components/event-sheet'
 import { FabForm } from '@/components/fab-form'
 import { FabSheet } from '@/components/fab-sheet'
 import { LinkEventField } from '@/components/link-event-field'
 import { TimePicker } from '@/components/time-picker'
+import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import {
   InputGroup,
@@ -17,42 +19,73 @@ import {
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
   type AccountRead,
+  type CategoryReadWithChildren,
+  type CurrencyRead,
+  type EventCreate,
+  type EventEntryCreate,
+  type EventRead,
   type EventReadDetailed,
   type TransactionCreate,
   type TransactionRead
 } from '@/lib/client'
+import type { Client } from '@/lib/client/client'
 import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { formatZonedDateTime, toZonedISOString } from '@/lib/utils'
 
+type EventEntryPayload = Omit<EventEntryCreate, 'event_id'>
+
 interface TransactionFabProps {
+  client: Client
   accounts: AccountRead[]
   account?: AccountRead
+  categories: CategoryReadWithChildren[]
+  currencies: CurrencyRead[]
   events: EventReadDetailed[] | undefined
   open: boolean
   onOpenChange: (open: boolean) => void
   editingTransaction: TransactionRead | null
   onSubmit: (body: TransactionCreate) => void
+  onCreateEvent: (
+    body: EventCreate,
+    linkedTransactionIds: number[],
+    entries: EventEntryPayload[]
+  ) => Promise<EventRead>
   isPending: boolean
+  isCreatingEvent: boolean
 }
 
 interface TransactionFabBodyProps {
+  client: Client
   accounts: AccountRead[]
   account?: AccountRead
+  categories: CategoryReadWithChildren[]
+  currencies: CurrencyRead[]
   events: EventReadDetailed[] | undefined
   editingTransaction: TransactionRead | null
   onSubmit: (body: TransactionCreate) => void
+  onCreateEvent: (
+    body: EventCreate,
+    linkedTransactionIds: number[],
+    entries: EventEntryPayload[]
+  ) => Promise<EventRead>
   isPending: boolean
+  isCreatingEvent: boolean
 }
 
 export function TransactionFab({
+  client,
   accounts,
   account,
+  categories,
+  currencies,
   events,
   open,
   onOpenChange,
   editingTransaction,
   onSubmit,
-  isPending
+  onCreateEvent,
+  isPending,
+  isCreatingEvent
 }: TransactionFabProps) {
   return (
     <FabSheet
@@ -69,24 +102,34 @@ export function TransactionFab({
       {/* Keyed so the form re-initializes from the picked transaction. */}
       <TransactionFabBody
         key={editingTransaction?.id ?? 'new'}
+        client={client}
         accounts={accounts}
         account={account}
+        categories={categories}
+        currencies={currencies}
         events={events}
         editingTransaction={editingTransaction}
         onSubmit={onSubmit}
+        onCreateEvent={onCreateEvent}
         isPending={isPending}
+        isCreatingEvent={isCreatingEvent}
       />
     </FabSheet>
   )
 }
 
 function TransactionFabBody({
+  client,
   accounts,
   account,
+  categories,
+  currencies,
   events,
   editingTransaction,
   onSubmit,
-  isPending
+  onCreateEvent,
+  isPending,
+  isCreatingEvent
 }: TransactionFabBodyProps) {
   const isEditing = editingTransaction != null
   const [amount, setAmount] = useState(() =>
@@ -102,6 +145,7 @@ function TransactionFabBody({
   const [eventId, setEventId] = useState<number | null>(
     editingTransaction?.event_id ?? null
   )
+  const [eventSheetOpen, setEventSheetOpen] = useState(false)
 
   // A user pick wins; otherwise fall back to the account passed in.
   const selectedAccount = pickedAccount ?? account ?? null
@@ -121,6 +165,17 @@ function TransactionFabBody({
       amount: negative ? `-${amount}` : amount,
       created_at: zonedCreatedAt,
       event_id: eventId
+    })
+  }
+
+  const handleCreateEvent = (
+    body: EventCreate,
+    linkedTransactionIds: number[],
+    entries: EventEntryPayload[]
+  ) => {
+    onCreateEvent(body, linkedTransactionIds, entries).then((event) => {
+      setEventId(event.id)
+      setEventSheetOpen(false)
     })
   }
 
@@ -198,7 +253,27 @@ function TransactionFabBody({
           eventId={eventId}
           onChange={setEventId}
         />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="self-start"
+          onClick={() => setEventSheetOpen(true)}
+        >
+          New event
+        </Button>
       </Field>
+
+      <EventSheet
+        open={eventSheetOpen}
+        onOpenChange={setEventSheetOpen}
+        client={client}
+        accounts={accounts}
+        categories={categories}
+        currencies={currencies}
+        onSubmit={handleCreateEvent}
+        isPending={isCreatingEvent}
+      />
     </FabForm>
   )
 }
