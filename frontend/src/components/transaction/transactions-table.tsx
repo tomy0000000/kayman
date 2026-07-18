@@ -145,9 +145,13 @@ export function TransactionsTable({
                     ))}
                   </TableRow>
                 </ContextMenuTrigger>
-                <ContextMenuContent>
+                <ContextMenuContent
+                  onCloseAutoFocus={(event) => event.preventDefault()}
+                >
                   <ContextMenuItem
-                    onClick={() => onTransactionEdit?.(row.original)}
+                    onSelect={() =>
+                      setTimeout(() => onTransactionEdit?.(row.original))
+                    }
                   >
                     Edit
                   </ContextMenuItem>
