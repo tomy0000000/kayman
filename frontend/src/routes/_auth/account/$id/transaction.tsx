@@ -1,13 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { Fragment, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { type DateRange } from 'react-day-picker'
 import { toast } from 'sonner'
 
-import { Amount } from '@/components/amount'
 import { DatePickerWithRange } from '@/components/date-range-picker'
 import { TransactionFab } from '@/components/transaction-fab'
-import { TransactionStatusBadge } from '@/components/transaction-status-badge'
+import { TransactionsTable } from '@/components/transaction/transactions-table'
 import { Separator } from '@/components/ui/separator'
 import {
   type EventCreate,
@@ -25,7 +24,7 @@ import {
   readEvents,
   updateTransactions
 } from '@/lib/client'
-import { cn, endExclusive, formatCurrency } from '@/lib/utils'
+import { endExclusive } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/account/$id/transaction')({
   component: AccountTransactionPage
@@ -196,6 +195,7 @@ function AccountTransactionPage() {
 
   const {
     isError: isTransactionsError,
+    isPending: isTransactionsPending,
     data: transactions,
     error: transactionsError
   } = useQuery({
@@ -247,101 +247,16 @@ function AccountTransactionPage() {
       </div>
 
       {/* Transactions */}
-      <div className="min-h-0 w-full flex-1 snap-y snap-mandatory overflow-y-auto scroll-pt-7 sm:scroll-pt-0">
-        {transactions?.map(function (transaction, index) {
-          const timestamp = new Date(transaction.created_at)
-          const amount = parseFloat(transaction.amount)
-          const dateLabel = timestamp.toLocaleDateString()
-          const prevDateLabel =
-            index > 0
-              ? new Date(
-                  transactions[index - 1].created_at
-                ).toLocaleDateString()
-              : null
-          const showDate = dateLabel !== prevDateLabel
-
-          return (
-            <Fragment key={transaction.id}>
-              {/* Separator: full width on date change, indented only on >=sm */}
-              {index > 0 && (
-                <Separator
-                  className={cn(
-                    'my-2 snap-start',
-                    !showDate && 'sm:ml-[calc(--spacing(24)+(--spacing(3)))]'
-                  )}
-                />
-              )}
-
-              {/* Narrow-viewport sticky date header */}
-              {showDate && (
-                <>
-                  <div className="bg-background sticky top-0 z-5 py-1 text-sm font-semibold sm:hidden">
-                    {dateLabel}
-                  </div>
-                  <Separator className="my-2 sm:hidden" />
-                </>
-              )}
-
-              {/* Row — first row gets snap-start too so scrollTop=0 is a valid snap point */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => {
-                  setEditingTransaction(transaction)
-                  setFabOpen(true)
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault()
-                    setEditingTransaction(transaction)
-                    setFabOpen(true)
-                  }
-                }}
-                className={cn(
-                  'hover:bg-muted focus-visible:ring-ring flex cursor-pointer items-start gap-3 rounded-md py-1 text-sm focus-visible:ring-2 focus-visible:outline-none',
-                  index === 0 && 'snap-start'
-                )}
-              >
-                {/* Date — only on >=sm */}
-                <div className="hidden w-24 shrink-0 text-neutral-500 sm:block">
-                  {showDate ? dateLabel : ''}
-                </div>
-
-                {/* Time */}
-                <div className="w-24 shrink-0 text-neutral-500">
-                  {timestamp.toLocaleTimeString(undefined, {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </div>
-
-                {/* Description — only thing allowed to shrink/truncate */}
-                <div className="min-w-0 flex-1 truncate font-semibold">
-                  {transaction.description}
-                </div>
-
-                {/* Status */}
-                <TransactionStatusBadge status={transaction.status} />
-
-                {/* Amount + running balance */}
-                <div className="flex w-24 shrink-0 flex-col items-end">
-                  <Amount
-                    amount={amount}
-                    currencyCode={account?.currency_code}
-                  />
-                  <span className="text-muted-foreground text-xs">
-                    {account
-                      ? formatCurrency(
-                          parseFloat(transaction.running_balance),
-                          account.currency_code
-                        )
-                      : transaction.running_balance}
-                  </span>
-                </div>
-              </div>
-            </Fragment>
-          )
-        })}
+      <div className="min-h-0 w-full flex-1 overflow-y-auto">
+        <TransactionsTable
+          transactions={transactions}
+          currencyCode={account?.currency_code}
+          isPending={isTransactionsPending}
+          onTransactionEdit={(transaction) => {
+            setEditingTransaction(transaction)
+            setFabOpen(true)
+          }}
+        />
       </div>
 
       <TransactionFab
