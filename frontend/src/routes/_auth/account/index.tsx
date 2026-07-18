@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 
 import { CreateAccountFab } from '@/components/create-account-fab'
 import { Separator } from '@/components/ui/separator'
-import { readAccounts } from '@/lib/client'
+import { readAccountsOptions } from '@/lib/client/@tanstack/react-query.gen'
 import { cn, formatCurrency } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/account/')({
@@ -20,15 +20,7 @@ function AccountListPage() {
     isError,
     data: accounts,
     error
-  } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: async () => {
-      const response = await readAccounts({ client })
-      if (response.error) throw new Error('Failed to fetch accounts')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
+  } = useQuery(readAccountsOptions({ client }))
 
   useEffect(() => {
     if (!isError) return
