@@ -8,7 +8,7 @@ import { DatePickerWithRange } from '@/components/date-range-picker'
 import { Tree } from '@/components/tree'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { readCategories } from '@/lib/client'
+import { readCategoriesOptions } from '@/lib/client/@tanstack/react-query.gen'
 import { categoryToTreeItem } from '@/lib/types'
 
 export const Route = createFileRoute('/_auth/category')({
@@ -28,14 +28,7 @@ function CategoryPage() {
     isError,
     data: categories,
     error
-  } = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      const response = await readCategories({ client })
-      if (response.error) throw new Error('Failed to fetch categories')
-      return response.data
-    }
-  })
+  } = useQuery(readCategoriesOptions({ client }))
 
   const treeData = categories?.map((category) =>
     categoryToTreeItem(category, 'root')

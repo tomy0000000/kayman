@@ -16,12 +16,12 @@ import {
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { type AccountCreate } from '@/lib/client'
 import {
-  type AccountCreate,
-  type AccountRead,
-  createAccount,
-  readCurrencies
-} from '@/lib/client'
+  createAccountMutation,
+  readAccountsQueryKey,
+  readCurrenciesOptions
+} from '@/lib/client/@tanstack/react-query.gen'
 import type { Client } from '@/lib/client/client'
 import { CLIENT_TIMEZONE } from '@/lib/constants'
 
@@ -37,13 +37,7 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
   const [timezone, setTimezone] = useState(CLIENT_TIMEZONE)
 
   const { data: currencies } = useQuery({
-    queryKey: ['currencies'],
-    queryFn: async () => {
-      const response = await readCurrencies({ client })
-      if (response.error) throw new Error('Failed to fetch currencies')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    },
+    ...readCurrenciesOptions({ client }),
     enabled: open
   })
 
@@ -56,15 +50,12 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
   }
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (body: AccountCreate) => {
-      const response = await createAccount({ client, body })
-      if (response.error) throw new Error('Failed to create account')
-      if (!response.data) throw new Error('No data returned')
-      return response.data as AccountRead
-    },
+    ...createAccountMutation(),
     onSuccess: () => {
       toast.success('Account created')
-      queryClient.invalidateQueries({ queryKey: ['accounts'] })
+      queryClient.invalidateQueries({
+        queryKey: readAccountsQueryKey({ client })
+      })
       reset()
       setOpen(false)
     },
@@ -80,9 +71,12 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
   const handleCreate = () => {
     if (currencyCode == null) return
     mutate({
-      name,
-      currency_code: currencyCode,
-      timezone: timezone as AccountCreate['timezone']
+      client,
+      body: {
+        name,
+        currency_code: currencyCode,
+        timezone: timezone as AccountCreate['timezone']
+      }
     })
   }
 

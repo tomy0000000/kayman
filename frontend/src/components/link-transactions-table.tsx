@@ -34,10 +34,12 @@ import {
 import {
   type AccountRead,
   type TransactionRead,
-  type TransactionStatus,
-  readAccounts,
-  readTransactions
+  type TransactionStatus
 } from '@/lib/client'
+import {
+  readAccountsOptions,
+  readTransactionsOptions
+} from '@/lib/client/@tanstack/react-query.gen'
 import type { Client } from '@/lib/client/client'
 import { cn, formatDateTime } from '@/lib/utils'
 
@@ -197,28 +199,14 @@ export function LinkTransactionsTable({
     )
   }
 
-  const { data: accounts } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: async () => {
-      const response = await readAccounts({ client })
-      if (response.error) throw new Error('Failed to fetch accounts')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
+  const { data: accounts } = useQuery(readAccountsOptions({ client }))
 
   const { data } = useQuery({
-    queryKey: ['transactions', selectedAccount?.id, 'unlinked'],
-    enabled: selectedAccount !== null,
-    queryFn: async () => {
-      const response = await readTransactions({
-        client,
-        query: { account_id: selectedAccount?.id, event_id: 'empty' }
-      })
-      if (response.error) throw new Error('Failed to fetch transactions')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
+    ...readTransactionsOptions({
+      client,
+      query: { account_id: selectedAccount?.id, event_id: 'empty' }
+    }),
+    enabled: selectedAccount !== null
   })
 
   // TanStack Table manages its own memoization; the React Compiler bail-out

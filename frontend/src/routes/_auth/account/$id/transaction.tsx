@@ -12,12 +12,16 @@ import {
   type TransactionCreate,
   type TransactionReadWithBalance,
   createTransaction,
-  readAccount,
-  readAccountTransactionsWithRunningBalance,
-  readAccounts,
-  readEvents,
   updateTransactions
 } from '@/lib/client'
+import {
+  readAccountOptions,
+  readAccountTransactionsWithRunningBalanceOptions,
+  readAccountTransactionsWithRunningBalanceQueryKey,
+  readAccountsOptions,
+  readEventsOptions,
+  readEventsQueryKey
+} from '@/lib/client/@tanstack/react-query.gen'
 import { endExclusive } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/account/$id/transaction')({
@@ -41,23 +45,26 @@ function AccountTransactionPage() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (body: TransactionCreate) => {
-      const response = editingTransaction
+      const { data } = editingTransaction
         ? await updateTransactions({
             client,
-            body: [{ ...body, id: editingTransaction.id }]
+            body: [{ ...body, id: editingTransaction.id }],
+            throwOnError: true
           })
-        : await createTransaction({ client, body })
-      if (response.error)
-        throw new Error(
-          `Failed to ${editingTransaction ? 'update' : 'create'} transaction`
-        )
-      if (!response.data) throw new Error('No data returned')
-      return response.data
+        : await createTransaction({ client, body, throwOnError: true })
+      return data
     },
     onSuccess: () => {
       toast.success(`Transaction ${editingTransaction ? 'updated' : 'created'}`)
-      queryClient.invalidateQueries({ queryKey: ['events'] })
-      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      queryClient.invalidateQueries({
+        queryKey: readEventsQueryKey({ client })
+      })
+      queryClient.invalidateQueries({
+        queryKey: readAccountTransactionsWithRunningBalanceQueryKey({
+          client,
+          path: { account_id: accountId }
+        })
+      })
       setFabOpen(false)
     },
     onError: (error) => {
@@ -80,39 +87,14 @@ function AccountTransactionPage() {
     isError,
     data: account,
     error
-  } = useQuery({
-    queryKey: ['account', accountId],
-    queryFn: async () => {
-      const response = await readAccount({
-        client,
-        path: { account_id: accountId }
-      })
-      if (response.error) throw new Error('Failed to fetch account')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
+  } = useQuery(readAccountOptions({ client, path: { account_id: accountId } }))
 
-  const { data: accounts } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: async () => {
-      const response = await readAccounts({ client })
-      if (response.error) throw new Error('Failed to fetch accounts')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
+  const { data: accounts } = useQuery(readAccountsOptions({ client }))
 
   // Backs the FAB's event field, so only fetched once the sheet opens.
   const { data: events } = useQuery({
-    queryKey: ['events'],
-    enabled: fabOpen,
-    queryFn: async () => {
-      const response = await readEvents({ client })
-      if (response.error) throw new Error('Failed to fetch events')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
+    ...readEventsOptions({ client }),
+    enabled: fabOpen
   })
 
   const {
@@ -120,19 +102,13 @@ function AccountTransactionPage() {
     isPending: isTransactionsPending,
     data: transactions,
     error: transactionsError
-  } = useQuery({
-    queryKey: ['transactions', { accountId, start, end }],
-    queryFn: async () => {
-      const response = await readAccountTransactionsWithRunningBalance({
-        client,
-        path: { account_id: accountId },
-        query: { start, end }
-      })
-      if (response.error) throw new Error('Failed to fetch transactions')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
+  } = useQuery(
+    readAccountTransactionsWithRunningBalanceOptions({
+      client,
+      path: { account_id: accountId },
+      query: { start, end }
+    })
+  )
 
   useEffect(() => {
     if (!isError) return

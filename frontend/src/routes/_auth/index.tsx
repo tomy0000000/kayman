@@ -12,13 +12,17 @@ import {
   type EventReadDetailed,
   createEvent,
   createEventEntries,
-  readAccounts,
-  readCategories,
-  readCurrencies,
-  readEvents,
   updateEvent,
   updateTransactions
 } from '@/lib/client'
+import {
+  readAccountsOptions,
+  readCategoriesOptions,
+  readCurrenciesOptions,
+  readEventsOptions,
+  readEventsQueryKey,
+  readTransactionsQueryKey
+} from '@/lib/client/@tanstack/react-query.gen'
 
 export const Route = createFileRoute('/_auth/')({
   component: HomePage
@@ -55,17 +59,14 @@ function HomePage() {
       linkedTransactionIds: number[]
       entries: Omit<EventEntryCreate, 'event_id'>[]
     }) => {
-      const response = editingEvent
+      const { data: event } = editingEvent
         ? await updateEvent({
             client,
             path: { event_id: editingEvent.id },
-            body
+            body,
+            throwOnError: true
           })
-        : await createEvent({ client, body })
-      if (response.error)
-        throw new Error(`Failed to ${editingEvent ? 'update' : 'create'} event`)
-      if (!response.data) throw new Error('No data returned')
-      const event = response.data
+        : await createEvent({ client, body, throwOnError: true })
 
       const previousIds = editingEvent?.transactions.map((t) => t.id) ?? []
       const nextIds = new Set(linkedTransactionIds)
@@ -78,28 +79,29 @@ function HomePage() {
           .map((id) => ({ id, event_id: null }))
       ]
       if (updates.length > 0) {
-        const linkResponse = await updateTransactions({ client, body: updates })
-        if (linkResponse.error)
-          throw new Error('Failed to update linked transactions')
+        await updateTransactions({ client, body: updates, throwOnError: true })
       }
 
       // The API can only batch-create entries, so they are only sent for a new
       // event. An existing event's entries are read-only in the sheet.
       if (!editingEvent && entries.length > 0) {
-        const entryResponse = await createEventEntries({
+        await createEventEntries({
           client,
-          body: entries.map((entry) => ({ ...entry, event_id: event.id }))
+          body: entries.map((entry) => ({ ...entry, event_id: event.id })),
+          throwOnError: true
         })
-        if (entryResponse.error)
-          throw new Error('Failed to create event entries')
       }
 
       return event
     },
     onSuccess: () => {
       toast.success(`Event ${editingEvent ? 'updated' : 'created'}`)
-      queryClient.invalidateQueries({ queryKey: ['events'] })
-      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      queryClient.invalidateQueries({
+        queryKey: readEventsQueryKey({ client })
+      })
+      queryClient.invalidateQueries({
+        queryKey: readTransactionsQueryKey({ client })
+      })
       setFabOpen(false)
     },
     onError: (error) => {
@@ -116,48 +118,13 @@ function HomePage() {
     isError,
     data: events,
     error
-  } = useQuery({
-    queryKey: ['events', eventDate],
-    queryFn: async () => {
-      const response = await readEvents({
-        client,
-        query: { event_date: eventDate }
-      })
-      if (response.error) throw new Error('Failed to fetch events')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
+  } = useQuery(readEventsOptions({ client, query: { event_date: eventDate } }))
 
-  const { data: accounts } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: async () => {
-      const response = await readAccounts({ client })
-      if (response.error) throw new Error('Failed to fetch accounts')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
+  const { data: accounts } = useQuery(readAccountsOptions({ client }))
 
-  const { data: categories } = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      const response = await readCategories({ client })
-      if (response.error) throw new Error('Failed to fetch categories')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
+  const { data: categories } = useQuery(readCategoriesOptions({ client }))
 
-  const { data: currencies } = useQuery({
-    queryKey: ['currencies'],
-    queryFn: async () => {
-      const response = await readCurrencies({ client })
-      if (response.error) throw new Error('Failed to fetch currencies')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
+  const { data: currencies } = useQuery(readCurrenciesOptions({ client }))
 
   useEffect(() => {
     if (!isError) return
