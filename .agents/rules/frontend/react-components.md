@@ -44,11 +44,15 @@ Pure helpers (formatters, date math, class-name builders, etc.) belong in `front
 
 Why: keeps component files lean and focused on rendering, and makes helpers reusable and testable without mounting React.
 
-## No data hooks in `components/`
+## Data hooks in `components/`
 
-Components in `frontend/src/components/` are pure presentational: no `useQuery`, `useMutation`, `useSuspenseQuery`, or `useQueryClient`. Data and mutation handlers arrive through props.
+Components in `frontend/src/components/` default to presentational: data and mutation handlers arrive through props.
 
-- Queries and mutations belong in route files under `frontend/src/routes/`, or in a component colocated with its route. The route fetches, then passes the data (and any submit/mutate callbacks) down as props.
-- A reusable widget that renders server data (e.g. a select populated from an API) still receives that data via props. The caller owns the query, so the cache stays deduped at the route boundary.
+- Page-level data (lists a route loads once and shares, e.g. accounts, categories, currencies) is fetched in route files under `frontend/src/routes/`, or in a component colocated with its route, then passed down as props.
+- Mutations always stay route-owned. The route decides what happens after success (invalidation, navigation, closing a sheet), so components receive submit callbacks and pending flags via props. No `useMutation` or `useQueryClient` in `components/`.
 
-Why: shared components render in tests without a `QueryClientProvider` or network, and each piece of data has one obvious owner instead of being fetched wherever it happens to be displayed.
+Exception: a component may own a `useQuery` when the query key depends on the component's own internal state (a search input, a selection, pagination inside the widget). Hoisting such a query would force the route to track the widget's internal state, which is worse than the hook. Example: `link-transactions-table.tsx` fetching unlinked transactions keyed on its own selected account.
+
+- These queries use a shared `queryOptions` factory from `frontend/src/lib/` rather than an inline key, so each key is defined in one place and dedupes with any other caller.
+
+Why: TanStack Query dedupes on the query key, not the call site, so ownership lives in the key. Keeping page data and mutations at the route keeps loading states and post-submit behavior in one place, while the exception avoids lifting widget-internal state into routes. Tests render shared components with a small `QueryClientProvider` wrapper when a query is involved.
