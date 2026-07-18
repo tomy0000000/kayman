@@ -52,8 +52,6 @@ interface EventFormProps {
     entries: EventEntryPayload[]
   ) => void
   isPending: boolean
-  hideTransactions?: boolean
-  defaultTimestamp?: string
 }
 
 export function EventForm({
@@ -63,9 +61,7 @@ export function EventForm({
   currencies,
   editingEvent,
   onSubmit,
-  isPending,
-  hideTransactions = false,
-  defaultTimestamp
+  isPending
 }: EventFormProps) {
   const isEditing = editingEvent != null
   const [type, setType] = useState<EventType>(editingEvent?.type ?? 'Expense')
@@ -78,7 +74,7 @@ export function EventForm({
   const [timestamp, setTimestamp] = useState(() =>
     isEditing
       ? editingEvent.timestamp
-      : (defaultTimestamp ?? toZonedISOString(new Date(), CLIENT_TIMEZONE))
+      : toZonedISOString(new Date(), CLIENT_TIMEZONE)
   )
   const [linkedTransactions, setLinkedTransactions] = useState<
     SelectedTransaction[]
@@ -186,16 +182,14 @@ export function EventForm({
         />
       </Field>
 
-      {!hideTransactions && (
-        <Field>
-          <FieldLabel>Transactions</FieldLabel>
-          <LinkedTransactionsField
-            client={client}
-            value={linkedTransactions}
-            onChange={setLinkedTransactions}
-          />
-        </Field>
-      )}
+      <Field>
+        <FieldLabel>Transactions</FieldLabel>
+        <LinkedTransactionsField
+          client={client}
+          value={linkedTransactions}
+          onChange={setLinkedTransactions}
+        />
+      </Field>
 
       <Field>
         <FieldLabel>Entries</FieldLabel>

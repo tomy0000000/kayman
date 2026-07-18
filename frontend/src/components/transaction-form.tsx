@@ -2,10 +2,8 @@ import { Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 
 import { AccountSelect } from '@/components/account-select'
-import { EventSheet } from '@/components/event/event-sheet'
 import { FabForm } from '@/components/fab-form'
 import { LinkEventField } from '@/components/link-event-field'
-import { Button } from '@/components/ui/button'
 import { Field, FieldLabel } from '@/components/ui/field'
 import {
   InputGroup,
@@ -17,55 +15,29 @@ import {
 import { ZonedTimePicker } from '@/components/zoned-time-picker'
 import {
   type AccountRead,
-  type CategoryReadWithChildren,
-  type CurrencyRead,
-  type EventCreate,
-  type EventEntryCreate,
-  type EventRead,
   type EventReadDetailed,
   type TransactionCreate,
   type TransactionRead
 } from '@/lib/client'
-import type { Client } from '@/lib/client/client'
 import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { toZonedISOString } from '@/lib/utils'
 
-type EventEntryPayload = Omit<EventEntryCreate, 'event_id'>
-
 interface TransactionFormProps {
-  client: Client
   accounts: AccountRead[]
   account?: AccountRead
-  categories: CategoryReadWithChildren[]
-  currencies: CurrencyRead[]
   events: EventReadDetailed[] | undefined
   editingTransaction: TransactionRead | null
   onSubmit: (body: TransactionCreate) => void
-  onCreateEvent: (
-    body: EventCreate,
-    linkedTransactionIds: number[],
-    entries: EventEntryPayload[]
-  ) => Promise<EventRead>
   isPending: boolean
-  isCreatingEvent: boolean
-  eventSheetOpen: boolean
-  onEventSheetOpenChange: (open: boolean) => void
 }
 
 export function TransactionForm({
-  client,
   accounts,
   account,
-  categories,
-  currencies,
   events,
   editingTransaction,
   onSubmit,
-  onCreateEvent,
-  isPending,
-  isCreatingEvent,
-  eventSheetOpen,
-  onEventSheetOpenChange
+  isPending
 }: TransactionFormProps) {
   const isEditing = editingTransaction != null
   const [amount, setAmount] = useState(() =>
@@ -94,17 +66,6 @@ export function TransactionForm({
       amount: negative ? `-${amount}` : amount,
       created_at: createdAt,
       event_id: eventId
-    })
-  }
-
-  const handleCreateEvent = (
-    body: EventCreate,
-    linkedTransactionIds: number[],
-    entries: EventEntryPayload[]
-  ) => {
-    onCreateEvent(body, linkedTransactionIds, entries).then((event) => {
-      setEventId(event.id)
-      onEventSheetOpenChange(false)
     })
   }
 
@@ -178,28 +139,7 @@ export function TransactionForm({
           eventId={eventId}
           onChange={setEventId}
         />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="self-start"
-          onClick={() => onEventSheetOpenChange(true)}
-        >
-          New event
-        </Button>
       </Field>
-
-      <EventSheet
-        open={eventSheetOpen}
-        onOpenChange={onEventSheetOpenChange}
-        client={client}
-        accounts={accounts}
-        categories={categories}
-        currencies={currencies}
-        onSubmit={handleCreateEvent}
-        isPending={isCreatingEvent}
-        defaultTimestamp={createdAt}
-      />
     </FabForm>
   )
 }

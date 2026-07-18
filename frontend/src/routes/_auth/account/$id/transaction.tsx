@@ -9,18 +9,12 @@ import { TransactionFab } from '@/components/transaction-fab'
 import { TransactionsTable } from '@/components/transaction/transactions-table'
 import { Separator } from '@/components/ui/separator'
 import {
-  type EventCreate,
-  type EventEntryCreate,
   type TransactionCreate,
   type TransactionReadWithBalance,
-  createEvent,
-  createEventEntries,
   createTransaction,
   readAccount,
   readAccountTransactionsWithRunningBalance,
   readAccounts,
-  readCategories,
-  readCurrencies,
   readEvents,
   updateTransactions
 } from '@/lib/client'
@@ -78,55 +72,6 @@ function AccountTransactionPage() {
     }
   })
 
-  const createEventMutation = useMutation({
-    mutationFn: async ({
-      body,
-      linkedTransactionIds,
-      entries
-    }: {
-      body: EventCreate
-      linkedTransactionIds: number[]
-      entries: Omit<EventEntryCreate, 'event_id'>[]
-    }) => {
-      const response = await createEvent({ client, body })
-      if (response.error) throw new Error('Failed to create event')
-      if (!response.data) throw new Error('No data returned')
-      const event = response.data
-
-      if (entries.length > 0) {
-        const entryResponse = await createEventEntries({
-          client,
-          body: entries.map((entry) => ({ ...entry, event_id: event.id }))
-        })
-        if (entryResponse.error)
-          throw new Error('Failed to create event entries')
-      }
-
-      if (linkedTransactionIds.length > 0) {
-        const linkResponse = await updateTransactions({
-          client,
-          body: linkedTransactionIds.map((id) => ({ id, event_id: event.id }))
-        })
-        if (linkResponse.error)
-          throw new Error('Failed to update linked transactions')
-      }
-
-      return event
-    },
-    onSuccess: () => {
-      toast.success('Event created')
-      queryClient.invalidateQueries({ queryKey: ['events'] })
-      queryClient.invalidateQueries({ queryKey: ['transactions'] })
-    },
-    onError: (error) => {
-      console.error(error)
-      toast.error('Failed to create event', {
-        description:
-          error instanceof Error ? error.message : 'An unknown error occurred'
-      })
-    }
-  })
-
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const start = dateRange?.from?.toISOString() ?? null
   const end = endExclusive(dateRange?.to)
@@ -165,29 +110,6 @@ function AccountTransactionPage() {
     queryFn: async () => {
       const response = await readEvents({ client })
       if (response.error) throw new Error('Failed to fetch events')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
-
-  // Back the nested "New event" sheet, so only fetched once the FAB opens.
-  const { data: categories } = useQuery({
-    queryKey: ['categories'],
-    enabled: fabOpen,
-    queryFn: async () => {
-      const response = await readCategories({ client })
-      if (response.error) throw new Error('Failed to fetch categories')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
-
-  const { data: currencies } = useQuery({
-    queryKey: ['currencies'],
-    enabled: fabOpen,
-    queryFn: async () => {
-      const response = await readCurrencies({ client })
-      if (response.error) throw new Error('Failed to fetch currencies')
       if (!response.data) throw new Error('No data returned')
       return response.data
     }
@@ -260,25 +182,14 @@ function AccountTransactionPage() {
       </div>
 
       <TransactionFab
-        client={client}
         accounts={accounts ?? []}
         account={account}
-        categories={categories ?? []}
-        currencies={currencies ?? []}
         events={events}
         open={fabOpen}
         onOpenChange={handleFabOpenChange}
         editingTransaction={editingTransaction}
         onSubmit={mutate}
-        onCreateEvent={(body, linkedTransactionIds, entries) =>
-          createEventMutation.mutateAsync({
-            body,
-            linkedTransactionIds,
-            entries
-          })
-        }
         isPending={isPending}
-        isCreatingEvent={createEventMutation.isPending}
       />
     </>
   )
