@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
 import {
   type ColumnDef,
   flexRender,
@@ -23,18 +22,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import {
-  type EventReadDetailed,
-  readAccounts,
-  readCategories
+import type {
+  AccountRead,
+  CategoryReadWithChildren,
+  EventReadDetailed
 } from '@/lib/client'
-import type { Client } from '@/lib/client/client'
 import { buildCategoryNameMap } from '@/lib/types'
 import { formatCurrency, formatTime } from '@/lib/utils'
 
 interface EventsTableProps {
-  client: Client
   events: EventReadDetailed[] | undefined
+  accounts: AccountRead[]
+  categories: CategoryReadWithChildren[]
   isPending: boolean
   onEventEdit?: (event: EventReadDetailed) => void
 }
@@ -44,40 +43,19 @@ interface EventsTableProps {
 const EMPTY_EVENTS: EventReadDetailed[] = []
 
 export function EventsTable({
-  client,
   events,
+  accounts,
+  categories,
   isPending,
   onEventEdit
 }: EventsTableProps) {
-  const { data: categories } = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      const response = await readCategories({ client })
-      if (response.error) throw new Error('Failed to fetch categories')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
-
-  const { data: accounts } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: async () => {
-      const response = await readAccounts({ client })
-      if (response.error) throw new Error('Failed to fetch accounts')
-      if (!response.data) throw new Error('No data returned')
-      return response.data
-    }
-  })
-
   const categoryNames = useMemo(
-    () => buildCategoryNameMap(categories ?? []),
+    () => buildCategoryNameMap(categories),
     [categories]
   )
   const accountCurrencies = useMemo(
     () =>
-      new Map(
-        (accounts ?? []).map((account) => [account.id, account.currency_code])
-      ),
+      new Map(accounts.map((account) => [account.id, account.currency_code])),
     [accounts]
   )
 

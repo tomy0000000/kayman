@@ -182,8 +182,9 @@ function HomePage() {
 
         <div className="w-full">
           <EventsTable
-            client={client}
             events={events}
+            accounts={accounts ?? []}
+            categories={categories ?? []}
             isPending={isPending}
             onEventEdit={handleEventClick}
           />
