@@ -73,7 +73,7 @@ export function TransactionsTable({
         cell: ({ row }) => (
           <div className="flex flex-col">
             <span className="font-semibold">
-              {row.original.event_description}
+              {row.original.event?.description}
             </span>
             {row.original.description && (
               <span className="text-muted-foreground text-sm">
