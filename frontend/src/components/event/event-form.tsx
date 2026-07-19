@@ -44,6 +44,9 @@ interface EventFormProps {
   categories: CategoryReadWithChildren[]
   currencies: CurrencyRead[]
   editingEvent: EventReadDetailed | null
+  // Seeds a new event from a transaction: prefills the timestamp, zone, and
+  // linked transaction. Ignored when editing an existing event.
+  seedTransaction?: SelectedTransaction
   onSubmit: (
     body: EventCreate,
     linkedTransactionIds: number[],
@@ -57,6 +60,7 @@ export function EventForm({
   categories,
   currencies,
   editingEvent,
+  seedTransaction,
   onSubmit,
   isPending
 }: EventFormProps) {
@@ -66,17 +70,19 @@ export function EventForm({
     editingEvent?.description ?? ''
   )
   const [timezone, setTimezone] = useState<string>(
-    editingEvent?.timezone ?? CLIENT_TIMEZONE
+    editingEvent?.timezone ??
+      seedTransaction?.account.timezone ??
+      CLIENT_TIMEZONE
   )
-  const [timestamp, setTimestamp] = useState(() =>
-    isEditing
-      ? editingEvent.timestamp
-      : toZonedISOString(new Date(), CLIENT_TIMEZONE)
-  )
+  const [timestamp, setTimestamp] = useState(() => {
+    if (isEditing) return editingEvent.timestamp
+    if (seedTransaction) return seedTransaction.transaction.created_at
+    return toZonedISOString(new Date(), CLIENT_TIMEZONE)
+  })
   const [linkedTransactions, setLinkedTransactions] = useState<
     SelectedTransaction[]
   >(() => {
-    if (!isEditing) return []
+    if (!isEditing) return seedTransaction ? [seedTransaction] : []
     const accountsById = new Map(
       accounts.map((account) => [account.id, account])
     )

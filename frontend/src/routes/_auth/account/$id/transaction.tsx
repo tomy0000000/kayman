@@ -5,13 +5,18 @@ import { type DateRange } from 'react-day-picker'
 import { toast } from 'sonner'
 
 import { DatePickerWithRange } from '@/components/date-range-picker'
+import { CreateEventSheet } from '@/components/event/create-event-sheet'
 import { TransactionFab } from '@/components/transaction-fab'
 import { TransactionPostSheet } from '@/components/transaction-post-sheet'
 import { TransactionsTable } from '@/components/transaction/transactions-table'
 import { Separator } from '@/components/ui/separator'
 import {
+  type EventCreate,
+  type EventEntryCreate,
   type TransactionCreate,
   type TransactionReadWithBalance,
+  createEvent,
+  createEventEntries,
   createTransaction,
   updateTransactions
 } from '@/lib/client'
@@ -21,6 +26,8 @@ import {
   readAccountTransactionsWithRunningBalanceOptions,
   readAccountTransactionsWithRunningBalanceQueryKey,
   readAccountsOptions,
+  readCategoriesOptions,
+  readCurrenciesOptions,
   readEventsOptions,
   readEventsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
@@ -40,6 +47,8 @@ function AccountTransactionPage() {
   const [editingTransaction, setEditingTransaction] =
     useState<TransactionReadWithBalance | null>(null)
   const [postingTransaction, setPostingTransaction] =
+    useState<TransactionReadWithBalance | null>(null)
+  const [creatingEventTransaction, setCreatingEventTransaction] =
     useState<TransactionReadWithBalance | null>(null)
 
   const handleFabOpenChange = (open: boolean) => {
@@ -87,6 +96,52 @@ function AccountTransactionPage() {
     meta: { errorMessage: 'Failed to post transaction' }
   })
 
+  const { mutate: createEventFromTransaction, isPending: isCreatingEvent } =
+    useMutation({
+      mutationFn: async ({
+        body,
+        linkedTransactionIds,
+        entries
+      }: {
+        body: EventCreate
+        linkedTransactionIds: number[]
+        entries: Omit<EventEntryCreate, 'event_id'>[]
+      }) => {
+        const { data: event } = await createEvent({
+          client,
+          body,
+          throwOnError: true
+        })
+
+        if (linkedTransactionIds.length > 0) {
+          await updateTransactions({
+            client,
+            body: linkedTransactionIds.map((id) => ({
+              id,
+              event_id: event.id
+            })),
+            throwOnError: true
+          })
+        }
+
+        if (entries.length > 0) {
+          await createEventEntries({
+            client,
+            body: entries.map((entry) => ({ ...entry, event_id: event.id })),
+            throwOnError: true
+          })
+        }
+
+        return event
+      },
+      onSuccess: () => {
+        toast.success('Event created')
+        invalidateTransactions()
+        setCreatingEventTransaction(null)
+      },
+      meta: { errorMessage: 'Failed to create event' }
+    })
+
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const start = dateRange?.from?.toISOString() ?? null
   const end = endExclusive(dateRange?.to)
@@ -102,6 +157,17 @@ function AccountTransactionPage() {
   const { data: events } = useQuery({
     ...readEventsOptions(),
     enabled: fabOpen
+  })
+
+  // Back the create-event sheet's entry fields, fetched once it opens.
+  const { data: categories } = useQuery({
+    ...readCategoriesOptions(),
+    enabled: creatingEventTransaction != null
+  })
+
+  const { data: currencies } = useQuery({
+    ...readCurrenciesOptions(),
+    enabled: creatingEventTransaction != null
   })
 
   const { isPending: isTransactionsPending, data: transactions } = useQuery({
@@ -137,6 +203,7 @@ function AccountTransactionPage() {
             setFabOpen(true)
           }}
           onTransactionPost={setPostingTransaction}
+          onTransactionCreateEvent={setCreatingEventTransaction}
         />
       </div>
 
@@ -166,6 +233,22 @@ function AccountTransactionPage() {
           })
         }}
         isPending={isPosting}
+      />
+
+      <CreateEventSheet
+        transaction={creatingEventTransaction}
+        account={account}
+        accounts={accounts ?? []}
+        categories={categories ?? []}
+        currencies={currencies ?? []}
+        open={creatingEventTransaction != null}
+        onOpenChange={(open) => {
+          if (!open) setCreatingEventTransaction(null)
+        }}
+        onSubmit={(body, linkedTransactionIds, entries) =>
+          createEventFromTransaction({ body, linkedTransactionIds, entries })
+        }
+        isPending={isCreatingEvent}
       />
     </>
   )
