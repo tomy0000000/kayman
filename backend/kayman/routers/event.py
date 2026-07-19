@@ -15,6 +15,7 @@ from kayman.schemas.api_models import EventReadDetailed
 from kayman.schemas.event import (
     Event,
     EventBase,
+    EventClear,
     EventCreate,
     EventRead,
     EventUpdate,
@@ -63,6 +64,18 @@ def update(
 ) -> EventBase:
     try:
         return update_events(session, [event_id], [event])[0]
+    except ValueError as err:
+        raise HTTPException(status_code=404, detail=err.args[0]) from err
+
+
+@event_router.post("/{event_id}/cleared", name="Clear Event", response_model=EventRead)
+def clear(
+    *, session: Session = Depends(get_session), event_id: int, data: EventClear
+) -> EventBase:
+    # TODO: validate event details before clearing
+    update = EventUpdate(**data.model_dump(exclude_unset=True))
+    try:
+        return update_events(session, [event_id], [update])[0]
     except ValueError as err:
         raise HTTPException(status_code=404, detail=err.args[0]) from err
 

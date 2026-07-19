@@ -52,6 +52,10 @@ class EventRead(EventBase):
     id: int
 
 
+class EventClear(SQLModel):
+    cleared_at: datetime
+
+
 class EventUpdate(SQLModel):
     type: EventType | None = None
     timestamp: datetime | None = None
