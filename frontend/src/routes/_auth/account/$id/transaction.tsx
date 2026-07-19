@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { type DateRange } from 'react-day-picker'
 import { toast } from 'sonner'
@@ -42,6 +42,7 @@ function AccountTransactionPage() {
   const { id } = Route.useParams()
   const accountId = Number(id)
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const [fabOpen, setFabOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] =
@@ -204,6 +205,17 @@ function AccountTransactionPage() {
           }}
           onTransactionPost={setPostingTransaction}
           onTransactionCreateEvent={setCreatingEventTransaction}
+          onTransactionGoToEvent={(transaction) => {
+            if (!transaction.event) return
+            navigate({
+              to: '/',
+              search: {
+                date: new Date(transaction.event.timestamp).toLocaleDateString(
+                  'en-CA'
+                )
+              }
+            })
+          }}
         />
       </div>
 

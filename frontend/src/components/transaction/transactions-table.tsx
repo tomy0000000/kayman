@@ -32,6 +32,7 @@ interface TransactionsTableProps {
   onTransactionEdit?: (transaction: TransactionReadWithBalance) => void
   onTransactionPost?: (transaction: TransactionReadWithBalance) => void
   onTransactionCreateEvent?: (transaction: TransactionReadWithBalance) => void
+  onTransactionGoToEvent?: (transaction: TransactionReadWithBalance) => void
 }
 
 // Stable reference for the empty state. A fresh `[]` per render makes
@@ -44,7 +45,8 @@ export function TransactionsTable({
   isPending,
   onTransactionEdit,
   onTransactionPost,
-  onTransactionCreateEvent
+  onTransactionCreateEvent,
+  onTransactionGoToEvent
 }: TransactionsTableProps) {
   const columns = useMemo<ColumnDef<TransactionReadWithBalance>[]>(
     () => [
@@ -177,6 +179,12 @@ export function TransactionsTable({
                     onSelect={() => onTransactionCreateEvent?.(row.original)}
                   >
                     Create Event
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    disabled={row.original.event == null}
+                    onSelect={() => onTransactionGoToEvent?.(row.original)}
+                  >
+                    Go to Event
                   </ContextMenuItem>
                 </ContextMenuContent>
               </ContextMenu>
