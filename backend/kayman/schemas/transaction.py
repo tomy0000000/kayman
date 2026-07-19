@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Optional
 from pydantic import computed_field
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, UniqueConstraint
 
+from kayman.schemas.event import EventRead
+
 if TYPE_CHECKING:
     from kayman.schemas.account import Account
     from kayman.schemas.event import Event
@@ -61,6 +63,7 @@ class TransactionRead(TransactionBase):
     created_at: datetime
     currency_code: str
     event_description: str | None
+    event: EventRead | None
 
     @computed_field
     def status(self) -> TransactionStatus:
