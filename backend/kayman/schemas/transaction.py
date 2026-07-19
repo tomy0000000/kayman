@@ -43,10 +43,6 @@ class Transaction(TransactionBase, table=True):
     def currency_code(self) -> str:
         return self.account.currency_code
 
-    @property
-    def event_description(self) -> str | None:
-        return self.event.description if self.event is not None else None
-
 
 class TransactionCreate(TransactionBase):
     pass
@@ -62,7 +58,6 @@ class TransactionRead(TransactionBase):
     id: int
     created_at: datetime
     currency_code: str
-    event_description: str | None
     event: EventRead | None
 
     @computed_field
