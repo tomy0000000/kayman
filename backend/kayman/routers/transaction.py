@@ -13,6 +13,7 @@ from kayman.logics.transaction import update_transactions_with_balances
 from kayman.schemas.transaction import (
     TransactionBase,
     TransactionCreate,
+    TransactionPost,
     TransactionRead,
     TransactionUpdate,
 )
@@ -60,6 +61,25 @@ def reads(
         end=end,
         event_id=event_id,
     )
+
+
+@txn_router.post(
+    "/{transaction_id}/posted",
+    name="Post Transaction",
+    response_model=TransactionRead,
+)
+def post(
+    *,
+    session: Session = Depends(get_session),
+    transaction_id: int,
+    data: TransactionPost,
+) -> TransactionBase:
+    update = TransactionUpdate(id=transaction_id, **data.model_dump(exclude_unset=True))
+    try:
+        updated = update_transactions_with_balances(session, [update])
+    except ValueError as err:
+        raise HTTPException(status_code=404, detail=err.args[0]) from err
+    return updated[0]
 
 
 @txn_router.patch("", name="Update Transactions", response_model=list[TransactionRead])
