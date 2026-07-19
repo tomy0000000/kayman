@@ -23,7 +23,7 @@ class TransactionBase(SQLModel):
         default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
     )
     description: str | None = None
-    reconciled_at: datetime | None = Field(
+    cleared_at: datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
     )
     index: int | None = None
@@ -64,7 +64,7 @@ class TransactionRead(TransactionBase):
 
     @computed_field
     def status(self) -> TransactionStatus:
-        if self.reconciled_at is not None:
+        if self.cleared_at is not None:
             return TransactionStatus.CLEARED
         if self.posted_at is not None:
             return TransactionStatus.POSTED
@@ -88,5 +88,5 @@ class TransactionUpdate(SQLModel):
     created_at: datetime | None = None
     posted_at: datetime | None = None
     description: str | None = None
-    reconciled_at: datetime | None = None
+    cleared_at: datetime | None = None
     index: int | None = None

@@ -2,267 +2,267 @@
   {
     "account_id": 2,
     "amount": "1200000",
+    "cleared_at": "2026-02-05T10:00:00+08:00",
     "created_at": "2026-02-02T10:00:00+08:00",
     "description": "January salary deposit",
     "id": 1,
-    "posted_at": "2026-02-03T10:00:00+08:00",
-    "reconciled_at": "2026-02-05T10:00:00+08:00"
+    "posted_at": "2026-02-03T10:00:00+08:00"
   },
   {
     "account_id": 2,
     "amount": "-195000",
+    "cleared_at": "2026-02-06T14:00:00+08:00",
     "created_at": "2026-02-03T14:00:00+08:00",
     "description": "TWD to USD wire transfer (out)",
     "id": 2,
-    "posted_at": "2026-02-04T14:00:00+08:00",
-    "reconciled_at": "2026-02-06T14:00:00+08:00"
+    "posted_at": "2026-02-04T14:00:00+08:00"
   },
   {
     "account_id": 5,
     "amount": "6000",
+    "cleared_at": "2026-02-06T14:00:00+08:00",
     "created_at": "2026-02-03T14:00:00+08:00",
     "description": "TWD to USD wire transfer (in)",
     "id": 3,
-    "posted_at": "2026-02-04T14:00:00+08:00",
-    "reconciled_at": "2026-02-06T14:00:00+08:00"
+    "posted_at": "2026-02-04T14:00:00+08:00"
   },
   {
     "account_id": 5,
     "amount": "105000",
+    "cleared_at": "2026-02-08T17:00:00-05:00",
     "created_at": "2026-02-05T17:00:00-05:00",
     "description": "January US salary deposit",
     "id": 4,
-    "posted_at": "2026-02-06T17:00:00-05:00",
-    "reconciled_at": "2026-02-08T17:00:00-05:00"
+    "posted_at": "2026-02-06T17:00:00-05:00"
   },
   {
     "account_id": 5,
     "amount": "-3000",
+    "cleared_at": "2026-02-09T10:00:00-05:00",
     "created_at": "2026-02-06T10:00:00-05:00",
     "description": "February rent",
     "event_id": 1,
     "id": 5,
     "index": 0,
-    "posted_at": "2026-02-07T10:00:00-05:00",
-    "reconciled_at": "2026-02-09T10:00:00-05:00"
+    "posted_at": "2026-02-07T10:00:00-05:00"
   },
   {
     "account_id": 2,
     "amount": "-5000",
+    "cleared_at": "2026-02-09T09:00:00+08:00",
     "created_at": "2026-02-06T09:00:00+08:00",
     "description": "ATM withdrawal to wallet",
     "id": 6,
-    "posted_at": "2026-02-07T09:00:00+08:00",
-    "reconciled_at": "2026-02-09T09:00:00+08:00"
+    "posted_at": "2026-02-07T09:00:00+08:00"
   },
   {
     "account_id": 1,
     "amount": "5000",
+    "cleared_at": "2026-02-09T09:00:00+08:00",
     "created_at": "2026-02-06T09:00:00+08:00",
     "description": "ATM withdrawal to wallet",
     "id": 7,
-    "posted_at": "2026-02-07T09:00:00+08:00",
-    "reconciled_at": "2026-02-09T09:00:00+08:00"
+    "posted_at": "2026-02-07T09:00:00+08:00"
   },
   {
     "account_id": 1,
     "amount": "-200",
+    "cleared_at": "2026-02-11T12:30:00+08:00",
     "created_at": "2026-02-08T12:30:00+08:00",
     "description": "Lunch at the noodle place",
     "event_id": 6,
     "id": 8,
     "index": 0,
-    "posted_at": "2026-02-09T12:30:00+08:00",
-    "reconciled_at": "2026-02-11T12:30:00+08:00"
+    "posted_at": "2026-02-09T12:30:00+08:00"
   },
   {
     "account_id": 1,
     "amount": "-150",
+    "cleared_at": "2026-02-12T08:30:00+08:00",
     "created_at": "2026-02-09T08:30:00+08:00",
     "description": "Morning coffee",
     "id": 9,
-    "posted_at": "2026-02-10T08:30:00+08:00",
-    "reconciled_at": "2026-02-12T08:30:00+08:00"
+    "posted_at": "2026-02-10T08:30:00+08:00"
   },
   {
     "account_id": 1,
     "amount": "-650",
+    "cleared_at": "2026-02-14T18:00:00+08:00",
     "created_at": "2026-02-11T18:00:00+08:00",
     "description": "Weekly groceries",
     "event_id": 7,
     "id": 10,
     "index": 0,
-    "posted_at": "2026-02-12T18:00:00+08:00",
-    "reconciled_at": "2026-02-14T18:00:00+08:00"
+    "posted_at": "2026-02-12T18:00:00+08:00"
   },
   {
     "account_id": 3,
     "amount": "-5000",
+    "cleared_at": "2026-02-16T19:30:00+08:00",
     "created_at": "2026-02-13T19:30:00+08:00",
     "description": "Dinner with friends",
     "event_id": 2,
     "id": 11,
     "index": 0,
-    "posted_at": "2026-02-14T19:30:00+08:00",
-    "reconciled_at": "2026-02-16T19:30:00+08:00"
+    "posted_at": "2026-02-14T19:30:00+08:00"
   },
   {
     "account_id": 5,
     "amount": "-8000",
+    "cleared_at": "2026-02-17T12:00:00-05:00",
     "created_at": "2026-02-14T12:00:00-05:00",
     "description": "Hotel in NYC",
     "id": 12,
-    "posted_at": "2026-02-15T12:00:00-05:00",
-    "reconciled_at": "2026-02-17T12:00:00-05:00"
+    "posted_at": "2026-02-15T12:00:00-05:00"
   },
   {
     "account_id": 3,
     "amount": "-20000",
+    "cleared_at": "2026-02-18T15:00:00+08:00",
     "created_at": "2026-02-15T15:00:00+08:00",
     "description": "AirPods Pro",
     "event_id": 3,
     "id": 13,
     "index": 0,
-    "posted_at": "2026-02-16T15:00:00+08:00",
-    "reconciled_at": "2026-02-18T15:00:00+08:00"
+    "posted_at": "2026-02-16T15:00:00+08:00"
   },
   {
     "account_id": 6,
     "amount": "-1500",
+    "cleared_at": "2026-02-20T19:00:00-05:00",
     "created_at": "2026-02-17T19:00:00-05:00",
     "description": "Anniversary dinner",
     "id": 14,
-    "posted_at": "2026-02-18T19:00:00-05:00",
-    "reconciled_at": "2026-02-20T19:00:00-05:00"
+    "posted_at": "2026-02-18T19:00:00-05:00"
   },
   {
     "account_id": 6,
     "amount": "-1500",
+    "cleared_at": "2026-02-23T10:00:00-05:00",
     "created_at": "2026-02-20T10:00:00-05:00",
     "description": "Apple One annual",
     "event_id": 4,
     "id": 15,
     "index": 0,
-    "posted_at": "2026-02-21T10:00:00-05:00",
-    "reconciled_at": "2026-02-23T10:00:00-05:00"
+    "posted_at": "2026-02-21T10:00:00-05:00"
   },
   {
     "account_id": 4,
     "amount": "200",
+    "cleared_at": null,
     "created_at": "2026-02-24T14:00:00-05:00",
     "description": "Birthday gift from family",
     "id": 16,
-    "posted_at": "2026-02-25T14:00:00-05:00",
-    "reconciled_at": null
+    "posted_at": "2026-02-25T14:00:00-05:00"
   },
   {
     "account_id": 4,
     "amount": "-100",
+    "cleared_at": null,
     "created_at": "2026-02-27T09:00:00-08:00",
     "description": "Specialty coffee",
     "event_id": 5,
     "id": 17,
     "index": 0,
-    "posted_at": "2026-02-28T09:00:00-08:00",
-    "reconciled_at": null
+    "posted_at": "2026-02-28T09:00:00-08:00"
   },
   {
     "account_id": 3,
     "amount": "-1000",
+    "cleared_at": "2026-02-14T18:00:00+08:00",
     "created_at": "2026-02-11T18:00:00+08:00",
     "description": "Weekly groceries",
     "event_id": 7,
     "id": 18,
     "index": 1,
-    "posted_at": "2026-02-12T18:00:00+08:00",
-    "reconciled_at": "2026-02-14T18:00:00+08:00"
+    "posted_at": "2026-02-12T18:00:00+08:00"
   },
   {
     "account_id": 7,
     "amount": "5",
+    "cleared_at": "2026-02-24T09:00:00-08:00",
     "created_at": "2026-02-22T09:00:00-08:00",
     "description": "Clipper card load",
     "event_id": 8,
     "id": 19,
     "index": 0,
-    "posted_at": "2026-02-23T09:00:00-08:00",
-    "reconciled_at": "2026-02-24T09:00:00-08:00"
+    "posted_at": "2026-02-23T09:00:00-08:00"
   },
   {
     "account_id": 6,
     "amount": "-8",
+    "cleared_at": "2026-02-24T09:00:00-08:00",
     "created_at": "2026-02-22T09:00:00-08:00",
     "description": "Clipper card ($5 value + $3 fee)",
     "event_id": 8,
     "id": 20,
     "index": 1,
-    "posted_at": "2026-02-23T09:00:00-08:00",
-    "reconciled_at": "2026-02-24T09:00:00-08:00"
+    "posted_at": "2026-02-23T09:00:00-08:00"
   },
   {
     "account_id": 5,
     "amount": "6500",
+    "cleared_at": null,
     "created_at": "2026-02-25T10:00:00-05:00",
     "description": "Payroll deposit (salary + bonus)",
     "event_id": 12,
     "id": 21,
     "index": 0,
-    "posted_at": "2026-02-26T10:00:00-05:00",
-    "reconciled_at": null
+    "posted_at": "2026-02-26T10:00:00-05:00"
   },
   {
     "account_id": 5,
     "amount": "300",
+    "cleared_at": null,
     "created_at": "2026-02-25T10:00:00-05:00",
     "description": "Expense reimbursement",
     "event_id": 12,
     "id": 22,
     "index": 1,
-    "posted_at": "2026-02-26T10:00:00-05:00",
-    "reconciled_at": null
+    "posted_at": "2026-02-26T10:00:00-05:00"
   },
   {
     "account_id": 5,
     "amount": "-3000",
+    "cleared_at": null,
     "created_at": "2026-02-27T10:00:00-05:00",
     "description": "Payment to Amex Gold",
     "event_id": 13,
     "id": 23,
     "index": 0,
-    "posted_at": "2026-02-28T10:00:00-05:00",
-    "reconciled_at": null
+    "posted_at": "2026-02-28T10:00:00-05:00"
   },
   {
     "account_id": 6,
     "amount": "3000",
+    "cleared_at": null,
     "created_at": "2026-02-27T10:00:00-05:00",
     "description": "Card payment received",
     "event_id": 13,
     "id": 24,
     "index": 1,
-    "posted_at": "2026-02-28T10:00:00-05:00",
-    "reconciled_at": null
+    "posted_at": "2026-02-28T10:00:00-05:00"
   },
   {
     "account_id": 2,
     "amount": "-30000",
+    "cleared_at": null,
     "created_at": "2026-02-24T14:00:00+08:00",
     "description": "TWD sold",
     "event_id": 14,
     "id": 25,
     "index": 0,
-    "posted_at": "2026-02-25T14:00:00+08:00",
-    "reconciled_at": null
+    "posted_at": "2026-02-25T14:00:00+08:00"
   },
   {
     "account_id": 5,
     "amount": "950",
+    "cleared_at": null,
     "created_at": "2026-02-24T14:00:00+08:00",
     "description": "USD bought",
     "event_id": 14,
     "id": 26,
     "index": 1,
-    "posted_at": "2026-02-25T14:00:00+08:00",
-    "reconciled_at": null
+    "posted_at": "2026-02-25T14:00:00+08:00"
   }
 ]

@@ -41,7 +41,7 @@ def test_create_transactions_1_txn(session: Session):
     assert db_txn.event_id == txn.event_id
     assert db_txn.created_at == txn.created_at
     assert db_txn.posted_at == txn.posted_at
-    assert db_txn.reconciled_at == txn.reconciled_at
+    assert db_txn.cleared_at == txn.cleared_at
 
 
 def test_create_transactions_n_txn(session: Session):
@@ -72,7 +72,7 @@ def test_create_transactions_n_txn(session: Session):
         assert db_txn.event_id == txn.event_id
         assert db_txn.created_at == txn.created_at
         assert db_txn.posted_at == txn.posted_at
-        assert db_txn.reconciled_at == txn.reconciled_at
+        assert db_txn.cleared_at == txn.cleared_at
 
 
 def test_create_transactions_no_commit(session: Session, session_2: Session):
@@ -98,7 +98,7 @@ def test_create_transactions_no_commit(session: Session, session_2: Session):
     assert session_txn.event_id == txn.event_id
     assert session_txn.created_at == txn.created_at
     assert session_txn.posted_at == txn.posted_at
-    assert session_txn.reconciled_at == txn.reconciled_at
+    assert session_txn.cleared_at == txn.cleared_at
 
     # The txn should not be visible to other sessions (yet)
     session_2_txn = session_2.get(Transaction, session_txn.id)
@@ -118,7 +118,7 @@ def test_create_transactions_no_commit(session: Session, session_2: Session):
     assert session_2_txn.event_id == txn.event_id
     assert session_2_txn.created_at == txn.created_at
     assert session_2_txn.posted_at == txn.posted_at
-    assert session_2_txn.reconciled_at == txn.reconciled_at
+    assert session_2_txn.cleared_at == txn.cleared_at
 
 
 def test_read_transactions_all(session: Session):
@@ -361,7 +361,7 @@ def test_update_transactions_length_mismatch(session: Session):
         # post-commit refresh, so keep the in-memory tz-aware value to compare.
         ("created_at", lambda: datetime(2026, 6, 1, tzinfo=UTC), False),
         ("posted_at", lambda: datetime(2026, 6, 2, tzinfo=UTC), False),
-        ("reconciled_at", lambda: datetime(2026, 6, 3, tzinfo=UTC), False),
+        ("cleared_at", lambda: datetime(2026, 6, 3, tzinfo=UTC), False),
     ],
     ids=[
         "account_id",
@@ -371,7 +371,7 @@ def test_update_transactions_length_mismatch(session: Session):
         "index",
         "created_at",
         "posted_at",
-        "reconciled_at",
+        "cleared_at",
     ],
 )
 def test_update_transaction_field(session: Session, field, make_value, commit):

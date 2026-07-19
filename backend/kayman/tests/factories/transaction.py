@@ -18,4 +18,4 @@ class TransactionFactory(SQLAlchemyModelFactory):
     event_id = factory.SelfAttribute("event.id")
     created_at = factory.Faker("date_time")
     posted_at = factory.Faker("date_time")
-    reconciled_at = factory.Faker("date_time")
+    cleared_at = factory.Faker("date_time")
