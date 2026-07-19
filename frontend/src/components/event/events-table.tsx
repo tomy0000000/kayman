@@ -177,8 +177,10 @@ export function EventsTable({
                     ))}
                   </TableRow>
                 </ContextMenuTrigger>
-                <ContextMenuContent>
-                  <ContextMenuItem onClick={() => onEventEdit?.(row.original)}>
+                <ContextMenuContent
+                  onCloseAutoFocus={(event) => event.preventDefault()}
+                >
+                  <ContextMenuItem onSelect={() => onEventEdit?.(row.original)}>
                     Edit
                   </ContextMenuItem>
                 </ContextMenuContent>

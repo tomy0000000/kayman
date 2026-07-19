@@ -149,9 +149,7 @@ export function TransactionsTable({
                   onCloseAutoFocus={(event) => event.preventDefault()}
                 >
                   <ContextMenuItem
-                    onSelect={() =>
-                      setTimeout(() => onTransactionEdit?.(row.original))
-                    }
+                    onSelect={() => onTransactionEdit?.(row.original)}
                   >
                     Edit
                   </ContextMenuItem>

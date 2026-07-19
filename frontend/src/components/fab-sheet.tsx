@@ -49,7 +49,11 @@ export function FabSheet({
           <Kbd>{hotkey.toUpperCase()}</Kbd>
         </TooltipContent>
       </Tooltip>
-      <SheetContent side="right" className={cn('flex flex-col', className)}>
+      <SheetContent
+        side="right"
+        className={cn('flex flex-col', className)}
+        onFocusOutside={(event) => event.preventDefault()}
+      >
         {children}
       </SheetContent>
     </Sheet>
