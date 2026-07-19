@@ -13,7 +13,8 @@ import {
   type AuthState
 } from '@/lib/auth-context'
 import { login as apiLogin } from '@/lib/client'
-import { type Client, createClient } from '@/lib/client/client'
+import { type Client } from '@/lib/client/client'
+import { client } from '@/lib/client/client.gen'
 
 const LOCAL_STORAGE_KEY = 'credential'
 
@@ -46,7 +47,8 @@ function loadCredential(): StoredCredential | null {
 }
 
 function clientFromCredential({ host, accessToken }: StoredCredential): Client {
-  return createClient({ baseURL: host, auth: () => accessToken })
+  client.setConfig({ baseURL: host, auth: () => accessToken })
+  return client
 }
 
 const EMPTY_STATE: AuthState = {
@@ -90,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (host: string, username: string, password: string) => {
-      const client = createClient({ baseURL: host })
+      client.setConfig({ baseURL: host })
       const { data, error } = await apiLogin({
         client,
         body: { username, password }

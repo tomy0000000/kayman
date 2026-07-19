@@ -25,7 +25,6 @@ import {
   type EventReadDetailed,
   type EventType
 } from '@/lib/client'
-import type { Client } from '@/lib/client/client'
 import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { eventTypeTabActiveClass } from '@/lib/event-types'
 import { type EventEntryDraft, toEventEntryDraft } from '@/lib/types'
@@ -41,7 +40,6 @@ const EVENT_TYPES: { value: EventType; icon: LucideIcon }[] = [
 type EventEntryPayload = Omit<EventEntryCreate, 'event_id'>
 
 interface EventFormProps {
-  client: Client
   accounts: AccountRead[]
   categories: CategoryReadWithChildren[]
   currencies: CurrencyRead[]
@@ -55,7 +53,6 @@ interface EventFormProps {
 }
 
 export function EventForm({
-  client,
   accounts,
   categories,
   currencies,
@@ -185,7 +182,6 @@ export function EventForm({
       <Field>
         <FieldLabel>Transactions</FieldLabel>
         <LinkedTransactionsField
-          client={client}
           value={linkedTransactions}
           onChange={setLinkedTransactions}
         />

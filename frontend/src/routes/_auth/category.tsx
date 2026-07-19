@@ -21,14 +21,9 @@ const transactions = [
 ]
 
 function CategoryPage() {
-  const { client } = Route.useRouteContext()
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
-  const {
-    isError,
-    data: categories,
-    error
-  } = useQuery(readCategoriesOptions({ client }))
+  const { isError, data: categories, error } = useQuery(readCategoriesOptions())
 
   const treeData = categories?.map((category) =>
     categoryToTreeItem(category, 'root')

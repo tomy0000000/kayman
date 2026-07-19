@@ -96,12 +96,8 @@ function HomePage() {
     },
     onSuccess: () => {
       toast.success(`Event ${editingEvent ? 'updated' : 'created'}`)
-      queryClient.invalidateQueries({
-        queryKey: readEventsQueryKey({ client })
-      })
-      queryClient.invalidateQueries({
-        queryKey: readTransactionsQueryKey({ client })
-      })
+      queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
+      queryClient.invalidateQueries({ queryKey: readTransactionsQueryKey() })
       setFabOpen(false)
     },
     onError: (error) => {
@@ -118,13 +114,13 @@ function HomePage() {
     isError,
     data: events,
     error
-  } = useQuery(readEventsOptions({ client, query: { event_date: eventDate } }))
+  } = useQuery(readEventsOptions({ query: { event_date: eventDate } }))
 
-  const { data: accounts } = useQuery(readAccountsOptions({ client }))
+  const { data: accounts } = useQuery(readAccountsOptions())
 
-  const { data: categories } = useQuery(readCategoriesOptions({ client }))
+  const { data: categories } = useQuery(readCategoriesOptions())
 
-  const { data: currencies } = useQuery(readCurrenciesOptions({ client }))
+  const { data: currencies } = useQuery(readCurrenciesOptions())
 
   useEffect(() => {
     if (!isError) return
@@ -159,7 +155,6 @@ function HomePage() {
       </div>
 
       <EventFab
-        client={client}
         accounts={accounts ?? []}
         categories={categories ?? []}
         currencies={currencies ?? []}

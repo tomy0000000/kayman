@@ -22,14 +22,9 @@ import {
   readAccountsQueryKey,
   readCurrenciesOptions
 } from '@/lib/client/@tanstack/react-query.gen'
-import type { Client } from '@/lib/client/client'
 import { CLIENT_TIMEZONE } from '@/lib/constants'
 
-interface CreateAccountFabProps {
-  client: Client
-}
-
-export function CreateAccountFab({ client }: CreateAccountFabProps) {
+export function CreateAccountFab() {
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -37,7 +32,7 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
   const [timezone, setTimezone] = useState(CLIENT_TIMEZONE)
 
   const { data: currencies } = useQuery({
-    ...readCurrenciesOptions({ client }),
+    ...readCurrenciesOptions(),
     enabled: open
   })
 
@@ -53,9 +48,7 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
     ...createAccountMutation(),
     onSuccess: () => {
       toast.success('Account created')
-      queryClient.invalidateQueries({
-        queryKey: readAccountsQueryKey({ client })
-      })
+      queryClient.invalidateQueries({ queryKey: readAccountsQueryKey() })
       reset()
       setOpen(false)
     },
@@ -71,7 +64,6 @@ export function CreateAccountFab({ client }: CreateAccountFabProps) {
   const handleCreate = () => {
     if (currencyCode == null) return
     mutate({
-      client,
       body: {
         name,
         currency_code: currencyCode,

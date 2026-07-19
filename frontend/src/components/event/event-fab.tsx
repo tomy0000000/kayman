@@ -9,12 +9,10 @@ import {
   type EventEntryCreate,
   type EventReadDetailed
 } from '@/lib/client'
-import type { Client } from '@/lib/client/client'
 
 type EventEntryPayload = Omit<EventEntryCreate, 'event_id'>
 
 interface EventFabProps {
-  client: Client
   accounts: AccountRead[]
   categories: CategoryReadWithChildren[]
   currencies: CurrencyRead[]
@@ -30,7 +28,6 @@ interface EventFabProps {
 }
 
 export function EventFab({
-  client,
   accounts,
   categories,
   currencies,
@@ -54,7 +51,6 @@ export function EventFab({
       {/* Keyed so the form re-initializes from the picked event. */}
       <EventForm
         key={editingEvent?.id ?? 'new'}
-        client={client}
         accounts={accounts}
         categories={categories}
         currencies={currencies}

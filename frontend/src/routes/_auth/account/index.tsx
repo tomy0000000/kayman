@@ -14,13 +14,7 @@ export const Route = createFileRoute('/_auth/account/')({
 })
 
 function AccountListPage() {
-  const { client } = Route.useRouteContext()
-
-  const {
-    isError,
-    data: accounts,
-    error
-  } = useQuery(readAccountsOptions({ client }))
+  const { isError, data: accounts, error } = useQuery(readAccountsOptions())
 
   useEffect(() => {
     if (!isError) return
@@ -68,7 +62,7 @@ function AccountListPage() {
         <p className="text-muted-foreground p-4 text-sm">No accounts found.</p>
       )}
 
-      <CreateAccountFab client={client} />
+      <CreateAccountFab />
     </div>
   )
 }

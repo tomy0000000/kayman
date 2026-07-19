@@ -40,7 +40,6 @@ import {
   readAccountsOptions,
   readTransactionsOptions
 } from '@/lib/client/@tanstack/react-query.gen'
-import type { Client } from '@/lib/client/client'
 import { cn, formatDateTime } from '@/lib/utils'
 
 type StatusFilter = TransactionStatus | 'ALL'
@@ -76,7 +75,6 @@ interface StatusFilterHeaderProps {
 }
 
 interface LinkTransactionsTableProps {
-  client: Client
   selection: SelectedTransaction[]
   onSelectionChange: (selection: SelectedTransaction[]) => void
 }
@@ -118,7 +116,6 @@ function StatusFilterHeader({ table }: StatusFilterHeaderProps) {
 }
 
 export function LinkTransactionsTable({
-  client,
   selection,
   onSelectionChange
 }: LinkTransactionsTableProps) {
@@ -199,11 +196,10 @@ export function LinkTransactionsTable({
     )
   }
 
-  const { data: accounts } = useQuery(readAccountsOptions({ client }))
+  const { data: accounts } = useQuery(readAccountsOptions())
 
   const { data } = useQuery({
     ...readTransactionsOptions({
-      client,
       query: { account_id: selectedAccount?.id, event_id: 'empty' }
     }),
     enabled: selectedAccount !== null

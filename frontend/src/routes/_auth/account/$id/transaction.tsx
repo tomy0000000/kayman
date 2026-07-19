@@ -56,12 +56,9 @@ function AccountTransactionPage() {
     },
     onSuccess: () => {
       toast.success(`Transaction ${editingTransaction ? 'updated' : 'created'}`)
-      queryClient.invalidateQueries({
-        queryKey: readEventsQueryKey({ client })
-      })
+      queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
       queryClient.invalidateQueries({
         queryKey: readAccountTransactionsWithRunningBalanceQueryKey({
-          client,
           path: { account_id: accountId }
         })
       })
@@ -87,13 +84,13 @@ function AccountTransactionPage() {
     isError,
     data: account,
     error
-  } = useQuery(readAccountOptions({ client, path: { account_id: accountId } }))
+  } = useQuery(readAccountOptions({ path: { account_id: accountId } }))
 
-  const { data: accounts } = useQuery(readAccountsOptions({ client }))
+  const { data: accounts } = useQuery(readAccountsOptions())
 
   // Backs the FAB's event field, so only fetched once the sheet opens.
   const { data: events } = useQuery({
-    ...readEventsOptions({ client }),
+    ...readEventsOptions(),
     enabled: fabOpen
   })
 
@@ -104,7 +101,6 @@ function AccountTransactionPage() {
     error: transactionsError
   } = useQuery(
     readAccountTransactionsWithRunningBalanceOptions({
-      client,
       path: { account_id: accountId },
       query: { start, end }
     })
