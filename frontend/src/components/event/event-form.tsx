@@ -182,6 +182,7 @@ export function EventForm({
       <Field>
         <FieldLabel>Transactions</FieldLabel>
         <LinkedTransactionsField
+          accounts={accounts}
           value={linkedTransactions}
           onChange={setLinkedTransactions}
         />

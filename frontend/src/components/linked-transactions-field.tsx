@@ -33,9 +33,11 @@ import {
   ItemDescription,
   ItemTitle
 } from '@/components/ui/item'
+import { type AccountRead } from '@/lib/client'
 import { formatDateTime } from '@/lib/utils'
 
 interface LinkedTransactionsFieldProps {
+  accounts: AccountRead[]
   value: SelectedTransaction[]
   onChange: (value: SelectedTransaction[]) => void
 }
@@ -46,6 +48,7 @@ interface LinkedTransactionItemProps {
 }
 
 export function LinkedTransactionsField({
+  accounts,
   value,
   onChange
 }: LinkedTransactionsFieldProps) {
@@ -120,6 +123,7 @@ export function LinkedTransactionsField({
           </DialogDescription>
         </DialogHeader>
         <LinkTransactionsTable
+          accounts={accounts}
           selection={selection}
           onSelectionChange={setSelection}
         />
