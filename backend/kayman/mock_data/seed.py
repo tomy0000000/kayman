@@ -19,6 +19,7 @@ from kayman.schemas.currency import Currency
 from kayman.schemas.event import Event
 from kayman.schemas.event_entry import EventEntry
 from kayman.schemas.transaction import Transaction
+from kayman.schemas.transaction_tag import TransactionTag, TransactionTagLink
 
 if TYPE_CHECKING:
     from loguru import Logger
@@ -90,6 +91,19 @@ def seed(session: Session, logger: Logger) -> None:
     session.commit()
     _resync_id_sequence(session, "transaction")
     logger.success(f"Transactions seeded: {len(transactions)}")
+
+    transaction_tags = load_records("transaction_tags", TransactionTag)
+    for transaction_tag in sorted(transaction_tags, key=lambda t: t.id or 0):
+        session.add(transaction_tag)
+    session.commit()
+    _resync_id_sequence(session, "transaction_tag")
+    logger.success(f"Transaction tags seeded: {len(transaction_tags)}")
+
+    transaction_tag_links = load_records("transaction_tag_links", TransactionTagLink)
+    for transaction_tag_link in transaction_tag_links:
+        session.add(transaction_tag_link)
+    session.commit()
+    logger.success(f"Transaction tag links seeded: {len(transaction_tag_links)}")
 
 
 def main() -> int:

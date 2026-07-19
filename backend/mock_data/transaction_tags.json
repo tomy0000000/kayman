@@ -1,0 +1,27 @@
+[
+  {
+    "archived": false,
+    "id": 1,
+    "name": "Apple Pay"
+  },
+  {
+    "archived": false,
+    "id": 2,
+    "name": "PayPal"
+  },
+  {
+    "archived": false,
+    "id": 3,
+    "name": "Zelle"
+  },
+  {
+    "archived": false,
+    "id": 4,
+    "name": "Recurring"
+  },
+  {
+    "archived": true,
+    "id": 5,
+    "name": "Venmo"
+  }
+]

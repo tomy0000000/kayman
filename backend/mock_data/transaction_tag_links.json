@@ -1,0 +1,38 @@
+[
+  {
+    "transaction_id": 5,
+    "transaction_tag_id": 4
+  },
+  {
+    "transaction_id": 9,
+    "transaction_tag_id": 1
+  },
+  {
+    "transaction_id": 11,
+    "transaction_tag_id": 5
+  },
+  {
+    "transaction_id": 13,
+    "transaction_tag_id": 1
+  },
+  {
+    "transaction_id": 15,
+    "transaction_tag_id": 1
+  },
+  {
+    "transaction_id": 15,
+    "transaction_tag_id": 4
+  },
+  {
+    "transaction_id": 16,
+    "transaction_tag_id": 3
+  },
+  {
+    "transaction_id": 20,
+    "transaction_tag_id": 1
+  },
+  {
+    "transaction_id": 22,
+    "transaction_tag_id": 2
+  }
+]
