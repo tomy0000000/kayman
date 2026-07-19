@@ -69,7 +69,16 @@ export function TransactionsTable({
         accessorKey: 'description',
         header: 'Description',
         cell: ({ row }) => (
-          <span className="font-semibold">{row.original.description}</span>
+          <div className="flex flex-col">
+            <span className="font-semibold">
+              {row.original.event_description}
+            </span>
+            {row.original.description && (
+              <span className="text-muted-foreground text-sm">
+                {row.original.description}
+              </span>
+            )}
+          </div>
         )
       },
       {
