@@ -64,6 +64,13 @@ export function toZonedISOString(date: Date, timeZone: string) {
     .toString({ timeZoneName: 'never', fractionalSecondDigits: 0 })
 }
 
+// Parse a "YYYY-MM-DD" string into a Date at local midnight (inverse of
+// `toLocaleDateString('en-CA')`). Avoids the UTC shift of `new Date(value)`.
+export function parseLocalDate(value: string): Date {
+  const [y = 0, m = 1, d = 1] = value.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
 export function pad(n: number) {
   return String(n).padStart(2, '0')
 }
