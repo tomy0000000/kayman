@@ -70,6 +70,11 @@ class TransactionReadWithBalance(TransactionRead):
     running_balance: Decimal
 
 
+class TransactionPost(SQLModel):
+    posted_at: datetime
+    amount: Decimal | None = None
+
+
 class TransactionUpdate(SQLModel):
     id: int
     account_id: int | None = None
