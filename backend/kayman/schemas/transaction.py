@@ -7,10 +7,12 @@ from pydantic import computed_field
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, UniqueConstraint
 
 from kayman.schemas.event import EventRead
+from kayman.schemas.transaction_tag import TransactionTagLink, TransactionTagRead
 
 if TYPE_CHECKING:
     from kayman.schemas.account import Account
     from kayman.schemas.event import Event
+    from kayman.schemas.transaction_tag import TransactionTag
 
 
 class TransactionBase(SQLModel):
@@ -38,6 +40,9 @@ class Transaction(TransactionBase, table=True):
     id: int | None = Field(primary_key=True, default=None)
     account: "Account" = Relationship(back_populates="transactions")
     event: Optional["Event"] = Relationship(back_populates="transactions")
+    tags: list["TransactionTag"] = Relationship(
+        back_populates="transactions", link_model=TransactionTagLink
+    )
 
     @property
     def currency_code(self) -> str:
@@ -45,7 +50,7 @@ class Transaction(TransactionBase, table=True):
 
 
 class TransactionCreate(TransactionBase):
-    pass
+    tag_ids: list[int] = []
 
 
 class TransactionStatus(enum.Enum):
@@ -59,6 +64,7 @@ class TransactionRead(TransactionBase):
     created_at: datetime
     currency_code: str
     event: EventRead | None
+    tags: list[TransactionTagRead] = []
 
     @computed_field
     def status(self) -> TransactionStatus:
@@ -92,3 +98,4 @@ class TransactionUpdate(SQLModel):
     description: str | None = None
     cleared_at: datetime | None = None
     index: int | None = None
+    tag_ids: list[int] | None = None
