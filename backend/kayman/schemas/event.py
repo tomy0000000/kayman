@@ -25,6 +25,7 @@ class EventBase(SQLModel):
     timestamp: datetime
     timezone: TimeZoneName
     description: str | None = None
+    cleared_at: datetime | None = None
 
 
 class Event(EventBase, table=True):
@@ -34,6 +35,9 @@ class Event(EventBase, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=False)
     )
     timezone: TimeZoneName = Field(sa_column=Column(SATimezone(), nullable=False))
+    cleared_at: datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
     # Auto calculated for Expense or Income
     # Manually logged for Transfer or Exchange
     transactions: list["Transaction"] = Relationship(back_populates="event")
@@ -53,3 +57,4 @@ class EventUpdate(SQLModel):
     timestamp: datetime | None = None
     timezone: TimeZoneName | None = None
     description: str | None = None
+    cleared_at: datetime | None = None

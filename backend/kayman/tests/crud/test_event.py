@@ -171,12 +171,14 @@ def test_read_events_for_update(session: Session):
         # Datetime fields use commit=False: SQLite drops tzinfo on the
         # post-commit refresh, so keep the in-memory tz-aware value to compare.
         ("timestamp", lambda: datetime(2026, 6, 1, tzinfo=UTC), False),
+        ("cleared_at", lambda: datetime(2026, 6, 1, tzinfo=UTC), False),
     ],
     ids=[
         "type",
         "timezone",
         "description",
         "timestamp",
+        "cleared_at",
     ],
 )
 def test_update_event_field(session: Session, field, make_value, commit):
@@ -185,12 +187,14 @@ def test_update_event_field(session: Session, field, make_value, commit):
         timestamp=datetime(2025, 1, 1, 12, 0),
         timezone="UTC",
         description="original description",
+        cleared_at=datetime(2025, 1, 1, 12, 0),
     )
     originals = {
         "type": event.type,
         "timestamp": event.timestamp,
         "timezone": event.timezone,
         "description": event.description,
+        "cleared_at": event.cleared_at,
     }
     new_value = make_value()
 

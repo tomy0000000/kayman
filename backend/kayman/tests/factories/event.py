@@ -15,6 +15,7 @@ class EventFactory(SQLAlchemyModelFactory):
     timestamp = factory.Faker("date_time")
     timezone = "UTC"
     type = factory.Faker("random_element", elements=list(EventType))
+    cleared_at = factory.Faker("date_time")
 
     @classmethod
     def build_details(cls, type=EventType.Expense, entry_num=1, transaction_num=1):
