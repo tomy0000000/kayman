@@ -40,6 +40,14 @@ def get_transactions_with_running_balance(
     return results
 
 
+def validate_transaction_has_event(session: Session, transaction_id: int) -> None:
+    txns = read_transactions(session, transaction_ids=[transaction_id])
+    if len(txns) != 1:
+        raise ValueError(f"Transaction id(s) not found: {{{transaction_id}}}")
+    if txns[0].event_id is None:
+        raise ValueError(f"Transaction {transaction_id} has no associated event")
+
+
 def update_transactions_with_balances(
     session: Session,
     updates: Sequence[TransactionUpdate],

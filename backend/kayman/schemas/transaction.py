@@ -80,6 +80,10 @@ class TransactionPost(SQLModel):
     amount: Decimal | None = None
 
 
+class TransactionClear(SQLModel):
+    cleared_at: datetime
+
+
 class TransactionUpdate(SQLModel):
     id: int
     account_id: int | None = None
