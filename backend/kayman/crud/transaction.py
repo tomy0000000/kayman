@@ -42,7 +42,10 @@ def read_transactions(
     descending: bool = False,
     for_update: bool = False,
 ) -> Sequence[Transaction]:
-    scalar = select(Transaction).options(selectinload(Transaction.account))  # type: ignore[arg-type]
+    scalar = select(Transaction).options(
+        selectinload(Transaction.account),  # type: ignore[arg-type]
+        selectinload(Transaction.event),  # type: ignore[arg-type]
+    )
     if transaction_ids:
         scalar = scalar.where(col(Transaction.id).in_(transaction_ids))
     if account_id:
