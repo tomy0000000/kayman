@@ -3,7 +3,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from kayman.crud.transaction import (
     create_transactions,
@@ -13,10 +13,17 @@ from kayman.crud.transaction import (
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBase,
+    TransactionCreate,
     TransactionRead,
     TransactionUpdate,
 )
-from kayman.tests.factories import AccountFactory, EventFactory, TransactionFactory
+from kayman.schemas.transaction_tag import TransactionTag, TransactionTagLink
+from kayman.tests.factories import (
+    AccountFactory,
+    EventFactory,
+    TransactionFactory,
+    TransactionTagFactory,
+)
 
 
 def test_create_transactions_1_txn(session: Session):
@@ -406,3 +413,177 @@ def test_update_transaction_explicit_none_clears_field(session: Session):
     assert len(updated) == 1
     assert updated[0].posted_at is None
     assert updated[0].description == original_description
+
+
+def test_create_transactions_with_tag_ids(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
+    tag_1 = TransactionTagFactory()
+    tag_2 = TransactionTagFactory()
+    txn_create = EventFactory.build_details().transactions[0]
+    txn = TransactionCreate.model_validate(
+        txn_create,
+        update={
+            "account_id": account.id,
+            "event_id": event.id,
+            "index": 0,
+            "tag_ids": [tag_1.id, tag_2.id],
+        },
+    )
+
+    db_txn = create_transactions(session, [txn])[0]
+
+    assert db_txn.id is not None
+    assert len(db_txn.tags) == 2
+    assert {tag.id for tag in db_txn.tags} == {tag_1.id, tag_2.id}
+
+
+def test_create_transactions_duplicate_tag_ids_deduped(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
+    tag = TransactionTagFactory()
+    txn_create = EventFactory.build_details().transactions[0]
+    txn = TransactionCreate.model_validate(
+        txn_create,
+        update={
+            "account_id": account.id,
+            "event_id": event.id,
+            "index": 0,
+            "tag_ids": [tag.id, tag.id],
+        },
+    )
+
+    db_txn = create_transactions(session, [txn])[0]
+
+    assert len(db_txn.tags) == 1
+    assert db_txn.tags[0].id == tag.id
+
+
+def test_create_transactions_missing_tag_id(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
+    tag = TransactionTagFactory()
+    missing_id = tag.id + 1000
+    txn_create = EventFactory.build_details().transactions[0]
+    txn = TransactionCreate.model_validate(
+        txn_create,
+        update={
+            "account_id": account.id,
+            "event_id": event.id,
+            "index": 0,
+            "tag_ids": [missing_id],
+        },
+    )
+
+    with pytest.raises(ValueError, match="not found"):
+        create_transactions(session, [txn])
+
+
+def test_create_transactions_without_tag_ids(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
+    txn_create = EventFactory.build_details().transactions[0]
+    txn = TransactionCreate.model_validate(
+        txn_create,
+        update={
+            "account_id": account.id,
+            "event_id": event.id,
+            "index": 0,
+        },
+    )
+
+    db_txn = create_transactions(session, [txn])[0]
+
+    assert db_txn.tags == []
+
+
+def test_read_transactions_with_tags(session: Session):
+    tag_1 = TransactionTagFactory()
+    tag_2 = TransactionTagFactory()
+    txn = TransactionFactory(tags=[tag_1, tag_2])
+
+    results = read_transactions(session, transaction_ids=[txn.id])
+
+    assert len(results) == 1
+    assert len(results[0].tags) == 2
+    assert {tag.id for tag in results[0].tags} == {tag_1.id, tag_2.id}
+
+
+def test_update_transactions_replaces_tags(session: Session):
+    old_tag = TransactionTagFactory()
+    new_tag_1 = TransactionTagFactory()
+    new_tag_2 = TransactionTagFactory()
+    txn = TransactionFactory(tags=[old_tag])
+
+    updated = update_transactions(
+        session,
+        [txn],
+        [TransactionUpdate(id=txn.id, tag_ids=[new_tag_1.id, new_tag_2.id])],
+    )
+
+    assert len(updated) == 1
+    assert len(updated[0].tags) == 2
+    assert {tag.id for tag in updated[0].tags} == {new_tag_1.id, new_tag_2.id}
+
+
+def test_update_transactions_empty_tag_ids_clears_tags(session: Session):
+    tag = TransactionTagFactory()
+    txn = TransactionFactory(tags=[tag])
+
+    updated = update_transactions(
+        session,
+        [txn],
+        [TransactionUpdate(id=txn.id, tag_ids=[])],
+    )
+
+    assert len(updated) == 1
+    assert updated[0].tags == []
+
+
+def test_update_transactions_omitted_tag_ids_leaves_tags_untouched(session: Session):
+    tag = TransactionTagFactory()
+    txn = TransactionFactory(tags=[tag], amount=Decimal("100.00"))
+
+    # tag_ids is omitted, so exclude_unset drops it and the tags survive.
+    updated = update_transactions(
+        session,
+        [txn],
+        [TransactionUpdate(id=txn.id, amount=Decimal("150.00"))],
+    )
+
+    assert len(updated) == 1
+    assert updated[0].amount == Decimal("150.00")
+    assert len(updated[0].tags) == 1
+    assert updated[0].tags[0].id == tag.id
+
+
+def test_update_transactions_missing_tag_id(session: Session):
+    tag = TransactionTagFactory()
+    txn = TransactionFactory(tags=[tag])
+    missing_id = tag.id + 1000
+
+    with pytest.raises(ValueError, match="not found"):
+        update_transactions(
+            session,
+            [txn],
+            [TransactionUpdate(id=txn.id, tag_ids=[missing_id])],
+        )
+
+
+def test_delete_transaction_removes_links_but_keeps_tags(session: Session):
+    tag_1 = TransactionTagFactory()
+    tag_2 = TransactionTagFactory()
+    txn = TransactionFactory(tags=[tag_1, tag_2])
+
+    links = session.exec(select(TransactionTagLink)).all()
+    assert len(links) == 2
+
+    session.delete(txn)
+    session.commit()
+
+    # The link rows are gone, but the tags themselves survive.
+    links = session.exec(select(TransactionTagLink)).all()
+    assert len(links) == 0
+    tags = session.exec(select(TransactionTag)).all()
+    assert len(tags) == 2
+    assert {tag.id for tag in tags} == {tag_1.id, tag_2.id}

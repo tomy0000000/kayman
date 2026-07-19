@@ -11,6 +11,7 @@ from kayman.schemas.transaction import (
     TransactionCreate,
     TransactionUpdate,
 )
+from kayman.schemas.transaction_tag import TransactionTag
 
 TransactionOrderBy = Literal["created_at", "posted_at", "amount", "id"]
 
@@ -21,6 +22,11 @@ def create_transactions(
     commit: bool = True,
 ) -> Sequence[TransactionBase]:
     db_txns = [Transaction.model_validate(txn) for txn in txns]
+    for db_txn, txn in zip(db_txns, txns, strict=True):
+        # getattr: callers may pass a plain TransactionBase, which lacks tag_ids
+        tag_ids = getattr(txn, "tag_ids", None)
+        if tag_ids:
+            db_txn.tags = _resolve_tags(session, tag_ids)
     session.add_all(db_txns)
     if commit:
         session.commit()
@@ -45,6 +51,7 @@ def read_transactions(
     scalar = select(Transaction).options(
         selectinload(Transaction.account),  # type: ignore[arg-type]
         selectinload(Transaction.event),  # type: ignore[arg-type]
+        selectinload(Transaction.tags),  # type: ignore[arg-type]
     )
     if transaction_ids:
         scalar = scalar.where(col(Transaction.id).in_(transaction_ids))
@@ -78,7 +85,13 @@ def update_transactions(
         raise ValueError("previous_txns and updates must have the same length")
 
     for db_txn, txn in zip(previous_txns, updates, strict=True):
-        db_txn.sqlmodel_update(txn.model_dump(exclude_unset=True, exclude={"id"}))
+        # tag_ids is not a column: strip it from the row update and apply it to
+        # the relationship instead. None means "leave tags untouched".
+        db_txn.sqlmodel_update(
+            txn.model_dump(exclude_unset=True, exclude={"id", "tag_ids"})
+        )
+        if txn.tag_ids is not None:
+            db_txn.tags = _resolve_tags(session, txn.tag_ids)
 
     session.add_all(previous_txns)
     if commit:
@@ -89,3 +102,15 @@ def update_transactions(
         session.flush()
 
     return previous_txns
+
+
+def _resolve_tags(session: Session, tag_ids: Collection[int]) -> list[TransactionTag]:
+    # Dedupe: the composite link-table primary key rejects duplicates
+    unique_ids = set(tag_ids)
+    tags = session.exec(
+        select(TransactionTag).where(col(TransactionTag.id).in_(unique_ids))
+    ).all()
+    missing_ids = unique_ids - {tag.id for tag in tags}
+    if missing_ids:
+        raise ValueError(f"Transaction tag id(s) not found: {missing_ids}")
+    return list(tags)
