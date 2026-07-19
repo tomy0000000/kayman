@@ -30,6 +30,7 @@ interface TransactionsTableProps {
   currencyCode?: string
   isPending: boolean
   onTransactionEdit?: (transaction: TransactionReadWithBalance) => void
+  onTransactionPost?: (transaction: TransactionReadWithBalance) => void
 }
 
 // Stable reference for the empty state. A fresh `[]` per render makes
@@ -40,7 +41,8 @@ export function TransactionsTable({
   transactions,
   currencyCode,
   isPending,
-  onTransactionEdit
+  onTransactionEdit,
+  onTransactionPost
 }: TransactionsTableProps) {
   const columns = useMemo<ColumnDef<TransactionReadWithBalance>[]>(
     () => [
@@ -152,6 +154,12 @@ export function TransactionsTable({
                     onSelect={() => onTransactionEdit?.(row.original)}
                   >
                     Edit
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    disabled={row.original.status !== 'PENDING'}
+                    onSelect={() => onTransactionPost?.(row.original)}
+                  >
+                    Post
                   </ContextMenuItem>
                 </ContextMenuContent>
               </ContextMenu>

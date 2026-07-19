@@ -10,6 +10,8 @@ interface FabFormProps {
   isPending: boolean
   disabled?: boolean
   isEditing?: boolean
+  submitLabel?: string
+  submitPendingLabel?: string
   children: React.ReactNode
 }
 
@@ -18,6 +20,8 @@ export function FabForm({
   isPending,
   disabled = false,
   isEditing = false,
+  submitLabel,
+  submitPendingLabel,
   children
 }: FabFormProps) {
   const submit = () => {
@@ -35,9 +39,11 @@ export function FabForm({
     preventDefault: true
   })
 
-  const { label, pendingLabel } = isEditing
+  const defaults = isEditing
     ? { label: 'Save', pendingLabel: 'Saving...' }
     : { label: 'Create', pendingLabel: 'Creating...' }
+  const label = submitLabel ?? defaults.label
+  const pendingLabel = submitPendingLabel ?? defaults.pendingLabel
 
   return (
     <form

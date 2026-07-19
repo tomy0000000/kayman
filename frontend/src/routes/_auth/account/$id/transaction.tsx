@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { DatePickerWithRange } from '@/components/date-range-picker'
 import { TransactionFab } from '@/components/transaction-fab'
+import { TransactionPostSheet } from '@/components/transaction-post-sheet'
 import { TransactionsTable } from '@/components/transaction/transactions-table'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -15,6 +16,7 @@ import {
   updateTransactions
 } from '@/lib/client'
 import {
+  postTransactionMutation,
   readAccountOptions,
   readAccountTransactionsWithRunningBalanceOptions,
   readAccountTransactionsWithRunningBalanceQueryKey,
@@ -37,10 +39,21 @@ function AccountTransactionPage() {
   const [fabOpen, setFabOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] =
     useState<TransactionReadWithBalance | null>(null)
+  const [postingTransaction, setPostingTransaction] =
+    useState<TransactionReadWithBalance | null>(null)
 
   const handleFabOpenChange = (open: boolean) => {
     setFabOpen(open)
     if (open) setEditingTransaction(null)
+  }
+
+  const invalidateTransactions = () => {
+    queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
+    queryClient.invalidateQueries({
+      queryKey: readAccountTransactionsWithRunningBalanceQueryKey({
+        path: { account_id: accountId }
+      })
+    })
   }
 
   const { mutate, isPending } = useMutation({
@@ -56,17 +69,22 @@ function AccountTransactionPage() {
     },
     onSuccess: () => {
       toast.success(`Transaction ${editingTransaction ? 'updated' : 'created'}`)
-      queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
-      queryClient.invalidateQueries({
-        queryKey: readAccountTransactionsWithRunningBalanceQueryKey({
-          path: { account_id: accountId }
-        })
-      })
+      invalidateTransactions()
       setFabOpen(false)
     },
     meta: {
       errorMessage: `Failed to ${editingTransaction ? 'update' : 'create'} transaction`
     }
+  })
+
+  const { mutate: postTransaction, isPending: isPosting } = useMutation({
+    ...postTransactionMutation(),
+    onSuccess: () => {
+      toast.success('Transaction posted')
+      invalidateTransactions()
+      setPostingTransaction(null)
+    },
+    meta: { errorMessage: 'Failed to post transaction' }
   })
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
@@ -118,6 +136,7 @@ function AccountTransactionPage() {
             setEditingTransaction(transaction)
             setFabOpen(true)
           }}
+          onTransactionPost={setPostingTransaction}
         />
       </div>
 
@@ -130,6 +149,23 @@ function AccountTransactionPage() {
         editingTransaction={editingTransaction}
         onSubmit={mutate}
         isPending={isPending}
+      />
+
+      <TransactionPostSheet
+        transaction={postingTransaction}
+        account={account}
+        open={postingTransaction != null}
+        onOpenChange={(open) => {
+          if (!open) setPostingTransaction(null)
+        }}
+        onSubmit={(body) => {
+          if (postingTransaction == null) return
+          postTransaction({
+            path: { transaction_id: postingTransaction.id },
+            body
+          })
+        }}
+        isPending={isPosting}
       />
     </>
   )
