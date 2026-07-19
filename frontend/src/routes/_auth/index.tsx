@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 
 import { EventFab } from '@/components/event/event-fab'
@@ -100,36 +100,21 @@ function HomePage() {
       queryClient.invalidateQueries({ queryKey: readTransactionsQueryKey() })
       setFabOpen(false)
     },
-    onError: (error) => {
-      console.error(error)
-      toast.error(`Failed to ${editingEvent ? 'update' : 'create'} event`, {
-        description:
-          error instanceof Error ? error.message : 'An unknown error occurred'
-      })
+    meta: {
+      errorMessage: `Failed to ${editingEvent ? 'update' : 'create'} event`
     }
   })
 
-  const {
-    isPending,
-    isError,
-    data: events,
-    error
-  } = useQuery(readEventsOptions({ query: { event_date: eventDate } }))
+  const { isPending, data: events } = useQuery({
+    ...readEventsOptions({ query: { event_date: eventDate } }),
+    meta: { errorMessage: 'Failed to fetch events' }
+  })
 
   const { data: accounts } = useQuery(readAccountsOptions())
 
   const { data: categories } = useQuery(readCategoriesOptions())
 
   const { data: currencies } = useQuery(readCurrenciesOptions())
-
-  useEffect(() => {
-    if (!isError) return
-    console.error(error)
-    toast.error('Failed to fetch events', {
-      description:
-        error instanceof Error ? error.message : 'An unknown error occurred'
-    })
-  }, [isError, error])
 
   return (
     <>

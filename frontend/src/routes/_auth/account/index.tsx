@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { Wallet } from 'lucide-react'
-import { useEffect } from 'react'
-import { toast } from 'sonner'
 
 import { CreateAccountFab } from '@/components/create-account-fab'
 import { Separator } from '@/components/ui/separator'
@@ -14,16 +12,10 @@ export const Route = createFileRoute('/_auth/account/')({
 })
 
 function AccountListPage() {
-  const { isError, data: accounts, error } = useQuery(readAccountsOptions())
-
-  useEffect(() => {
-    if (!isError) return
-    console.error(error)
-    toast.error('Failed to fetch accounts', {
-      description:
-        error instanceof Error ? error.message : 'An unknown error occurred'
-    })
-  }, [isError, error])
+  const { data: accounts } = useQuery({
+    ...readAccountsOptions(),
+    meta: { errorMessage: 'Failed to fetch accounts' }
+  })
 
   return (
     <div className="w-full">

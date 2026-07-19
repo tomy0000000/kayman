@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { type DateRange } from 'react-day-picker'
 import { toast } from 'sonner'
 
@@ -64,15 +64,8 @@ function AccountTransactionPage() {
       })
       setFabOpen(false)
     },
-    onError: (error) => {
-      console.error(error)
-      toast.error(
-        `Failed to ${editingTransaction ? 'update' : 'create'} transaction`,
-        {
-          description:
-            error instanceof Error ? error.message : 'An unknown error occurred'
-        }
-      )
+    meta: {
+      errorMessage: `Failed to ${editingTransaction ? 'update' : 'create'} transaction`
     }
   })
 
@@ -80,11 +73,10 @@ function AccountTransactionPage() {
   const start = dateRange?.from?.toISOString() ?? null
   const end = endExclusive(dateRange?.to)
 
-  const {
-    isError,
-    data: account,
-    error
-  } = useQuery(readAccountOptions({ path: { account_id: accountId } }))
+  const { data: account } = useQuery({
+    ...readAccountOptions({ path: { account_id: accountId } }),
+    meta: { errorMessage: 'Failed to fetch account' }
+  })
 
   const { data: accounts } = useQuery(readAccountsOptions())
 
@@ -94,37 +86,13 @@ function AccountTransactionPage() {
     enabled: fabOpen
   })
 
-  const {
-    isError: isTransactionsError,
-    isPending: isTransactionsPending,
-    data: transactions,
-    error: transactionsError
-  } = useQuery(
-    readAccountTransactionsWithRunningBalanceOptions({
+  const { isPending: isTransactionsPending, data: transactions } = useQuery({
+    ...readAccountTransactionsWithRunningBalanceOptions({
       path: { account_id: accountId },
       query: { start, end }
-    })
-  )
-
-  useEffect(() => {
-    if (!isError) return
-    console.error(error)
-    toast.error('Failed to fetch account', {
-      description:
-        error instanceof Error ? error.message : 'An unknown error occurred'
-    })
-  }, [isError, error])
-
-  useEffect(() => {
-    if (!isTransactionsError) return
-    console.error(transactionsError)
-    toast.error('Failed to fetch transactions', {
-      description:
-        transactionsError instanceof Error
-          ? transactionsError.message
-          : 'An unknown error occurred'
-    })
-  }, [isTransactionsError, transactionsError])
+    }),
+    meta: { errorMessage: 'Failed to fetch transactions' }
+  })
 
   return (
     <>

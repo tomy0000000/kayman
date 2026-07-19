@@ -52,13 +52,7 @@ export function CreateAccountFab() {
       reset()
       setOpen(false)
     },
-    onError: (error) => {
-      console.error(error)
-      toast.error('Failed to create account', {
-        description:
-          error instanceof Error ? error.message : 'An unknown error occurred'
-      })
-    }
+    meta: { errorMessage: 'Failed to create account' }
   })
 
   const handleCreate = () => {

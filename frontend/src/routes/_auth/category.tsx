@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useState } from 'react'
 import { type DateRange } from 'react-day-picker'
-import { toast } from 'sonner'
 
 import { DatePickerWithRange } from '@/components/date-range-picker'
 import { Tree } from '@/components/tree'
@@ -23,20 +22,14 @@ const transactions = [
 function CategoryPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
-  const { isError, data: categories, error } = useQuery(readCategoriesOptions())
+  const { data: categories } = useQuery({
+    ...readCategoriesOptions(),
+    meta: { errorMessage: 'Failed to fetch categories' }
+  })
 
   const treeData = categories?.map((category) =>
     categoryToTreeItem(category, 'root')
   )
-
-  useEffect(() => {
-    if (!isError) return
-    console.error(error)
-    toast.error('Failed to fetch categories', {
-      description:
-        error instanceof Error ? error.message : 'An unknown error occurred'
-    })
-  }, [isError, error])
 
   return (
     <div className="flex h-full">
