@@ -1,144 +1,39 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown } from 'lucide-react'
-import { useState } from 'react'
-import { toast } from 'sonner'
-
-import { FabForm } from '@/components/fab-form'
+import { CreateAccountForm } from '@/components/create-account-form'
 import { FabSheet } from '@/components/fab-sheet'
-import { TimezoneCombobox } from '@/components/timezone-combobox'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { type AccountCreate } from '@/lib/client'
-import {
-  createAccountMutation,
-  readAccountsQueryKey,
-  readCurrenciesOptions
-} from '@/lib/client/@tanstack/react-query.gen'
-import { CLIENT_TIMEZONE } from '@/lib/constants'
+import { type AccountCreate, type CurrencyRead } from '@/lib/client'
 
-export function CreateAccountFab() {
-  const queryClient = useQueryClient()
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState('')
-  const [currencyCode, setCurrencyCode] = useState<string | null>(null)
-  const [timezone, setTimezone] = useState(CLIENT_TIMEZONE)
+interface CreateAccountFabProps {
+  currencies: CurrencyRead[]
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSubmit: (body: AccountCreate) => void
+  isPending: boolean
+}
 
-  const { data: currencies } = useQuery({
-    ...readCurrenciesOptions(),
-    enabled: open
-  })
-
-  const selectedCurrency = currencies?.find((c) => c.code === currencyCode)
-
-  const reset = () => {
-    setName('')
-    setCurrencyCode(null)
-    setTimezone(CLIENT_TIMEZONE)
-  }
-
-  const { mutate, isPending } = useMutation({
-    ...createAccountMutation(),
-    onSuccess: () => {
-      toast.success('Account created')
-      queryClient.invalidateQueries({ queryKey: readAccountsQueryKey() })
-      reset()
-      setOpen(false)
-    },
-    meta: { errorMessage: 'Failed to create account' }
-  })
-
-  const handleCreate = () => {
-    if (currencyCode == null) return
-    mutate({
-      body: {
-        name,
-        currency_code: currencyCode,
-        timezone: timezone as AccountCreate['timezone']
-      }
-    })
-  }
-
+export function CreateAccountFab({
+  currencies,
+  open,
+  onOpenChange,
+  onSubmit,
+  isPending
+}: CreateAccountFabProps) {
   return (
-    <FabSheet open={open} onOpenChange={setOpen} hotkey="n" label="New account">
+    <FabSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      hotkey="n"
+      label="New account"
+    >
       <SheetHeader>
         <SheetTitle>New account</SheetTitle>
       </SheetHeader>
-      <FabForm
-        onSubmit={handleCreate}
+
+      <CreateAccountForm
+        currencies={currencies}
+        onSubmit={onSubmit}
         isPending={isPending}
-        disabled={!name || currencyCode == null}
-      >
-        <Field>
-          <FieldLabel htmlFor="account-name">Name</FieldLabel>
-          <Input
-            id="account-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Account name"
-            required
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="account-currency">Currency</FieldLabel>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                id="account-currency"
-                type="button"
-                variant="outline"
-                className="w-full justify-between"
-              >
-                {selectedCurrency ? (
-                  <span className="flex items-center gap-2">
-                    <span className="font-medium">{selectedCurrency.code}</span>
-                    <span className="text-muted-foreground text-xs">
-                      {selectedCurrency.name}
-                    </span>
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">Select currency</span>
-                )}
-                <ChevronDown className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              className="max-h-72 w-(--radix-dropdown-menu-trigger-width) overflow-y-auto"
-            >
-              {currencies?.map((currency) => (
-                <DropdownMenuItem
-                  key={currency.code}
-                  onSelect={() => setCurrencyCode(currency.code)}
-                >
-                  <span className="leading-none">{currency.code}</span>
-                  <span className="text-muted-foreground ml-auto text-xs leading-none">
-                    {currency.name}
-                  </span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="account-timezone">Timezone</FieldLabel>
-          <TimezoneCombobox
-            id="account-timezone"
-            value={timezone}
-            onValueChange={setTimezone}
-          />
-          <FieldDescription>Will be stored as {timezone}</FieldDescription>
-        </Field>
-      </FabForm>
+      />
     </FabSheet>
   )
 }

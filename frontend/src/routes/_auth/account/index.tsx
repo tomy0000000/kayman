@@ -1,10 +1,17 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { Wallet } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 import { CreateAccountFab } from '@/components/create-account-fab'
 import { Separator } from '@/components/ui/separator'
-import { readAccountsOptions } from '@/lib/client/@tanstack/react-query.gen'
+import {
+  createAccountMutation,
+  readAccountsOptions,
+  readAccountsQueryKey,
+  readCurrenciesOptions
+} from '@/lib/client/@tanstack/react-query.gen'
 import { cn, formatCurrency } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/account/')({
@@ -12,9 +19,28 @@ export const Route = createFileRoute('/_auth/account/')({
 })
 
 function AccountListPage() {
+  const queryClient = useQueryClient()
+  const [fabOpen, setFabOpen] = useState(false)
+
   const { data: accounts } = useQuery({
     ...readAccountsOptions(),
     meta: { errorMessage: 'Failed to fetch accounts' }
+  })
+
+  // Backs the FAB's currency field, so only fetched once the sheet opens.
+  const { data: currencies } = useQuery({
+    ...readCurrenciesOptions(),
+    enabled: fabOpen
+  })
+
+  const { mutate, isPending } = useMutation({
+    ...createAccountMutation(),
+    onSuccess: () => {
+      toast.success('Account created')
+      queryClient.invalidateQueries({ queryKey: readAccountsQueryKey() })
+      setFabOpen(false)
+    },
+    meta: { errorMessage: 'Failed to create account' }
   })
 
   return (
@@ -54,7 +80,13 @@ function AccountListPage() {
         <p className="text-muted-foreground p-4 text-sm">No accounts found.</p>
       )}
 
-      <CreateAccountFab />
+      <CreateAccountFab
+        currencies={currencies ?? []}
+        open={fabOpen}
+        onOpenChange={setFabOpen}
+        onSubmit={(body) => mutate({ body })}
+        isPending={isPending}
+      />
     </div>
   )
 }
