@@ -37,8 +37,10 @@ def assert_account_matches(
     # - a server-assigned id for new accounts
     if isinstance(expected, Account):
         assert actual.id == expected.id
+        assert actual.created_at == expected.created_at
     else:
         assert actual.id is not None
+        assert actual.created_at is not None
 
     # balance should be
     # - 0 for new accounts
