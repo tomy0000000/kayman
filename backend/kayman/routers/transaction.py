@@ -40,7 +40,10 @@ txn_router = APIRouter(
 def create(
     *, session: Session = Depends(get_session), transaction: TransactionCreate
 ) -> TransactionBase:
-    db_txns = create_transactions(session, [transaction], commit=False)
+    try:
+        db_txns = create_transactions(session, [transaction], commit=False)
+    except ValueError as err:
+        raise HTTPException(status_code=404, detail=err.args[0]) from err
     update_balances_with_transactions(session, [transaction], commit=False)
     session.commit()
     session.refresh(db_txns[0])
