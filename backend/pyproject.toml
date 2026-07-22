@@ -1,6 +1,6 @@
 [project]
 name = "kayman"
-version = "0.14.0"
+version = "0.15.0"
 description = "Kayman is the one-stop solution for personal finance"
 license = { text = "MIT" }
 readme = "README.md"
