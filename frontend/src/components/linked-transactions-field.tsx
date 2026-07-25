@@ -1,4 +1,4 @@
-import { GripVertical, Link2, X } from 'lucide-react'
+import { GripVertical, X } from 'lucide-react'
 import { Reorder, useDragControls } from 'motion/react'
 import { useState } from 'react'
 
@@ -7,6 +7,7 @@ import {
   LinkTransactionsTable,
   type SelectedTransaction
 } from '@/components/link-transactions-table'
+import { TransactionEmpty } from '@/components/transaction/transaction-empty'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -18,14 +19,6 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle
-} from '@/components/ui/empty'
 import {
   Item,
   ItemActions,
@@ -73,24 +66,7 @@ export function LinkedTransactionsField({
       }}
     >
       {value.length === 0 ? (
-        <Empty className="border border-dashed py-8">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Link2 />
-            </EmptyMedia>
-            <EmptyTitle>No transactions linked</EmptyTitle>
-            <EmptyDescription>
-              Link one or more transactions to this event.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <DialogTrigger asChild>
-              <Button type="button" variant="outline" size="sm">
-                Link transactions
-              </Button>
-            </DialogTrigger>
-          </EmptyContent>
-        </Empty>
+        <TransactionEmpty />
       ) : (
         <div className="space-y-3">
           <Reorder.Group
