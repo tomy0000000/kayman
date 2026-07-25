@@ -18,6 +18,15 @@ export type EventEntryDraft = {
   description: string
 }
 
+// A transaction row being edited in the event sheet. Amount stays a string
+// while typing; `key` is client-only and keeps a row's identity stable across
+// reorders, since a row has no id until it is created.
+export type TransactionDraft = {
+  key: string
+  accountId: number | null
+  amount: string
+}
+
 export function toEventEntryDraft(entry: EventEntryRead): EventEntryDraft {
   return {
     key: String(entry.id),

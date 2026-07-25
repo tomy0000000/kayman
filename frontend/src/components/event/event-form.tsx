@@ -10,8 +10,8 @@ import { useState } from 'react'
 import { EventEntriesField } from '@/components/event/event-entries-field'
 import { FabForm } from '@/components/fab-form'
 import { type SelectedTransaction } from '@/components/link-transactions-table'
-import { LinkedTransactionsField } from '@/components/linked-transactions-field'
 import { TimezoneCombobox } from '@/components/timezone-combobox'
+import { TransactionsField } from '@/components/transaction/transactions-field'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -27,7 +27,11 @@ import {
 } from '@/lib/client'
 import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { eventTypeTabActiveClass } from '@/lib/event-types'
-import { type EventEntryDraft, toEventEntryDraft } from '@/lib/types'
+import {
+  type EventEntryDraft,
+  type TransactionDraft,
+  toEventEntryDraft
+} from '@/lib/types'
 import { cn, toZonedISOString } from '@/lib/utils'
 
 const EVENT_TYPES: { value: EventType; icon: LucideIcon }[] = [
@@ -79,9 +83,10 @@ export function EventForm({
     if (seedTransaction) return seedTransaction.transaction.created_at
     return toZonedISOString(new Date(), CLIENT_TIMEZONE)
   })
-  const [linkedTransactions, setLinkedTransactions] = useState<
-    SelectedTransaction[]
-  >(() => {
+  // UI-only for now: the new transactions field isn't wired to the API, so the
+  // linked-transaction ids still come from the seed / edited event.
+  const [transactions, setTransactions] = useState<TransactionDraft[]>([])
+  const [linkedTransactions] = useState<SelectedTransaction[]>(() => {
     if (!isEditing) return seedTransaction ? [seedTransaction] : []
     const accountsById = new Map(
       accounts.map((account) => [account.id, account])
@@ -158,10 +163,10 @@ export function EventForm({
 
       <Field>
         <FieldLabel>Transactions</FieldLabel>
-        <LinkedTransactionsField
+        <TransactionsField
           accounts={accounts}
-          value={linkedTransactions}
-          onChange={setLinkedTransactions}
+          value={transactions}
+          onChange={setTransactions}
         />
       </Field>
 

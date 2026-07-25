@@ -1,7 +1,6 @@
-import { Link2 } from 'lucide-react'
+import { ArrowLeftRight } from 'lucide-react'
+import { type ReactNode } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { DialogTrigger } from '@/components/ui/dialog'
 import {
   Empty,
   EmptyContent,
@@ -11,25 +10,25 @@ import {
   EmptyTitle
 } from '@/components/ui/empty'
 
-export function TransactionEmpty() {
+interface TransactionEmptyProps {
+  // The call to action, which differs per caller (add a draft, open the link
+  // dialog).
+  children: ReactNode
+}
+
+export function TransactionEmpty({ children }: TransactionEmptyProps) {
   return (
     <Empty className="border border-dashed py-8">
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <Link2 />
+          <ArrowLeftRight />
         </EmptyMedia>
-        <EmptyTitle>No transactions linked</EmptyTitle>
+        <EmptyTitle>No transactions</EmptyTitle>
         <EmptyDescription>
-          Link one or more transactions to this event.
+          Record the money movement behind this event.
         </EmptyDescription>
       </EmptyHeader>
-      <EmptyContent>
-        <DialogTrigger asChild>
-          <Button type="button" variant="outline" size="sm">
-            Link transactions
-          </Button>
-        </DialogTrigger>
-      </EmptyContent>
+      <EmptyContent>{children}</EmptyContent>
     </Empty>
   )
 }

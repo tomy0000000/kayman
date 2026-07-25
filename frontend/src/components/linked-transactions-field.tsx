@@ -66,7 +66,13 @@ export function LinkedTransactionsField({
       }}
     >
       {value.length === 0 ? (
-        <TransactionEmpty />
+        <TransactionEmpty>
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline" size="sm">
+              Link transactions
+            </Button>
+          </DialogTrigger>
+        </TransactionEmpty>
       ) : (
         <div className="space-y-3">
           <Reorder.Group
