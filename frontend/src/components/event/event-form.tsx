@@ -133,16 +133,6 @@ export function EventForm({
       isEditing={isEditing}
     >
       <Field>
-        <FieldLabel htmlFor="event-description">Description</FieldLabel>
-        <Input
-          id="event-description"
-          placeholder="Optional"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </Field>
-
-      <Field>
         <FieldLabel>Type</FieldLabel>
         <Tabs
           value={type}
@@ -167,6 +157,26 @@ export function EventForm({
       </Field>
 
       <Field>
+        <FieldLabel>Transactions</FieldLabel>
+        <LinkedTransactionsField
+          accounts={accounts}
+          value={linkedTransactions}
+          onChange={setLinkedTransactions}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel>Entries</FieldLabel>
+        <EventEntriesField
+          categories={categories}
+          currencies={currencies}
+          value={entries}
+          onChange={setEntries}
+          readOnly={isEditing}
+        />
+      </Field>
+
+      <Field>
         <FieldLabel htmlFor="event-timezone">Timezone</FieldLabel>
         <TimezoneCombobox
           id="event-timezone"
@@ -186,22 +196,12 @@ export function EventForm({
       </Field>
 
       <Field>
-        <FieldLabel>Transactions</FieldLabel>
-        <LinkedTransactionsField
-          accounts={accounts}
-          value={linkedTransactions}
-          onChange={setLinkedTransactions}
-        />
-      </Field>
-
-      <Field>
-        <FieldLabel>Entries</FieldLabel>
-        <EventEntriesField
-          categories={categories}
-          currencies={currencies}
-          value={entries}
-          onChange={setEntries}
-          readOnly={isEditing}
+        <FieldLabel htmlFor="event-description">Description</FieldLabel>
+        <Input
+          id="event-description"
+          placeholder="Optional"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
         />
       </Field>
     </FabForm>
