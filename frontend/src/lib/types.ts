@@ -18,13 +18,37 @@ export type EventEntryDraft = {
   description: string
 }
 
-// A transaction row being edited in the event sheet. Amount stays a string
-// while typing; `key` is client-only and keeps a row's identity stable across
-// reorders, since a row has no id until it is created.
+// A transaction row being edited in the event sheet. `id` is null for a row
+// added in the sheet, which is created on submit; a row that came from an
+// existing transaction (linked, seeded, or already on the event) carries its
+// id and is patched instead. Amount stays a string while typing; `key` is
+// client-only and keeps a row's identity stable across reorders.
 export type TransactionDraft = {
   key: string
+  id: number | null
   accountId: number | null
   amount: string
+}
+
+// What the event form hands back per transaction row, once the row is complete.
+export type TransactionPayload = {
+  id: number | null
+  account_id: number
+  amount: string
+  index: number
+}
+
+export function toTransactionDraft(transaction: {
+  id: number
+  account_id: number
+  amount: string
+}): TransactionDraft {
+  return {
+    key: String(transaction.id),
+    id: transaction.id,
+    accountId: transaction.account_id,
+    amount: transaction.amount
+  }
 }
 
 export function toEventEntryDraft(entry: EventEntryRead): EventEntryDraft {

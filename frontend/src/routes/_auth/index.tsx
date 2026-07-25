@@ -13,8 +13,7 @@ import {
   type EventReadDetailed,
   createEvent,
   createEventEntries,
-  updateEvent,
-  updateTransactions
+  updateEvent
 } from '@/lib/client'
 import {
   readAccountsOptions,
@@ -24,6 +23,8 @@ import {
   readEventsQueryKey,
   readTransactionsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
+import { syncEventTransactions } from '@/lib/events'
+import { type TransactionPayload } from '@/lib/types'
 import { parseLocalDate } from '@/lib/utils'
 
 const searchSchema = z.object({
@@ -68,11 +69,11 @@ function HomePage() {
   const { mutate, isPending: isMutationPending } = useMutation({
     mutationFn: async ({
       body,
-      linkedTransactionIds,
+      transactions,
       entries
     }: {
       body: EventCreate
-      linkedTransactionIds: number[]
+      transactions: TransactionPayload[]
       entries: Omit<EventEntryCreate, 'event_id'>[]
     }) => {
       const { data: event } = editingEvent
@@ -84,19 +85,13 @@ function HomePage() {
           })
         : await createEvent({ client, body, throwOnError: true })
 
-      const previousIds = editingEvent?.transactions.map((t) => t.id) ?? []
-      const nextIds = new Set(linkedTransactionIds)
-      const updates = [
-        ...linkedTransactionIds
-          .filter((id) => !previousIds.includes(id))
-          .map((id) => ({ id, event_id: event.id })),
-        ...previousIds
-          .filter((id) => !nextIds.has(id))
-          .map((id) => ({ id, event_id: null }))
-      ]
-      if (updates.length > 0) {
-        await updateTransactions({ client, body: updates, throwOnError: true })
-      }
+      await syncEventTransactions({
+        client,
+        eventId: event.id,
+        transactions,
+        previousIds: editingEvent?.transactions.map((t) => t.id) ?? [],
+        createdAt: body.timestamp
+      })
 
       // The API can only batch-create entries, so they are only sent for a new
       // event. An existing event's entries are read-only in the sheet.
@@ -163,8 +158,8 @@ function HomePage() {
         open={fabOpen}
         onOpenChange={handleFabOpenChange}
         editingEvent={editingEvent}
-        onSubmit={(body, linkedTransactionIds, entries) =>
-          mutate({ body, linkedTransactionIds, entries })
+        onSubmit={(body, transactions, entries) =>
+          mutate({ body, transactions, entries })
         }
         isPending={isMutationPending}
       />

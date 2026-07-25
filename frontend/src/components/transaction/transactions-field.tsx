@@ -3,7 +3,9 @@ import { Reorder, useDragControls } from 'motion/react'
 import { type RefObject, useRef } from 'react'
 
 import { AccountSelect } from '@/components/account-select'
+import { type SelectedTransaction } from '@/components/link-transactions-table'
 import { TransactionEmpty } from '@/components/transaction/transaction-empty'
+import { TransactionsLinkDialog } from '@/components/transaction/transactions-link-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -14,7 +16,7 @@ import {
   TableRow
 } from '@/components/ui/table'
 import { type AccountRead } from '@/lib/client'
-import { type TransactionDraft } from '@/lib/types'
+import { type TransactionDraft, toTransactionDraft } from '@/lib/types'
 
 interface TransactionsFieldProps {
   accounts: AccountRead[]
@@ -42,8 +44,16 @@ export function TransactionsField({
   const addTransaction = () =>
     onChange([
       ...value,
-      { key: crypto.randomUUID(), accountId: null, amount: '' }
+      { key: crypto.randomUUID(), id: null, accountId: null, amount: '' }
     ])
+
+  const linkTransactions = (selection: SelectedTransaction[]) => {
+    const existing = new Set(value.map((item) => item.id))
+    const additions = selection
+      .filter((item) => !existing.has(item.transaction.id))
+      .map((item) => toTransactionDraft(item.transaction))
+    if (additions.length > 0) onChange([...value, ...additions])
+  }
 
   const updateTransaction = (transaction: TransactionDraft) =>
     onChange(
@@ -53,19 +63,26 @@ export function TransactionsField({
   const removeTransaction = (key: string) =>
     onChange(value.filter((item) => item.key !== key))
 
-  if (value.length === 0) {
-    return (
-      <TransactionEmpty>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={addTransaction}
-        >
-          Add transaction
+  const actions = (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={addTransaction}
+      >
+        Add transaction
+      </Button>
+      <TransactionsLinkDialog accounts={accounts} onLink={linkTransactions}>
+        <Button type="button" variant="outline" size="sm">
+          Link existing
         </Button>
-      </TransactionEmpty>
-    )
+      </TransactionsLinkDialog>
+    </>
+  )
+
+  if (value.length === 0) {
+    return <TransactionEmpty>{actions}</TransactionEmpty>
   }
 
   return (
@@ -101,14 +118,7 @@ export function TransactionsField({
           </Reorder.Group>
         </Table>
       </div>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={addTransaction}
-      >
-        Add transaction
-      </Button>
+      <div className="flex gap-2">{actions}</div>
     </div>
   )
 }

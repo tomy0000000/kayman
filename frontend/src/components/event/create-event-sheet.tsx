@@ -13,6 +13,7 @@ import {
   type EventEntryCreate,
   type TransactionReadWithBalance
 } from '@/lib/client'
+import { type TransactionPayload } from '@/lib/types'
 
 type EventEntryPayload = Omit<EventEntryCreate, 'event_id'>
 
@@ -26,7 +27,7 @@ interface CreateEventSheetProps {
   onOpenChange: (open: boolean) => void
   onSubmit: (
     body: EventCreate,
-    linkedTransactionIds: number[],
+    transactions: TransactionPayload[],
     entries: EventEntryPayload[]
   ) => void
   isPending: boolean

@@ -9,6 +9,7 @@ import {
   type EventEntryCreate,
   type EventReadDetailed
 } from '@/lib/client'
+import { type TransactionPayload } from '@/lib/types'
 
 type EventEntryPayload = Omit<EventEntryCreate, 'event_id'>
 
@@ -21,7 +22,7 @@ interface EventFabProps {
   editingEvent: EventReadDetailed | null
   onSubmit: (
     body: EventCreate,
-    linkedTransactionIds: number[],
+    transactions: TransactionPayload[],
     entries: EventEntryPayload[]
   ) => void
   isPending: boolean

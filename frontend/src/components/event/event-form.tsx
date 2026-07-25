@@ -30,7 +30,9 @@ import { eventTypeTabActiveClass } from '@/lib/event-types'
 import {
   type EventEntryDraft,
   type TransactionDraft,
-  toEventEntryDraft
+  type TransactionPayload,
+  toEventEntryDraft,
+  toTransactionDraft
 } from '@/lib/types'
 import { cn, toZonedISOString } from '@/lib/utils'
 
@@ -53,7 +55,7 @@ interface EventFormProps {
   seedTransaction?: SelectedTransaction
   onSubmit: (
     body: EventCreate,
-    linkedTransactionIds: number[],
+    transactions: TransactionPayload[],
     entries: EventEntryPayload[]
   ) => void
   isPending: boolean
@@ -83,18 +85,11 @@ export function EventForm({
     if (seedTransaction) return seedTransaction.transaction.created_at
     return toZonedISOString(new Date(), CLIENT_TIMEZONE)
   })
-  // UI-only for now: the new transactions field isn't wired to the API, so the
-  // linked-transaction ids still come from the seed / edited event.
-  const [transactions, setTransactions] = useState<TransactionDraft[]>([])
-  const [linkedTransactions] = useState<SelectedTransaction[]>(() => {
-    if (!isEditing) return seedTransaction ? [seedTransaction] : []
-    const accountsById = new Map(
-      accounts.map((account) => [account.id, account])
-    )
-    return editingEvent.transactions.flatMap((transaction) => {
-      const account = accountsById.get(transaction.account_id)
-      return account ? [{ transaction, account }] : []
-    })
+  const [transactions, setTransactions] = useState<TransactionDraft[]>(() => {
+    if (isEditing) return editingEvent.transactions.map(toTransactionDraft)
+    return seedTransaction
+      ? [toTransactionDraft(seedTransaction.transaction)]
+      : []
   })
   const [entries, setEntries] = useState<EventEntryDraft[]>(() =>
     isEditing ? editingEvent.entries.map(toEventEntryDraft) : []
@@ -109,6 +104,10 @@ export function EventForm({
       entry.amount === ''
   )
 
+  const incompleteTransaction = transactions.some(
+    (transaction) => transaction.accountId == null || transaction.amount === ''
+  )
+
   const handleSubmit = () => {
     const body: EventCreate = {
       type,
@@ -118,7 +117,12 @@ export function EventForm({
     }
     onSubmit(
       body,
-      linkedTransactions.map((item) => item.transaction.id),
+      transactions.map((transaction, index) => ({
+        id: transaction.id,
+        account_id: transaction.accountId as number,
+        amount: transaction.amount,
+        index
+      })),
       entries.map((entry, index) => ({
         category_id: entry.categoryId as number,
         amount: entry.amount,
@@ -134,7 +138,7 @@ export function EventForm({
     <FabForm
       onSubmit={handleSubmit}
       isPending={isPending}
-      disabled={incompleteEntry}
+      disabled={incompleteEntry || incompleteTransaction}
       isEditing={isEditing}
     >
       <Field>

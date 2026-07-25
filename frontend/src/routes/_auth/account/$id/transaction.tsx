@@ -31,6 +31,8 @@ import {
   readEventsOptions,
   readEventsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
+import { syncEventTransactions } from '@/lib/events'
+import { type TransactionPayload } from '@/lib/types'
 import { endExclusive } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/account/$id/transaction')({
@@ -101,11 +103,11 @@ function AccountTransactionPage() {
     useMutation({
       mutationFn: async ({
         body,
-        linkedTransactionIds,
+        transactions,
         entries
       }: {
         body: EventCreate
-        linkedTransactionIds: number[]
+        transactions: TransactionPayload[]
         entries: Omit<EventEntryCreate, 'event_id'>[]
       }) => {
         const { data: event } = await createEvent({
@@ -114,16 +116,13 @@ function AccountTransactionPage() {
           throwOnError: true
         })
 
-        if (linkedTransactionIds.length > 0) {
-          await updateTransactions({
-            client,
-            body: linkedTransactionIds.map((id) => ({
-              id,
-              event_id: event.id
-            })),
-            throwOnError: true
-          })
-        }
+        await syncEventTransactions({
+          client,
+          eventId: event.id,
+          transactions,
+          previousIds: [],
+          createdAt: body.timestamp
+        })
 
         if (entries.length > 0) {
           await createEventEntries({
@@ -257,8 +256,8 @@ function AccountTransactionPage() {
         onOpenChange={(open) => {
           if (!open) setCreatingEventTransaction(null)
         }}
-        onSubmit={(body, linkedTransactionIds, entries) =>
-          createEventFromTransaction({ body, linkedTransactionIds, entries })
+        onSubmit={(body, transactions, entries) =>
+          createEventFromTransaction({ body, transactions, entries })
         }
         isPending={isCreatingEvent}
       />
