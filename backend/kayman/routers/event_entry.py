@@ -21,7 +21,7 @@ tag = {
 }
 
 event_entry_router = APIRouter(
-    prefix="/events/entries",
+    prefix="/event-entries",
     tags=[TAG_NAME],
     dependencies=[Depends(get_client)],
     responses={404: {"description": "Not found"}},
