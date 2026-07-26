@@ -7,9 +7,13 @@ from sqlmodel import Session, col, select
 
 from kayman.crud.event_entry import (
     create_event_entries,
+    delete_event_entries,
     read_event_entries,
     update_event_entries,
 )
+from kayman.schemas.category import Category
+from kayman.schemas.currency import Currency
+from kayman.schemas.event import Event
 from kayman.schemas.event_entry import EventEntry, EventEntryCreate, EventEntryUpdate
 from kayman.tests.factories import (
     CategoryFactory,
@@ -360,3 +364,80 @@ def test_update_event_entries_reorder_onto_row_outside_batch(session: Session):
     all_entries = session.exec(select(EventEntry).order_by(col(EventEntry.id))).all()
     assert len(all_entries) == 3
     assert [entry.index for entry in all_entries] == [0, 1, 2]
+
+
+def test_delete_event_entries(session: Session):
+    entries = EventEntryFactory.create_batch(3)
+
+    delete_event_entries(session, [entries[0], entries[2]])
+
+    remaining = session.exec(select(EventEntry).order_by(col(EventEntry.id))).all()
+    assert len(remaining) == 1
+    assert remaining[0].id == entries[1].id
+
+
+def test_delete_event_entries_empty(session: Session):
+    entry = EventEntryFactory()
+
+    delete_event_entries(session, [])
+
+    remaining = session.exec(select(EventEntry)).all()
+    assert len(remaining) == 1
+    assert remaining[0].id == entry.id
+
+
+def test_delete_event_entries_no_commit(session: Session, session_2: Session):
+    entry = EventEntryFactory()
+    entry_id = entry.id
+
+    delete_event_entries(session, [entry], commit=False)
+
+    # The delete should not be visible to other sessions (yet)
+    session_2_entries = session_2.exec(select(EventEntry)).all()
+    assert len(session_2_entries) == 1
+    assert session_2_entries[0].id == entry_id
+
+    # Commit the delete from main session
+    session.commit()
+
+    # The delete should now be visible to other sessions
+    session_2_entries = session_2.exec(select(EventEntry)).all()
+    assert len(session_2_entries) == 0
+
+
+def test_delete_event_entries_leaves_index_gap(session: Session):
+    event = EventFactory()
+    entries = [
+        EventEntryFactory(event=event, event_id=event.id, index=index)
+        for index in range(3)
+    ]
+
+    delete_event_entries(session, [entries[1]])
+
+    # Survivors keep their original indexes, so the deleted one leaves a hole.
+    # Renumbering is deliberately not part of the delete.
+    remaining = session.exec(select(EventEntry).order_by(col(EventEntry.id))).all()
+    assert len(remaining) == 2
+    assert [entry.index for entry in remaining] == [0, 2]
+
+
+def test_delete_event_entries_keeps_related_rows(session: Session):
+    entry = EventEntryFactory()
+    event_id = entry.event_id
+    category_id = entry.category_id
+    currency_code = entry.currency_code
+
+    delete_event_entries(session, [entry])
+
+    # EventEntry is a leaf table, so the rows it points at all survive.
+    remaining = session.exec(select(EventEntry)).all()
+    assert len(remaining) == 0
+    events = session.exec(select(Event)).all()
+    assert len(events) == 1
+    assert events[0].id == event_id
+    categories = session.exec(select(Category)).all()
+    assert len(categories) == 1
+    assert categories[0].id == category_id
+    currencies = session.exec(select(Currency)).all()
+    assert len(currencies) == 1
+    assert currencies[0].code == currency_code

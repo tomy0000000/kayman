@@ -69,3 +69,17 @@ def update_event_entries(
         session.flush()
 
     return previous_entries
+
+
+def delete_event_entries(
+    session: Session,
+    entries: Sequence[EventEntry],
+    commit: bool = True,
+) -> None:
+    for entry in entries:
+        session.delete(entry)
+
+    if commit:
+        session.commit()
+    else:
+        session.flush()
