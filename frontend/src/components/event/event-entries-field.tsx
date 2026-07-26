@@ -3,7 +3,7 @@ import { Reorder, useDragControls } from 'motion/react'
 import { type RefObject, useMemo, useRef } from 'react'
 
 import { CategoryCombobox } from '@/components/category-combobox'
-import { CurrencySelect } from '@/components/currency-select'
+import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { Button } from '@/components/ui/button'
 import {
   Empty,
@@ -105,9 +105,8 @@ export function EventEntriesField({
       <TableRow>
         {!readOnly && <TableHead className="w-6 px-0" />}
         <TableHead>Category</TableHead>
-        <TableHead className="w-28">Amount</TableHead>
+        <TableHead className="w-56">Amount</TableHead>
         <TableHead className="w-16">Qty</TableHead>
-        <TableHead className="w-28">Currency</TableHead>
         <TableHead>Description</TableHead>
         {!readOnly && <TableHead className="w-8 px-0" />}
       </TableRow>
@@ -136,7 +135,6 @@ export function EventEntriesField({
                     : entry.amount}
                 </TableCell>
                 <TableCell>{entry.quantity}</TableCell>
-                <TableCell>{entry.currencyCode}</TableCell>
                 <TableCell className="text-muted-foreground">
                   {entry.description}
                 </TableCell>
@@ -224,14 +222,14 @@ function EventEntryRow({
         />
       </TableCell>
       <TableCell>
-        <Input
-          type="number"
-          inputMode="decimal"
-          placeholder="0.00"
-          value={entry.amount}
-          onChange={(e) =>
-            onChange({ ...entry, amount: e.target.value.replace(/-/g, '') })
+        <CurrencyAmountInput
+          currencies={currencies}
+          currencyCode={entry.currencyCode}
+          onCurrencyChange={(currencyCode) =>
+            onChange({ ...entry, currencyCode })
           }
+          amount={entry.amount}
+          onAmountChange={(amount) => onChange({ ...entry, amount })}
         />
       </TableCell>
       <TableCell>
@@ -241,13 +239,6 @@ function EventEntryRow({
           step={1}
           value={entry.quantity}
           onChange={(e) => onChange({ ...entry, quantity: e.target.value })}
-        />
-      </TableCell>
-      <TableCell>
-        <CurrencySelect
-          currencies={currencies}
-          value={entry.currencyCode}
-          onValueChange={(currencyCode) => onChange({ ...entry, currencyCode })}
         />
       </TableCell>
       <TableCell>
