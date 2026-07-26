@@ -86,28 +86,21 @@ export type CategoryGroup = {
   items: CategoryOption[]
 }
 
-// Flatten a category tree into combobox groups: one group per root category,
-// whose items are the root and all its descendants, each labelled by its path
-// ("Food / Groceries"). Disabled categories and their subtrees are omitted.
+// Flatten a category tree into combobox groups
 export function buildCategoryGroups(
   categories: CategoryReadWithChildren[]
 ): CategoryGroup[] {
-  const walk = (
-    category: CategoryReadWithChildren,
-    path: string[]
-  ): CategoryOption[] => {
-    if (category.disabled) return []
-    const labelPath = [...path, category.name]
+  const walk = (category: CategoryReadWithChildren): CategoryOption[] => {
     const options: CategoryOption[] = [
-      { value: category.id, label: labelPath.join(' / ') }
+      { value: category.id, label: category.name }
     ]
     for (const subCategory of category.sub_categories ?? []) {
-      options.push(...walk(subCategory, labelPath))
+      options.push(...walk(subCategory))
     }
     return options
   }
   return categories.flatMap((root) => {
-    const items = walk(root, [])
+    const items = walk(root)
     return items.length > 0 ? [{ value: root.name, items }] : []
   })
 }
