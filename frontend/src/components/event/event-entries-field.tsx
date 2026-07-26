@@ -4,6 +4,7 @@ import { type RefObject, useMemo, useRef } from 'react'
 
 import { CategoryCombobox } from '@/components/category-combobox'
 import { CurrencyAmountInput } from '@/components/currency-amount-input'
+import { DescriptionPopover } from '@/components/description-popover'
 import { Button } from '@/components/ui/button'
 import {
   Empty,
@@ -107,7 +108,11 @@ export function EventEntriesField({
         <TableHead>Category</TableHead>
         <TableHead className="w-56">Amount</TableHead>
         <TableHead className="w-16">Qty</TableHead>
-        <TableHead>Description</TableHead>
+        {readOnly ? (
+          <TableHead>Description</TableHead>
+        ) : (
+          <TableHead className="w-8 px-0" />
+        )}
         {!readOnly && <TableHead className="w-8 px-0" />}
       </TableRow>
     </TableHeader>
@@ -241,11 +246,10 @@ function EventEntryRow({
           onChange={(e) => onChange({ ...entry, quantity: e.target.value })}
         />
       </TableCell>
-      <TableCell>
-        <Input
-          placeholder="Optional"
+      <TableCell className="px-0">
+        <DescriptionPopover
           value={entry.description}
-          onChange={(e) => onChange({ ...entry, description: e.target.value })}
+          onValueChange={(description) => onChange({ ...entry, description })}
         />
       </TableCell>
       <TableCell className="px-0">
