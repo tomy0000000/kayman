@@ -1,54 +1,47 @@
-import { ChevronDown } from 'lucide-react'
-
-import { Button } from '@/components/ui/button'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { type CurrencyRead } from '@/lib/client'
+import { cn } from '@/lib/utils'
 
 interface CurrencySelectProps {
   currencies: CurrencyRead[]
   value: string | null
   onValueChange: (code: string) => void
   id?: string
+  className?: string
 }
 
 export function CurrencySelect({
   currencies,
   value,
   onValueChange,
-  id
+  id,
+  className
 }: CurrencySelectProps) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          id={id}
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-full justify-between px-2 font-normal"
-        >
-          {value ?? <span className="text-muted-foreground">Currency</span>}
-          <ChevronDown className="size-4 shrink-0 opacity-50" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
+    <Select value={value ?? ''} onValueChange={onValueChange}>
+      <SelectTrigger id={id} className={cn('w-full font-normal', className)}>
+        <SelectValue placeholder="Currency">{value}</SelectValue>
+      </SelectTrigger>
+      <SelectContent position="popper" align="start" className="max-h-72">
         {currencies.map((currency) => (
-          <DropdownMenuItem
+          <SelectItem
             key={currency.code}
-            onSelect={() => onValueChange(currency.code)}
+            value={currency.code}
+            className="[&>span:last-child]:w-full"
           >
             <span className="leading-none">{currency.code}</span>
-            <span className="text-muted-foreground ml-auto text-xs leading-none">
+            <span className="ml-auto text-xs leading-none text-muted-foreground">
               {currency.name}
             </span>
-          </DropdownMenuItem>
+          </SelectItem>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </SelectContent>
+    </Select>
   )
 }
