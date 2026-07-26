@@ -1,7 +1,7 @@
 import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 
-import { FabForm } from '@/components/fab-form'
+import { KbdForm } from '@/components/kbd-form'
 import { TimezoneCombobox } from '@/components/timezone-combobox'
 import { Button } from '@/components/ui/button'
 import {
@@ -42,7 +42,7 @@ export function CreateAccountForm({
   }
 
   return (
-    <FabForm
+    <KbdForm
       onSubmit={handleCreate}
       isPending={isPending}
       disabled={!name || currencyCode == null}
@@ -109,6 +109,6 @@ export function CreateAccountForm({
         />
         <FieldDescription>Will be stored as {timezone}</FieldDescription>
       </Field>
-    </FabForm>
+    </KbdForm>
   )
 }

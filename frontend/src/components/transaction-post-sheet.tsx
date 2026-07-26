@@ -1,7 +1,7 @@
 import { Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 
-import { FabForm } from '@/components/fab-form'
+import { KbdForm } from '@/components/kbd-form'
 import { Field, FieldLabel } from '@/components/ui/field'
 import {
   InputGroup,
@@ -83,7 +83,7 @@ export function TransactionPostSheet({
         <SheetHeader>
           <SheetTitle>Post transaction</SheetTitle>
         </SheetHeader>
-        <FabForm
+        <KbdForm
           onSubmit={handleSubmit}
           isPending={isPending}
           disabled={amount === ''}
@@ -130,7 +130,7 @@ export function TransactionPostSheet({
               </InputGroupAddon>
             </InputGroup>
           </Field>
-        </FabForm>
+        </KbdForm>
       </SheetContent>
     </Sheet>
   )

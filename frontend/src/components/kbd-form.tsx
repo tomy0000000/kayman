@@ -15,7 +15,7 @@ interface FabFormProps {
   children: React.ReactNode
 }
 
-export function FabForm({
+export function KbdForm({
   onSubmit,
   isPending,
   disabled = false,

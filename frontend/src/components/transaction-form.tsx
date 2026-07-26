@@ -2,7 +2,7 @@ import { Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 
 import { AccountSelect } from '@/components/account-select'
-import { FabForm } from '@/components/fab-form'
+import { KbdForm } from '@/components/kbd-form'
 import { LinkEventField } from '@/components/link-event-field'
 import { Field, FieldLabel } from '@/components/ui/field'
 import {
@@ -70,7 +70,7 @@ export function TransactionForm({
   }
 
   return (
-    <FabForm
+    <KbdForm
       onSubmit={handleSubmit}
       isPending={isPending}
       disabled={selectedAccount == null || amount === ''}
@@ -140,6 +140,6 @@ export function TransactionForm({
           onChange={setEventId}
         />
       </Field>
-    </FabForm>
+    </KbdForm>
   )
 }

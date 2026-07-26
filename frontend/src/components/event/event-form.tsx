@@ -8,7 +8,7 @@ import {
 import { useState } from 'react'
 
 import { EventEntriesField } from '@/components/event/event-entries-field'
-import { FabForm } from '@/components/fab-form'
+import { KbdForm } from '@/components/kbd-form'
 import { type SelectedTransaction } from '@/components/link-transactions-table'
 import { TimezoneCombobox } from '@/components/timezone-combobox'
 import { TransactionsField } from '@/components/transaction/transactions-field'
@@ -135,7 +135,7 @@ export function EventForm({
   }
 
   return (
-    <FabForm
+    <KbdForm
       onSubmit={handleSubmit}
       isPending={isPending}
       disabled={incompleteEntry || incompleteTransaction}
@@ -213,6 +213,6 @@ export function EventForm({
           onChange={(e) => setDescription(e.target.value)}
         />
       </Field>
-    </FabForm>
+    </KbdForm>
   )
 }
