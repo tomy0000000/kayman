@@ -5,6 +5,7 @@ from typing import Literal
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, col, select
 
+from kayman.crud.util import park_moving_indexes
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBase,
@@ -84,14 +85,22 @@ def update_transactions(
     if len(previous_txns) != len(updates):
         raise ValueError("previous_txns and updates must have the same length")
 
-    for db_txn, txn in zip(previous_txns, updates, strict=True):
-        # tag_ids is not a column: strip it from the row update and apply it to
-        # the relationship instead. None means "leave tags untouched".
-        db_txn.sqlmodel_update(
-            txn.model_dump(exclude_unset=True, exclude={"id", "tag_ids"})
-        )
-        if txn.tag_ids is not None:
-            db_txn.tags = _resolve_tags(session, txn.tag_ids)
+    # tag_ids is not a column: strip it from the row update and apply it to the
+    # relationship instead. None means "leave tags untouched".
+    resolved_tags = [
+        None if txn.tag_ids is None else _resolve_tags(session, txn.tag_ids)
+        for txn in updates
+    ]
+    txn_data = [
+        txn.model_dump(exclude_unset=True, exclude={"id", "tag_ids"}) for txn in updates
+    ]
+
+    park_moving_indexes(session, previous_txns, txn_data)
+
+    for db_txn, data, tags in zip(previous_txns, txn_data, resolved_tags, strict=True):
+        db_txn.sqlmodel_update(data)
+        if tags is not None:
+            db_txn.tags = tags
 
     session.add_all(previous_txns)
     if commit:

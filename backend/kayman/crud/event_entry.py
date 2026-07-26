@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from sqlmodel import Session
 
+from kayman.crud.util import park_moving_indexes
 from kayman.schemas.event_entry import (
     EventEntry,
     EventEntryBase,
@@ -35,8 +36,13 @@ def update_event_entries(
     if len(previous_entries) != len(updates):
         raise ValueError("previous_entries and updates must have the same length")
 
-    for db_entry, entry in zip(previous_entries, updates, strict=True):
-        db_entry.sqlmodel_update(entry.model_dump(exclude_unset=True, exclude={"id"}))
+    entry_data = [
+        entry.model_dump(exclude_unset=True, exclude={"id"}) for entry in updates
+    ]
+    park_moving_indexes(session, previous_entries, entry_data)
+
+    for db_entry, data in zip(previous_entries, entry_data, strict=True):
+        db_entry.sqlmodel_update(data)
 
     session.add_all(previous_entries)
     if commit:

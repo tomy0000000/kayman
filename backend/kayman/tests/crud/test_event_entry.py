@@ -3,7 +3,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session
+from sqlmodel import Session, col, select
 
 from kayman.crud.event_entry import create_event_entries, update_event_entries
 from kayman.schemas.event_entry import EventEntry, EventEntryCreate, EventEntryUpdate
@@ -212,3 +212,112 @@ def test_event_entry_create_rejects_negative_index():
 def test_event_entry_update_rejects_negative_index():
     with pytest.raises(ValidationError):
         EventEntryUpdate(id=1, index=-1)
+
+
+# Reorders only survive because park_moving_indexes vacates the target range
+# first. shift_up_into_free_slot has a free slot at the top and still needs it:
+# SQLAlchemy orders UPDATEs within a flush by primary key, so the lowest row is
+# always written first, straight into an index its neighbour still holds.
+@pytest.mark.parametrize(
+    ("start", "target"),
+    [
+        ([0, 1], [1, 0]),
+        ([0, 1, 2], [1, 2, 0]),
+        ([0, 1, 2], [1, 2, 3]),
+    ],
+    ids=["swap", "rotate", "shift_up_into_free_slot"],
+)
+def test_update_event_entries_reorder(session: Session, start, target):
+    event = EventFactory()
+    entries = [
+        EventEntryFactory(event=event, event_id=event.id, index=index)
+        for index in start
+    ]
+
+    updated = update_event_entries(
+        session,
+        entries,
+        [
+            EventEntryUpdate(id=entry.id, index=index)
+            for entry, index in zip(entries, target, strict=True)
+        ],
+    )
+
+    assert len(updated) == len(target)
+    assert [entry.index for entry in updated] == target
+
+
+def test_update_event_entries_reorder_leaves_rows_outside_batch_alone(session: Session):
+    event = EventFactory()
+    entries = [
+        EventEntryFactory(event=event, event_id=event.id, index=index)
+        for index in range(4)
+    ]
+
+    # Swap the middle two. The outer two are not in the batch at all, so the
+    # parking pass must not disturb them.
+    updated = update_event_entries(
+        session,
+        [entries[1], entries[2]],
+        [
+            EventEntryUpdate(id=entries[1].id, index=2),
+            EventEntryUpdate(id=entries[2].id, index=1),
+        ],
+    )
+
+    assert len(updated) == 2
+    assert [entry.index for entry in updated] == [2, 1]
+
+    all_entries = session.exec(select(EventEntry).order_by(col(EventEntry.id))).all()
+    assert len(all_entries) == 4
+    assert [entry.index for entry in all_entries] == [0, 2, 1, 3]
+
+
+def test_update_event_entries_reorder_across_events(session: Session):
+    # Parking numbers every moving row in one global sequence, so this proves the
+    # parked values stay unique when a batch spans more than one event.
+    event_1 = EventFactory()
+    event_2 = EventFactory()
+    entries = [
+        EventEntryFactory(event=event, event_id=event.id, index=index)
+        for event in (event_1, event_2)
+        for index in range(2)
+    ]
+
+    updated = update_event_entries(
+        session,
+        entries,
+        [EventEntryUpdate(id=entry.id, index=1 - entry.index) for entry in entries],
+    )
+
+    assert len(updated) == 4
+    assert [entry.index for entry in updated] == [1, 0, 1, 0]
+    assert [entry.event_id for entry in updated] == [
+        event_1.id,
+        event_1.id,
+        event_2.id,
+        event_2.id,
+    ]
+
+
+def test_update_event_entries_reorder_onto_row_outside_batch(session: Session):
+    event = EventFactory()
+    entries = [
+        EventEntryFactory(event=event, event_id=event.id, index=index)
+        for index in range(3)
+    ]
+
+    # Parking only vacates indexes held by rows in the batch. Targeting an index
+    # still held by a row outside it is a genuine duplicate, so it must fail.
+    with pytest.raises(IntegrityError):
+        update_event_entries(
+            session,
+            [entries[0]],
+            [EventEntryUpdate(id=entries[0].id, index=1)],
+        )
+
+    # The failed write rolls back whole, leaving no parked negative indexes.
+    session.rollback()
+    all_entries = session.exec(select(EventEntry).order_by(col(EventEntry.id))).all()
+    assert len(all_entries) == 3
+    assert [entry.index for entry in all_entries] == [0, 1, 2]

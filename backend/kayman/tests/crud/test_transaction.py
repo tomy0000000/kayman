@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from pydantic import ValidationError
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from kayman.crud.transaction import (
     create_transactions,
@@ -569,6 +569,66 @@ def test_update_transactions_missing_tag_id(session: Session):
             [txn],
             [TransactionUpdate(id=txn.id, tag_ids=[missing_id])],
         )
+
+
+# Mirrors test_update_event_entries_reorder. Reorders only survive because
+# park_moving_indexes vacates the target range first.
+@pytest.mark.parametrize(
+    ("start", "target"),
+    [
+        ([0, 1], [1, 0]),
+        ([0, 1, 2], [1, 2, 0]),
+        ([0, 1, 2], [1, 2, 3]),
+    ],
+    ids=["swap", "rotate", "shift_up_into_free_slot"],
+)
+def test_update_transactions_reorder(session: Session, start, target):
+    event = EventFactory()
+    txns = [
+        TransactionFactory(event=event, event_id=event.id, index=index)
+        for index in start
+    ]
+
+    updated = update_transactions(
+        session,
+        txns,
+        [
+            TransactionUpdate(id=txn.id, index=index)
+            for txn, index in zip(txns, target, strict=True)
+        ],
+    )
+
+    assert len(updated) == len(target)
+    assert [txn.index for txn in updated] == target
+
+
+def test_update_transactions_bad_tag_id_parks_nothing(
+    session: Session, session_2: Session
+):
+    # Tags resolve before park_moving_indexes runs, so an unknown tag id aborts
+    # while every row is still untouched. Were it the other way round, the
+    # second row would be left stranded at its negative parking index.
+    event = EventFactory()
+    txn_1 = TransactionFactory(event=event, event_id=event.id, index=0)
+    txn_2 = TransactionFactory(event=event, event_id=event.id, index=1)
+    missing_id = TransactionTagFactory().id + 1000
+
+    with pytest.raises(ValueError, match="not found"):
+        update_transactions(
+            session,
+            [txn_1, txn_2],
+            [
+                TransactionUpdate(id=txn_1.id, index=1, tag_ids=[missing_id]),
+                TransactionUpdate(id=txn_2.id, index=0),
+            ],
+        )
+
+    # Even a caller that swallows the error and commits cannot persist a parked
+    # index, because nothing was ever written.
+    session.commit()
+    rows = session_2.exec(select(Transaction).order_by(col(Transaction.id))).all()
+    assert len(rows) == 2
+    assert [row.index for row in rows] == [0, 1]
 
 
 def test_transaction_create_rejects_negative_index():
