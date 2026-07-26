@@ -69,6 +69,34 @@ export function EventsTable({
       return currency ? formatCurrency(value, currency) : String(value)
     }
 
+    const renderAmount = (event: EventReadDetailed) => {
+      if (event.type === 'Expense' || event.type === 'Income') {
+        const total = event.entries.reduce(
+          (sum, entry) => sum + Number(entry.amount) * entry.quantity,
+          0
+        )
+        const signed = event.type === 'Expense' ? -total : total
+        return (
+          <Amount
+            amount={signed}
+            currencyCode={event.entries[0]?.currency_code}
+          />
+        )
+      }
+      if (event.type === 'Transfer') {
+        const [transaction] = event.transactions
+        return transaction
+          ? formatTransaction(transaction.account_id, transaction.amount)
+          : '—'
+      }
+      // Exchange: each leg in its own account's currency.
+      return event.transactions
+        .map((transaction) =>
+          formatTransaction(transaction.account_id, transaction.amount)
+        )
+        .join(' / ')
+    }
+
     return [
       {
         accessorKey: 'timestamp',
@@ -79,56 +107,40 @@ export function EventsTable({
         id: 'summary',
         header: 'Summary',
         cell: ({ row }) => {
-          const description = row.original.description?.trim()
-          if (description) return description
-          const names = [
+          const labels = [
             ...new Set(
-              row.original.entries.map(
-                (entry) =>
+              row.original.entries.map((entry) => {
+                const name =
                   categoryNames.get(entry.category_id) ??
                   `#${entry.category_id}`
-              )
+                const description = entry.description?.trim()
+                return description ? `${name} (${description})` : name
+              })
             )
           ]
-          return names.length ? names.join(', ') : '—'
+          return (
+            <div className="flex max-w-xs flex-col">
+              <span className="truncate font-semibold">
+                {row.original.description}
+              </span>
+              {labels.length > 0 && (
+                <span className="truncate text-muted-foreground text-sm">
+                  {labels.join(', ')}
+                </span>
+              )}
+            </div>
+          )
         }
-      },
-      {
-        accessorKey: 'type',
-        header: 'Type',
-        cell: ({ row }) => <EventTypeBadge type={row.original.type} />
       },
       {
         id: 'amount',
         header: 'Amount',
-        cell: ({ row }) => {
-          const event = row.original
-          if (event.type === 'Expense' || event.type === 'Income') {
-            const total = event.entries.reduce(
-              (sum, entry) => sum + Number(entry.amount) * entry.quantity,
-              0
-            )
-            const signed = event.type === 'Expense' ? -total : total
-            return (
-              <Amount
-                amount={signed}
-                currencyCode={event.entries[0]?.currency_code}
-              />
-            )
-          }
-          if (event.type === 'Transfer') {
-            const [transaction] = event.transactions
-            return transaction
-              ? formatTransaction(transaction.account_id, transaction.amount)
-              : '—'
-          }
-          // Exchange: each leg in its own account's currency.
-          return event.transactions
-            .map((transaction) =>
-              formatTransaction(transaction.account_id, transaction.amount)
-            )
-            .join(' / ')
-        }
+        cell: ({ row }) => (
+          <div className="flex flex-col items-start">
+            <EventTypeBadge type={row.original.type} />
+            {renderAmount(row.original)}
+          </div>
+        )
       }
     ]
   }, [categoryNames, accountCurrencies])
@@ -166,7 +178,7 @@ export function EventsTable({
             table.getRowModel().rows.map((row) => (
               <ContextMenu key={row.id}>
                 <ContextMenuTrigger asChild>
-                  <TableRow>
+                  <TableRow className="h-14">
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(
