@@ -16,7 +16,9 @@ class EventEntryBase(SQLModel):
     quantity: int
     currency_code: str = Field(foreign_key="currency.code")
     description: str | None = None
-    index: int
+    # Negatives are reserved for park_moving_indexes in crud/util.py. Not a DB
+    # check: parking flushes negatives, and PG checks cannot be deferred.
+    index: int = Field(ge=0)
 
 
 class EventEntry(EventEntryBase, table=True):
@@ -47,4 +49,4 @@ class EventEntryUpdate(SQLModel):
     quantity: int | None = None
     currency_code: str | None = None
     description: str | None = None
-    index: int | None = None
+    index: int | None = Field(default=None, ge=0)

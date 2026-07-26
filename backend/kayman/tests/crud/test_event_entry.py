@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
@@ -194,3 +195,20 @@ def test_update_event_entries_length_mismatch(session: Session):
 
     with pytest.raises(ValueError, match="same length"):
         update_event_entries(session, [entry], [])
+
+
+def test_event_entry_create_rejects_negative_index():
+    with pytest.raises(ValidationError):
+        EventEntryCreate(
+            event_id=1,
+            category_id=1,
+            amount=Decimal("1.00"),
+            quantity=1,
+            currency_code="USD",
+            index=-1,
+        )
+
+
+def test_event_entry_update_rejects_negative_index():
+    with pytest.raises(ValidationError):
+        EventEntryUpdate(id=1, index=-1)

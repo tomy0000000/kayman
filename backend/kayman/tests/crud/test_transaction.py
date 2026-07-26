@@ -3,6 +3,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
+from pydantic import ValidationError
 from sqlmodel import Session, select
 
 from kayman.crud.transaction import (
@@ -568,6 +569,16 @@ def test_update_transactions_missing_tag_id(session: Session):
             [txn],
             [TransactionUpdate(id=txn.id, tag_ids=[missing_id])],
         )
+
+
+def test_transaction_create_rejects_negative_index():
+    with pytest.raises(ValidationError):
+        TransactionCreate(account_id=1, amount=Decimal("1.00"), index=-1)
+
+
+def test_transaction_update_rejects_negative_index():
+    with pytest.raises(ValidationError):
+        TransactionUpdate(id=1, index=-1)
 
 
 def test_delete_transaction_removes_links_but_keeps_tags(session: Session):

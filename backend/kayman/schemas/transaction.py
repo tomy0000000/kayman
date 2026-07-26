@@ -30,7 +30,9 @@ class TransactionBase(SQLModel):
     cleared_at: datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
     )
-    index: int | None = None
+    # Negatives are reserved for park_moving_indexes in crud/util.py. Not a DB
+    # check: parking flushes negatives, and PG checks cannot be deferred.
+    index: int | None = Field(default=None, ge=0)
 
 
 class Transaction(TransactionBase, table=True):
@@ -97,5 +99,5 @@ class TransactionUpdate(SQLModel):
     posted_at: datetime | None = None
     description: str | None = None
     cleared_at: datetime | None = None
-    index: int | None = None
+    index: int | None = Field(default=None, ge=0)
     tag_ids: list[int] | None = None
