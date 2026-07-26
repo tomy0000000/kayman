@@ -37,3 +37,14 @@ class EventEntryCreate(EventEntryBase):
 class EventEntryRead(EventEntryBase):
     id: int
     event_id: int
+
+
+class EventEntryUpdate(SQLModel):
+    id: int
+    event_id: int | None = None
+    category_id: int | None = None
+    amount: Decimal | None = None
+    quantity: int | None = None
+    currency_code: str | None = None
+    description: str | None = None
+    index: int | None = None
