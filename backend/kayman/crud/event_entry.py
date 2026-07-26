@@ -1,6 +1,6 @@
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 
-from sqlmodel import Session
+from sqlmodel import Session, col, select
 
 from kayman.crud.util import park_moving_indexes
 from kayman.schemas.event_entry import (
@@ -25,6 +25,22 @@ def create_event_entries(
     else:
         session.flush()
     return db_entries
+
+
+def read_event_entries(
+    session: Session,
+    entry_ids: Collection[int] | None = None,
+    for_update: bool = False,
+) -> Sequence[EventEntry]:
+    scalar = select(EventEntry)
+    if entry_ids:
+        scalar = scalar.where(col(EventEntry.id).in_(entry_ids))
+    # Always id-ordered: callers pair the rows with id-sorted updates positionally
+    scalar = scalar.order_by(col(EventEntry.id))
+    if for_update:
+        scalar = scalar.with_for_update()
+    entries = session.exec(scalar).all()
+    return entries
 
 
 def update_event_entries(

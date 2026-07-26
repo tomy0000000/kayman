@@ -5,7 +5,11 @@ from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, col, select
 
-from kayman.crud.event_entry import create_event_entries, update_event_entries
+from kayman.crud.event_entry import (
+    create_event_entries,
+    read_event_entries,
+    update_event_entries,
+)
 from kayman.schemas.event_entry import EventEntry, EventEntryCreate, EventEntryUpdate
 from kayman.tests.factories import (
     CategoryFactory,
@@ -92,6 +96,41 @@ def test_create_event_entries_event_not_found(session: Session):
 
     with pytest.raises(IntegrityError):
         create_event_entries(session, [entry])
+
+
+def test_read_event_entries(session: Session):
+    entries = EventEntryFactory.create_batch(3)
+
+    db_entries = read_event_entries(session)
+
+    assert len(db_entries) == 3
+    assert [db_entry.id for db_entry in db_entries] == sorted(
+        entry.id for entry in entries
+    )
+
+
+def test_read_event_entries_by_ids(session: Session):
+    entries = EventEntryFactory.create_batch(3)
+
+    db_entries = read_event_entries(session, entry_ids=[entries[2].id, entries[0].id])
+
+    assert len(db_entries) == 2
+    assert [db_entry.id for db_entry in db_entries] == [entries[0].id, entries[2].id]
+
+
+def test_read_event_entries_unknown_id(session: Session):
+    EventEntryFactory()
+
+    assert read_event_entries(session, entry_ids=[999999]) == []
+
+
+def test_read_event_entries_for_update(session: Session):
+    entry = EventEntryFactory()
+
+    db_entries = read_event_entries(session, entry_ids=[entry.id], for_update=True)
+
+    assert len(db_entries) == 1
+    assert db_entries[0].id == entry.id
 
 
 def test_update_event_entries(session: Session):
