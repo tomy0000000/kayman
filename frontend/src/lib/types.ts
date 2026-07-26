@@ -6,11 +6,13 @@ export type TreeItem = {
   children?: TreeItem[]
 }
 
-// An entry row being edited in the event sheet. Amount and quantity stay
-// strings while typing; `key` is client-only and keeps a row's identity stable
-// across reorders, since a row has no id until it is created.
+// An entry row being edited in the event sheet. `id` is null for a row added in
+// the sheet, which is created on submit; a row already on the event carries its
+// id and is patched instead. Amount and quantity stay strings while typing;
+// `key` is client-only and keeps a row's identity stable across reorders.
 export type EventEntryDraft = {
   key: string
+  id: number | null
   categoryId: number | null
   amount: string
   quantity: string
@@ -38,6 +40,18 @@ export type TransactionPayload = {
   index: number
 }
 
+// What the event form hands back per entry row, once the row is complete. `id`
+// is null for a row added in the sheet; `index` is the row's final position.
+export type EventEntryPayload = {
+  id: number | null
+  category_id: number
+  amount: string
+  quantity: number
+  currency_code: string
+  description: string | null
+  index: number
+}
+
 export function toTransactionDraft(transaction: {
   id: number
   account_id: number
@@ -54,6 +68,7 @@ export function toTransactionDraft(transaction: {
 export function toEventEntryDraft(entry: EventEntryRead): EventEntryDraft {
   return {
     key: String(entry.id),
+    id: entry.id,
     categoryId: entry.category_id,
     amount: entry.amount,
     quantity: String(entry.quantity),

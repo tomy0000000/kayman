@@ -64,6 +64,7 @@ export function EventEntriesField({
       ...value,
       {
         key: crypto.randomUUID(),
+        id: null,
         categoryId: null,
         amount: '',
         quantity: '1',

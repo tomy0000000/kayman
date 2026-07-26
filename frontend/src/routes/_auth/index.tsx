@@ -9,7 +9,6 @@ import { EventsTable } from '@/components/event/events-table'
 import { Calendar } from '@/components/ui/calendar'
 import {
   type EventCreate,
-  type EventEntryCreate,
   type EventReadDetailed,
   createEvent,
   createEventEntries,
@@ -24,7 +23,7 @@ import {
   readTransactionsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
 import { syncEventTransactions } from '@/lib/events'
-import { type TransactionPayload } from '@/lib/types'
+import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 import { parseLocalDate } from '@/lib/utils'
 
 const searchSchema = z.object({
@@ -74,7 +73,7 @@ function HomePage() {
     }: {
       body: EventCreate
       transactions: TransactionPayload[]
-      entries: Omit<EventEntryCreate, 'event_id'>[]
+      entries: EventEntryPayload[]
     }) => {
       const { data: event } = editingEvent
         ? await updateEvent({

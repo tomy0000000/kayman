@@ -6,12 +6,9 @@ import {
   type CategoryReadWithChildren,
   type CurrencyRead,
   type EventCreate,
-  type EventEntryCreate,
   type EventReadDetailed
 } from '@/lib/client'
-import { type TransactionPayload } from '@/lib/types'
-
-type EventEntryPayload = Omit<EventEntryCreate, 'event_id'>
+import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 
 interface EventFabProps {
   accounts: AccountRead[]

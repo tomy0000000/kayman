@@ -21,7 +21,6 @@ import {
   type CategoryReadWithChildren,
   type CurrencyRead,
   type EventCreate,
-  type EventEntryCreate,
   type EventReadDetailed,
   type EventType
 } from '@/lib/client'
@@ -29,6 +28,7 @@ import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { eventTypeTabActiveClass } from '@/lib/event-types'
 import {
   type EventEntryDraft,
+  type EventEntryPayload,
   type TransactionDraft,
   type TransactionPayload,
   toEventEntryDraft,
@@ -42,8 +42,6 @@ const EVENT_TYPES: { value: EventType; icon: LucideIcon }[] = [
   { value: 'Transfer', icon: ArrowLeftRight },
   { value: 'Exchange', icon: Repeat }
 ]
-
-type EventEntryPayload = Omit<EventEntryCreate, 'event_id'>
 
 interface EventFormProps {
   accounts: AccountRead[]
@@ -124,6 +122,7 @@ export function EventForm({
         index
       })),
       entries.map((entry, index) => ({
+        id: entry.id,
         category_id: entry.categoryId as number,
         amount: entry.amount,
         quantity: parseInt(entry.quantity, 10),

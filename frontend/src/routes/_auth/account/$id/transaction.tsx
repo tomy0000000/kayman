@@ -12,7 +12,6 @@ import { TransactionsTable } from '@/components/transaction/transactions-table'
 import { Separator } from '@/components/ui/separator'
 import {
   type EventCreate,
-  type EventEntryCreate,
   type TransactionCreate,
   type TransactionReadWithBalance,
   createEvent,
@@ -32,7 +31,7 @@ import {
   readEventsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
 import { syncEventTransactions } from '@/lib/events'
-import { type TransactionPayload } from '@/lib/types'
+import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 import { endExclusive } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/account/$id/transaction')({
@@ -108,7 +107,7 @@ function AccountTransactionPage() {
       }: {
         body: EventCreate
         transactions: TransactionPayload[]
-        entries: Omit<EventEntryCreate, 'event_id'>[]
+        entries: EventEntryPayload[]
       }) => {
         const { data: event } = await createEvent({
           client,
