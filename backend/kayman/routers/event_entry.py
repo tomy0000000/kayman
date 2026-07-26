@@ -1,12 +1,16 @@
 from collections.abc import Sequence
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session
 
 from kayman.auth import get_client
 from kayman.core.db import get_session
 from kayman.crud.event_entry import create_event_entries
-from kayman.logics.event_entry import update_event_entries_by_ids
+from kayman.logics.event_entry import (
+    delete_event_entries_by_ids,
+    update_event_entries_by_ids,
+)
 from kayman.schemas.event_entry import (
     EventEntryBase,
     EventEntryCreate,
@@ -49,5 +53,17 @@ def update_entries(
 ) -> Sequence[EventEntryBase]:
     try:
         return update_event_entries_by_ids(session, entries)
+    except ValueError as err:
+        raise HTTPException(status_code=404, detail=err.args[0]) from err
+
+
+@event_entry_router.delete("", name="Delete Event Entries")
+def delete_entries(
+    *,
+    session: Session = Depends(get_session),
+    ids: Annotated[list[int], Query()],
+) -> None:
+    try:
+        delete_event_entries_by_ids(session, ids)
     except ValueError as err:
         raise HTTPException(status_code=404, detail=err.args[0]) from err
