@@ -1,6 +1,6 @@
 import { GripVertical, Receipt, X } from 'lucide-react'
 import { Reorder, useDragControls } from 'motion/react'
-import { type RefObject, useMemo, useRef } from 'react'
+import { type RefObject, useRef } from 'react'
 
 import { CategoryCombobox } from '@/components/category-combobox'
 import { CurrencyAmountInput } from '@/components/currency-amount-input'
@@ -17,22 +17,19 @@ import {
 import { Input } from '@/components/ui/input'
 import {
   Table,
-  TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow
 } from '@/components/ui/table'
 import { type CategoryReadWithChildren, type CurrencyRead } from '@/lib/client'
-import { type EventEntryDraft, buildCategoryNameMap } from '@/lib/types'
-import { formatCurrency } from '@/lib/utils'
+import { type EventEntryDraft } from '@/lib/types'
 
 interface EventEntriesFieldProps {
   categories: CategoryReadWithChildren[]
   currencies: CurrencyRead[]
   value: EventEntryDraft[]
   onChange: (value: EventEntryDraft[]) => void
-  readOnly?: boolean
 }
 
 interface EventEntryRowProps {
@@ -48,13 +45,8 @@ export function EventEntriesField({
   categories,
   currencies,
   value,
-  onChange,
-  readOnly = false
+  onChange
 }: EventEntriesFieldProps) {
-  const categoryNames = useMemo(
-    () => buildCategoryNameMap(categories),
-    [categories]
-  )
   // A row dragged past the table is clipped by the scroll container `Table`
   // wraps it in, so keep the drag inside the body.
   const body = useRef<HTMLTableSectionElement>(null)
@@ -81,7 +73,6 @@ export function EventEntriesField({
     onChange(value.filter((item) => item.key !== key))
 
   if (value.length === 0) {
-    if (readOnly) return null
     return (
       <Empty className="border border-dashed py-8">
         <EmptyHeader>
@@ -102,61 +93,20 @@ export function EventEntriesField({
     )
   }
 
-  const header = (
-    <TableHeader>
-      <TableRow>
-        {!readOnly && <TableHead className="w-6 px-0" />}
-        <TableHead>Category</TableHead>
-        <TableHead className="w-56">Amount</TableHead>
-        <TableHead className="w-16">Qty</TableHead>
-        {readOnly ? (
-          <TableHead>Description</TableHead>
-        ) : (
-          <TableHead className="w-8 px-0" />
-        )}
-        {!readOnly && <TableHead className="w-8 px-0" />}
-      </TableRow>
-    </TableHeader>
-  )
-
-  if (readOnly) {
-    return (
-      <div className="rounded-md border">
-        <Table>
-          {header}
-          <TableBody>
-            {value.map((entry) => (
-              <TableRow key={entry.key}>
-                <TableCell>
-                  {entry.categoryId != null
-                    ? categoryNames.get(entry.categoryId)
-                    : null}
-                </TableCell>
-                <TableCell>
-                  {entry.currencyCode
-                    ? formatCurrency(
-                        parseFloat(entry.amount),
-                        entry.currencyCode
-                      )
-                    : entry.amount}
-                </TableCell>
-                <TableCell>{entry.quantity}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {entry.description}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-3">
       <div className="rounded-md border">
         <Table>
-          {header}
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-6 px-0" />
+              <TableHead>Category</TableHead>
+              <TableHead className="w-56">Amount</TableHead>
+              <TableHead className="w-16">Qty</TableHead>
+              <TableHead className="w-8 px-0" />
+              <TableHead className="w-8 px-0" />
+            </TableRow>
+          </TableHeader>
           <Reorder.Group
             as="tbody"
             ref={body}

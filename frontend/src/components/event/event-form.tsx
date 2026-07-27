@@ -93,8 +93,6 @@ export function EventForm({
     isEditing ? editingEvent.entries.map(toEventEntryDraft) : []
   )
 
-  // The API can only batch-create entries, so an existing event's entries are
-  // shown but not editable.
   const incompleteEntry = entries.some(
     (entry) =>
       entry.categoryId == null ||
@@ -180,7 +178,6 @@ export function EventForm({
           currencies={currencies}
           value={entries}
           onChange={setEntries}
-          readOnly={isEditing}
         />
       </Field>
 
