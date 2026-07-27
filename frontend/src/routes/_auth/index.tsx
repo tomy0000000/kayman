@@ -22,7 +22,7 @@ import {
   readTransactionsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
 import { syncEventEntries } from '@/lib/event-entries'
-import { syncEventTransactions } from '@/lib/events'
+import { hasEventChanges, syncEventTransactions } from '@/lib/events'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 import { parseLocalDate } from '@/lib/utils'
 
@@ -75,20 +75,28 @@ function HomePage() {
       transactions: TransactionPayload[]
       entries: EventEntryPayload[]
     }) => {
-      const { data: event } = editingEvent
-        ? await updateEvent({
-            client,
-            path: { event_id: editingEvent.id },
-            body,
-            throwOnError: true
-          })
-        : await createEvent({ client, body, throwOnError: true })
+      let event: { id: number }
+      if (!editingEvent) {
+        const { data } = await createEvent({ client, body, throwOnError: true })
+        event = data
+      } else if (hasEventChanges(body, editingEvent)) {
+        const { data } = await updateEvent({
+          client,
+          path: { event_id: editingEvent.id },
+          body,
+          throwOnError: true
+        })
+        event = data
+      } else {
+        // Only the transactions or entries changed, so the event needs no patch.
+        event = editingEvent
+      }
 
       await syncEventTransactions({
         client,
         eventId: event.id,
         transactions,
-        previousIds: editingEvent?.transactions.map((t) => t.id) ?? [],
+        previousTransactions: editingEvent?.transactions ?? [],
         createdAt: body.timestamp
       })
 
@@ -96,7 +104,7 @@ function HomePage() {
         client,
         eventId: event.id,
         entries,
-        previousIds: editingEvent?.entries.map((e) => e.id) ?? []
+        previousEntries: editingEvent?.entries ?? []
       })
 
       return event

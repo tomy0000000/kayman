@@ -119,7 +119,7 @@ function AccountTransactionPage() {
           client,
           eventId: event.id,
           transactions,
-          previousIds: [],
+          previousTransactions: [],
           createdAt: body.timestamp
         })
 
@@ -127,7 +127,7 @@ function AccountTransactionPage() {
           client,
           eventId: event.id,
           entries,
-          previousIds: []
+          previousEntries: []
         })
 
         return event
