@@ -2,14 +2,16 @@ from datetime import UTC, datetime
 from unittest.mock import patch
 
 import pytest
+from sqlalchemy import inspect
 from sqlmodel import Session
 
 from kayman.crud.event import create_events, read_events, update_events
-from kayman.schemas.event import EventType, EventUpdate
+from kayman.schemas.event import Event, EventType, EventUpdate
 from kayman.tests.factories import (
     CategoryFactory,
     EventEntryFactory,
     EventFactory,
+    TransactionFactory,
 )
 
 
@@ -85,6 +87,36 @@ def test_read_events_by_ids(session: Session):
     multiple = read_events(session, event_ids=[event_1.id, event_2.id])
     assert len(multiple) == 2
     assert {event.id for event in multiple} == {event_1.id, event_2.id}
+
+
+def test_read_events_details_ordered_by_index(
+    session: Session,  # noqa: ARG001 (binds factory session)
+    session_2: Session,
+):
+    event = EventFactory()
+    for index in (2, 0, 1):
+        EventEntryFactory(event=event, index=index)
+        TransactionFactory(event=event, index=index)
+
+    events = read_events(session_2, event_ids=[event.id])
+
+    assert len(events) == 1
+    assert len(events[0].entries) == 3
+    assert [entry.index for entry in events[0].entries] == [0, 1, 2]
+    assert len(events[0].transactions) == 3
+    assert [transaction.index for transaction in events[0].transactions] == [0, 1, 2]
+
+    # The assertions above cannot fail on SQLite: it answers both lazy loads
+    # from the (event_id, index) unique index, so rows come back in index order
+    # even without an ORDER BY. Assert the relationships are configured to sort,
+    # which is what actually holds on Postgres.
+    relationships = inspect(Event).relationships
+    assert [str(column) for column in relationships["entries"].order_by] == [
+        "event_entry.index"
+    ]
+    assert [str(column) for column in relationships["transactions"].order_by] == [
+        "transaction.index"
+    ]
 
 
 def test_read_events_all(session: Session):

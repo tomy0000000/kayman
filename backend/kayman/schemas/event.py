@@ -40,8 +40,14 @@ class Event(EventBase, table=True):
     )
     # Auto calculated for Expense or Income
     # Manually logged for Transfer or Exchange
-    transactions: list["Transaction"] = Relationship(back_populates="event")
-    entries: list["EventEntry"] = Relationship(back_populates="event")
+    transactions: list["Transaction"] = Relationship(
+        back_populates="event",
+        sa_relationship_kwargs={"order_by": "Transaction.index"},
+    )
+    entries: list["EventEntry"] = Relationship(
+        back_populates="event",
+        sa_relationship_kwargs={"order_by": "EventEntry.index"},
+    )
 
 
 class EventCreate(EventBase):
