@@ -15,7 +15,6 @@ import {
   type TransactionCreate,
   type TransactionReadWithBalance,
   createEvent,
-  createEventEntries,
   createTransaction,
   updateTransactions
 } from '@/lib/client'
@@ -30,6 +29,7 @@ import {
   readEventsOptions,
   readEventsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
+import { syncEventEntries } from '@/lib/event-entries'
 import { syncEventTransactions } from '@/lib/events'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 import { endExclusive } from '@/lib/utils'
@@ -123,21 +123,22 @@ function AccountTransactionPage() {
           createdAt: body.timestamp
         })
 
-        if (entries.length > 0) {
-          await createEventEntries({
-            client,
-            body: entries.map((entry) => ({ ...entry, event_id: event.id })),
-            throwOnError: true
-          })
-        }
+        await syncEventEntries({
+          client,
+          eventId: event.id,
+          entries,
+          previousIds: []
+        })
 
         return event
       },
       onSuccess: () => {
         toast.success('Event created')
-        invalidateTransactions()
         setCreatingEventTransaction(null)
       },
+      // Settled, not success: the submit spans several calls, so a failure
+      // partway can still have created rows the table is not showing yet.
+      onSettled: invalidateTransactions,
       meta: { errorMessage: 'Failed to create event' }
     })
 

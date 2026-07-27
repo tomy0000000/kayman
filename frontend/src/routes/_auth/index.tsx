@@ -11,7 +11,6 @@ import {
   type EventCreate,
   type EventReadDetailed,
   createEvent,
-  createEventEntries,
   updateEvent
 } from '@/lib/client'
 import {
@@ -22,6 +21,7 @@ import {
   readEventsQueryKey,
   readTransactionsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
+import { syncEventEntries } from '@/lib/event-entries'
 import { syncEventTransactions } from '@/lib/events'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 import { parseLocalDate } from '@/lib/utils'
@@ -92,23 +92,24 @@ function HomePage() {
         createdAt: body.timestamp
       })
 
-      // The API can only batch-create entries, so they are only sent for a new
-      // event. An existing event's entries are read-only in the sheet.
-      if (!editingEvent && entries.length > 0) {
-        await createEventEntries({
-          client,
-          body: entries.map((entry) => ({ ...entry, event_id: event.id })),
-          throwOnError: true
-        })
-      }
+      await syncEventEntries({
+        client,
+        eventId: event.id,
+        entries,
+        previousIds: editingEvent?.entries.map((e) => e.id) ?? []
+      })
 
       return event
     },
     onSuccess: () => {
       toast.success(`Event ${editingEvent ? 'updated' : 'created'}`)
+      setFabOpen(false)
+    },
+    // Settled, not success: the submit spans several calls, so a failure partway
+    // can still have deleted or changed rows the table is now showing stale.
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
       queryClient.invalidateQueries({ queryKey: readTransactionsQueryKey() })
-      setFabOpen(false)
     },
     meta: {
       errorMessage: `Failed to ${editingEvent ? 'update' : 'create'} event`
