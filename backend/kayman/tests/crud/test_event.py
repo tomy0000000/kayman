@@ -184,6 +184,54 @@ def test_read_events_by_category_deduplicates(session: Session):
     assert events[0].id == event.id
 
 
+def test_read_events_without_order_by_defaults_to_timestamp_ascending(
+    session: Session,
+):
+    middle = EventFactory(timestamp=datetime(2026, 1, 2, tzinfo=UTC))
+    first = EventFactory(timestamp=datetime(2026, 1, 1, tzinfo=UTC))
+    last = EventFactory(timestamp=datetime(2026, 1, 3, tzinfo=UTC))
+
+    results = read_events(session)
+
+    assert len(results) == 3
+    assert [event.id for event in results] == [first.id, middle.id, last.id]
+
+
+def test_read_events_descending_without_order_by_is_timestamp_descending(
+    session: Session,
+):
+    middle = EventFactory(timestamp=datetime(2026, 1, 2, tzinfo=UTC))
+    first = EventFactory(timestamp=datetime(2026, 1, 1, tzinfo=UTC))
+    last = EventFactory(timestamp=datetime(2026, 1, 3, tzinfo=UTC))
+
+    results = read_events(session, descending=True)
+
+    assert len(results) == 3
+    assert [event.id for event in results] == [last.id, middle.id, first.id]
+
+
+def test_read_events_order_by_cleared_at(session: Session):
+    second = EventFactory(cleared_at=datetime(2026, 1, 2, tzinfo=UTC))
+    first = EventFactory(cleared_at=datetime(2026, 1, 1, tzinfo=UTC))
+    third = EventFactory(cleared_at=datetime(2026, 1, 3, tzinfo=UTC))
+
+    results = read_events(session, order_by="cleared_at")
+
+    assert len(results) == 3
+    assert [event.id for event in results] == [first.id, second.id, third.id]
+
+
+def test_read_events_order_by_id_descending(session: Session):
+    first = EventFactory(timestamp=datetime(2026, 1, 3, tzinfo=UTC))
+    second = EventFactory(timestamp=datetime(2026, 1, 1, tzinfo=UTC))
+    third = EventFactory(timestamp=datetime(2026, 1, 2, tzinfo=UTC))
+
+    results = read_events(session, order_by="id", descending=True)
+
+    assert len(results) == 3
+    assert [event.id for event in results] == [third.id, second.id, first.id]
+
+
 def test_read_events_for_update(session: Session):
     EventFactory()
 

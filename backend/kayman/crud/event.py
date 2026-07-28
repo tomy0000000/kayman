@@ -1,5 +1,6 @@
 from collections.abc import Collection, Sequence
 from datetime import date
+from typing import Literal
 
 from sqlmodel import Session, col, func, select
 
@@ -10,6 +11,8 @@ from kayman.schemas.event import (
     EventUpdate,
 )
 from kayman.schemas.event_entry import EventEntry
+
+EventOrderBy = Literal["timestamp", "cleared_at", "id"]
 
 
 def create_events(
@@ -31,6 +34,8 @@ def read_events(
     event_ids: Collection[int] | None = None,
     event_date: date | None = None,
     category_id: int | None = None,
+    order_by: EventOrderBy | None = None,
+    descending: bool = False,
     for_update: bool = False,
 ) -> Sequence[Event]:
     scalar = select(Event)
@@ -46,6 +51,8 @@ def read_events(
             .where(EventEntry.category_id == category_id)
             .distinct()
         )
+    column = getattr(Event, order_by) if order_by is not None else col(Event.timestamp)
+    scalar = scalar.order_by(column.desc() if descending else column.asc())
     if for_update:
         scalar = scalar.with_for_update()
     events = session.exec(scalar).all()
