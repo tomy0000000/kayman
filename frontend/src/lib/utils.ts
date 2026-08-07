@@ -32,9 +32,10 @@ export function formatDateTime(value: string | Date): string {
   })
 }
 
-export function formatTime(value: string | Date): string {
+export function formatTime(value: string | Date, timeZone: string): string {
   return new Date(value).toLocaleTimeString(browserLocale, {
-    timeStyle: 'short'
+    timeStyle: 'short',
+    timeZone
   })
 }
 

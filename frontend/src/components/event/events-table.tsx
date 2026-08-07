@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
 import type {
   AccountRead,
   CategoryReadWithChildren,
@@ -49,6 +50,7 @@ export function EventsTable({
   isPending,
   onEventEdit
 }: EventsTableProps) {
+  const { timezone } = useClientTimezone()
   const categoryNames = useMemo(
     () => buildCategoryNameMap(categories),
     [categories]
@@ -101,7 +103,7 @@ export function EventsTable({
       {
         accessorKey: 'timestamp',
         header: 'Time',
-        cell: ({ row }) => formatTime(row.original.timestamp)
+        cell: ({ row }) => formatTime(row.original.timestamp, timezone)
       },
       {
         id: 'summary',
@@ -143,7 +145,7 @@ export function EventsTable({
         )
       }
     ]
-  }, [categoryNames, accountCurrencies])
+  }, [categoryNames, accountCurrencies, timezone])
 
   // TanStack Table manages its own memoization; the React Compiler bail-out
   // for `useReactTable` is expected and safe here.

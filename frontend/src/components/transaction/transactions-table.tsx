@@ -23,6 +23,7 @@ import {
   TableRow
 } from '@/components/ui/table'
 import { type TransactionReadWithBalance } from '@/lib/client'
+import { BROWSER_TIMEZONE } from '@/lib/constants'
 import { formatCurrency, formatTime } from '@/lib/utils'
 
 interface TransactionsTableProps {
@@ -67,7 +68,7 @@ export function TransactionsTable({
       {
         id: 'time',
         header: 'Time',
-        cell: ({ row }) => formatTime(row.original.created_at)
+        cell: ({ row }) => formatTime(row.original.created_at, BROWSER_TIMEZONE)
       },
       {
         accessorKey: 'description',
