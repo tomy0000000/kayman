@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { EventFab } from '@/components/event/event-fab'
 import { EventsTable } from '@/components/event/events-table'
 import { Calendar } from '@/components/ui/calendar'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
   type EventCreate,
   type EventReadDetailed,
@@ -24,7 +25,7 @@ import {
 import { syncEventEntries } from '@/lib/event-entries'
 import { hasEventChanges, syncEventTransactions } from '@/lib/events'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
-import { parseLocalDate } from '@/lib/utils'
+import { parseLocalDate, zonedCalendarDate, zonedDayRange } from '@/lib/utils'
 
 const searchSchema = z.object({
   date: z.iso.date().optional()
@@ -40,15 +41,22 @@ function HomePage() {
   const queryClient = useQueryClient()
   const navigate = Route.useNavigate()
   const { date: dateParam } = Route.useSearch()
+  const { timezone } = useClientTimezone()
   const [date, setDate] = useState<Date | undefined>(
-    dateParam ? parseLocalDate(dateParam) : new Date()
+    dateParam
+      ? parseLocalDate(dateParam)
+      : zonedCalendarDate(new Date(), timezone)
   )
 
   const handleDateSelect = (next: Date | undefined) => {
     setDate(next)
     navigate({ search: { date: next?.toLocaleDateString('en-CA') } })
   }
-  const eventDate = date?.toLocaleDateString('en-CA') // 2025-01-01
+  // The picked day is read in the client timezone, so its bounds are that day's
+  // midnight and the next day's midnight there, sent as UTC instants.
+  const { start, end } = date
+    ? zonedDayRange(date, timezone)
+    : { start: null, end: null }
 
   const [fabOpen, setFabOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<EventReadDetailed | null>(
@@ -125,7 +133,7 @@ function HomePage() {
   })
 
   const { isPending, data: events } = useQuery({
-    ...readEventsOptions({ query: { event_date: eventDate } }),
+    ...readEventsOptions({ query: { start, end } }),
     meta: { errorMessage: 'Failed to fetch events' }
   })
 

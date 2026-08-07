@@ -100,6 +100,21 @@ export function zonedCalendarDate(date: Date, timeZone: string) {
   return new Date(year, month - 1, day)
 }
 
+// The half-open instant range covering the calendar day `picked` names (a
+// `zonedCalendarDate` stand-in), as that day runs in `timeZone`. Aug 5 in
+// Taipei is [2026-08-04T16:00Z, 2026-08-05T16:00Z).
+export function zonedDayRange(picked: Date, timeZone: string) {
+  const start = Temporal.PlainDate.from({
+    year: picked.getFullYear(),
+    month: picked.getMonth() + 1,
+    day: picked.getDate()
+  }).toZonedDateTime(timeZone)
+  return {
+    start: new Date(start.epochMilliseconds).toISOString(),
+    end: new Date(start.add({ days: 1 }).epochMilliseconds).toISOString()
+  }
+}
+
 // Move `value` to the calendar day `picked` names (a `zonedCalendarDate`
 // stand-in), keeping its wall-clock time in `timeZone`.
 export function withDate(value: Date, picked: Date, timeZone: string) {
