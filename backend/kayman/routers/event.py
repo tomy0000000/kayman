@@ -1,7 +1,8 @@
 from collections.abc import Sequence
-from datetime import date
+from datetime import date, datetime
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session
 
 from kayman.auth import get_client
@@ -52,10 +53,18 @@ def read(*, session: Session = Depends(get_session), event_id: int) -> EventBase
 def reads(
     *,
     session: Session = Depends(get_session),
-    event_date: date | None = None,
+    event_date: Annotated[date | None, Query(deprecated=True)] = None,
     category_id: int | None = None,
+    start: datetime | None = None,
+    end: datetime | None = None,
 ) -> Sequence[EventBase]:
-    return read_events(session, event_date=event_date, category_id=category_id)
+    return read_events(
+        session,
+        event_date=event_date,
+        category_id=category_id,
+        start=start,
+        end=end,
+    )
 
 
 @event_router.patch("/{event_id}", name="Update Event", response_model=EventRead)
