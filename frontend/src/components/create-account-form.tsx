@@ -12,8 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { type AccountCreate, type CurrencyRead } from '@/lib/client'
-import { CLIENT_TIMEZONE } from '@/lib/constants'
 
 interface CreateAccountFormProps {
   currencies: CurrencyRead[]
@@ -26,9 +26,10 @@ export function CreateAccountForm({
   onSubmit,
   isPending
 }: CreateAccountFormProps) {
+  const { timezone: clientTimezone } = useClientTimezone()
   const [name, setName] = useState('')
   const [currencyCode, setCurrencyCode] = useState<string | null>(null)
-  const [timezone, setTimezone] = useState(CLIENT_TIMEZONE)
+  const [timezone, setTimezone] = useState(clientTimezone)
 
   const selectedCurrency = currencies.find((c) => c.code === currencyCode)
 

@@ -1,6 +1,6 @@
 import { TimePicker } from '@/components/time-picker'
 import { FieldDescription } from '@/components/ui/field'
-import { CLIENT_TIMEZONE } from '@/lib/constants'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { formatZonedDateTime, toZonedISOString } from '@/lib/utils'
 
 interface ZonedTimePickerProps {
@@ -16,14 +16,17 @@ export function ZonedTimePicker({
   timezone,
   onChange
 }: ZonedTimePickerProps) {
+  const { timezone: clientTimezone } = useClientTimezone()
+
   return (
     <>
       <TimePicker
         id={id}
         value={value}
+        timezone={clientTimezone}
         onChange={(next) => onChange(toZonedISOString(next, timezone))}
       />
-      {timezone !== CLIENT_TIMEZONE && (
+      {timezone !== clientTimezone && (
         <FieldDescription>
           {`= ${formatZonedDateTime(value, timezone)} in ${timezone}`}
         </FieldDescription>

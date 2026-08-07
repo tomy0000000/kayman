@@ -4,7 +4,7 @@ import { TimezoneCombobox } from '@/components/timezone-combobox'
 import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
-import { CLIENT_TIMEZONE } from '@/lib/constants'
+import { BROWSER_TIMEZONE } from '@/lib/constants'
 
 export const Route = createFileRoute('/_auth/settings')({
   component: SettingsPage
@@ -26,7 +26,7 @@ function SettingsPage() {
         />
         <FieldDescription>
           {isOverridden
-            ? `Overriding your browser timezone (${CLIENT_TIMEZONE}).`
+            ? `Overriding your browser timezone (${BROWSER_TIMEZONE}).`
             : 'Using your browser timezone.'}
         </FieldDescription>
       </Field>

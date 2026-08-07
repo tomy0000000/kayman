@@ -13,13 +13,13 @@ import {
   InputGroupText
 } from '@/components/ui/input-group'
 import { ZonedTimePicker } from '@/components/zoned-time-picker'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
   type AccountRead,
   type EventReadDetailed,
   type TransactionCreate,
   type TransactionRead
 } from '@/lib/client'
-import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { toZonedISOString } from '@/lib/utils'
 
 interface TransactionFormProps {
@@ -39,6 +39,7 @@ export function TransactionForm({
   onSubmit,
   isPending
 }: TransactionFormProps) {
+  const { timezone: clientTimezone } = useClientTimezone()
   const isEditing = editingTransaction != null
   const [amount, setAmount] = useState(() =>
     isEditing ? Math.abs(parseFloat(editingTransaction.amount)).toString() : ''
@@ -50,7 +51,7 @@ export function TransactionForm({
   const [createdAt, setCreatedAt] = useState(() =>
     isEditing
       ? editingTransaction.created_at
-      : toZonedISOString(new Date(), CLIENT_TIMEZONE)
+      : toZonedISOString(new Date(), clientTimezone)
   )
   const [eventId, setEventId] = useState<number | null>(
     editingTransaction?.event_id ?? null
@@ -127,7 +128,7 @@ export function TransactionForm({
         <ZonedTimePicker
           id="txn-created-at"
           value={new Date(createdAt)}
-          timezone={selectedAccount?.timezone ?? CLIENT_TIMEZONE}
+          timezone={selectedAccount?.timezone ?? clientTimezone}
           onChange={setCreatedAt}
         />
       </Field>

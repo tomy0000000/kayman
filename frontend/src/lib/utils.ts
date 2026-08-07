@@ -55,13 +55,23 @@ export function formatZonedDateTime(date: Date, timeZone: string): string {
   return `${get('month')} ${get('day')} ${get('hour')}:${get('minute')}`
 }
 
+// The instant `date` read as a wall clock in `timeZone`. Every wall-clock read
+// and write below goes through this, so the user's timezone drives them rather
+// than the browser's.
+function zoned(date: Date, timeZone: string) {
+  return Temporal.Instant.fromEpochMilliseconds(
+    date.getTime()
+  ).toZonedDateTimeISO(timeZone)
+}
+
 // Re-express the instant `date` represents in `timeZone` (a IANA name) as an
 // offset-aware ISO 8601 string. The same moment picked as 8:00 in PT becomes
 // 11:00-04:00 for an ET account.
 export function toZonedISOString(date: Date, timeZone: string) {
-  return Temporal.Instant.fromEpochMilliseconds(date.getTime())
-    .toZonedDateTimeISO(timeZone)
-    .toString({ timeZoneName: 'never', fractionalSecondDigits: 0 })
+  return zoned(date, timeZone).toString({
+    timeZoneName: 'never',
+    fractionalSecondDigits: 0
+  })
 }
 
 // Parse a "YYYY-MM-DD" string into a Date at local midnight (inverse of
@@ -75,21 +85,41 @@ export function pad(n: number) {
   return String(n).padStart(2, '0')
 }
 
-export function formatTimePart(date: Date) {
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+// "HH:MM:SS" of the instant `date` as read in `timeZone`.
+export function formatTimePart(date: Date, timeZone: string) {
+  const { hour, minute, second } = zoned(date, timeZone)
+  return `${pad(hour)}:${pad(minute)}:${pad(second)}`
 }
 
-export function withDate(value: Date, picked: Date) {
-  const next = new Date(value)
-  next.setFullYear(picked.getFullYear(), picked.getMonth(), picked.getDate())
-  return next
+// react-day-picker and date-fns read a Date's Y/M/D with browser-local getters,
+// so hand them a stand-in whose *local* calendar day is the day `date` falls on
+// in `timeZone`. For display and selection only: never store this instant.
+export function zonedCalendarDate(date: Date, timeZone: string) {
+  const { year, month, day } = zoned(date, timeZone)
+  return new Date(year, month - 1, day)
 }
 
-export function withTime(value: Date, time: string) {
+// Move `value` to the calendar day `picked` names (a `zonedCalendarDate`
+// stand-in), keeping its wall-clock time in `timeZone`.
+export function withDate(value: Date, picked: Date, timeZone: string) {
+  const next = zoned(value, timeZone).with({
+    year: picked.getFullYear(),
+    month: picked.getMonth() + 1,
+    day: picked.getDate()
+  })
+  return new Date(next.epochMilliseconds)
+}
+
+// Set the wall-clock time of `value` as read in `timeZone`.
+export function withTime(value: Date, time: string, timeZone: string) {
   const [h = 0, m = 0, s = 0] = time.split(':').map(Number)
-  const next = new Date(value)
-  next.setHours(h, m, s, 0)
-  return next
+  const next = zoned(value, timeZone).with({
+    hour: h,
+    minute: m,
+    second: s,
+    millisecond: 0
+  })
+  return new Date(next.epochMilliseconds)
 }
 
 export function isSameRange(a: DateRange | undefined, b: DateRange) {

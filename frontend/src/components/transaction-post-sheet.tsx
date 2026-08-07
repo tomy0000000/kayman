@@ -17,12 +17,12 @@ import {
   SheetTitle
 } from '@/components/ui/sheet'
 import { ZonedTimePicker } from '@/components/zoned-time-picker'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
   type AccountRead,
   type TransactionPost,
   type TransactionReadWithBalance
 } from '@/lib/client'
-import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { toZonedISOString } from '@/lib/utils'
 
 interface TransactionPostSheetProps {
@@ -42,9 +42,10 @@ export function TransactionPostSheet({
   onSubmit,
   isPending
 }: TransactionPostSheetProps) {
+  const { timezone: clientTimezone } = useClientTimezone()
   const [txnId, setTxnId] = useState(transaction?.id)
   const [postedAt, setPostedAt] = useState(() =>
-    toZonedISOString(new Date(), CLIENT_TIMEZONE)
+    toZonedISOString(new Date(), clientTimezone)
   )
   // The bank may post a different amount than the pending value; pre-fill
   // with the current amount and let the user adjust.
@@ -59,12 +60,12 @@ export function TransactionPostSheet({
   // keeping the sheet itself mounted so it can animate open/closed.
   if (transaction && transaction.id !== txnId) {
     setTxnId(transaction.id)
-    setPostedAt(toZonedISOString(new Date(), CLIENT_TIMEZONE))
+    setPostedAt(toZonedISOString(new Date(), clientTimezone))
     setAmount(Math.abs(parseFloat(transaction.amount)).toString())
     setNegative(parseFloat(transaction.amount) < 0)
   }
 
-  const timezone = account?.timezone ?? CLIENT_TIMEZONE
+  const timezone = account?.timezone ?? clientTimezone
 
   const handleSubmit = () => {
     onSubmit({

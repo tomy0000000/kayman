@@ -20,17 +20,24 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
-import { formatTimePart, withDate, withTime } from '@/lib/utils'
+import {
+  formatTimePart,
+  withDate,
+  withTime,
+  zonedCalendarDate
+} from '@/lib/utils'
 
 interface TimePickerProps {
   id: string
   value: Date
+  timezone: string
   onChange: (value: Date) => void
 }
 
-export function TimePicker({ id, value, onChange }: TimePickerProps) {
+export function TimePicker({ id, value, timezone, onChange }: TimePickerProps) {
   const [open, setOpen] = useState(false)
-  const time = formatTimePart(value)
+  const time = formatTimePart(value, timezone)
+  const calendarDate = zonedCalendarDate(value, timezone)
 
   return (
     <InputGroup>
@@ -38,7 +45,7 @@ export function TimePicker({ id, value, onChange }: TimePickerProps) {
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <InputGroupButton className="w-full justify-between">
-              {format(value, 'PP')}
+              {format(calendarDate, 'PP')}
               <ChevronDownIcon />
             </InputGroupButton>
           </PopoverTrigger>
@@ -49,12 +56,12 @@ export function TimePicker({ id, value, onChange }: TimePickerProps) {
           >
             <Calendar
               mode="single"
-              selected={value}
+              selected={calendarDate}
               captionLayout="dropdown"
-              defaultMonth={value}
+              defaultMonth={calendarDate}
               onSelect={(picked) => {
                 if (!picked) return
-                onChange(withDate(value, picked))
+                onChange(withDate(value, picked, timezone))
                 setOpen(false)
               }}
             />
@@ -66,7 +73,7 @@ export function TimePicker({ id, value, onChange }: TimePickerProps) {
         id={id}
         step="1"
         value={time}
-        onChange={(e) => onChange(withTime(value, e.target.value))}
+        onChange={(e) => onChange(withTime(value, e.target.value, timezone))}
         required
         className="[&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
       />
@@ -82,14 +89,14 @@ export function TimePicker({ id, value, onChange }: TimePickerProps) {
               Now
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={() => onChange(withTime(value, '00:00:00'))}
+              onSelect={() => onChange(withTime(value, '00:00:00', timezone))}
             >
               Midnight
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() => {
                 const [h = '00', m = '00'] = time.split(':')
-                onChange(withTime(value, `${h}:${m}:00`))
+                onChange(withTime(value, `${h}:${m}:00`, timezone))
               }}
             >
               :00 second

@@ -16,6 +16,7 @@ import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ZonedTimePicker } from '@/components/zoned-time-picker'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
   type AccountRead,
   type CategoryReadWithChildren,
@@ -24,7 +25,6 @@ import {
   type EventReadDetailed,
   type EventType
 } from '@/lib/client'
-import { CLIENT_TIMEZONE } from '@/lib/constants'
 import { eventTypeTabActiveClass } from '@/lib/event-types'
 import {
   type EventEntryDraft,
@@ -68,6 +68,7 @@ export function EventForm({
   onSubmit,
   isPending
 }: EventFormProps) {
+  const { timezone: clientTimezone } = useClientTimezone()
   const isEditing = editingEvent != null
   const [type, setType] = useState<EventType>(editingEvent?.type ?? 'Expense')
   const [description, setDescription] = useState(
@@ -76,12 +77,12 @@ export function EventForm({
   const [timezone, setTimezone] = useState<string>(
     editingEvent?.timezone ??
       seedTransaction?.account.timezone ??
-      CLIENT_TIMEZONE
+      clientTimezone
   )
   const [timestamp, setTimestamp] = useState(() => {
     if (isEditing) return editingEvent.timestamp
     if (seedTransaction) return seedTransaction.transaction.created_at
-    return toZonedISOString(new Date(), CLIENT_TIMEZONE)
+    return toZonedISOString(new Date(), clientTimezone)
   })
   const [transactions, setTransactions] = useState<TransactionDraft[]>(() => {
     if (isEditing) return editingEvent.transactions.map(toTransactionDraft)

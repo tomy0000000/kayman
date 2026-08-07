@@ -4,7 +4,7 @@ import {
   ClientTimezoneContext,
   type ClientTimezoneContextValue
 } from '@/lib/client-timezone-context'
-import { CLIENT_TIMEZONE } from '@/lib/constants'
+import { BROWSER_TIMEZONE } from '@/lib/constants'
 
 const LOCAL_STORAGE_KEY = 'client_timezone'
 
@@ -37,7 +37,7 @@ export function ClientTimezoneProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<ClientTimezoneContextValue>(
     () => ({
-      timezone: override ?? CLIENT_TIMEZONE,
+      timezone: override ?? BROWSER_TIMEZONE,
       isOverridden: override !== null,
       setTimezone,
       reset
