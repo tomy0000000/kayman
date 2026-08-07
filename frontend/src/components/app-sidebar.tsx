@@ -4,6 +4,7 @@ import {
   ChevronUp,
   FolderTree,
   LogOut,
+  Settings,
   User,
   Wallet
 } from 'lucide-react'
@@ -87,7 +88,13 @@ export function AppSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="end" className="w-48">
                 <DropdownMenuItem asChild>
-                  <Link to="/logout">
+                  <Link to="/settings">
+                    <Settings />
+                    <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/logout" preload={false}>
                     <LogOut />
                     <span>Logout</span>
                   </Link>
