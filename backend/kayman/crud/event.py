@@ -1,8 +1,8 @@
 from collections.abc import Collection, Sequence
-from datetime import date, datetime
+from datetime import datetime
 from typing import Literal
 
-from sqlmodel import Session, col, func, select
+from sqlmodel import Session, col, select
 
 from kayman.schemas.event import (
     Event,
@@ -32,7 +32,6 @@ def create_events(
 def read_events(
     session: Session,
     event_ids: Collection[int] | None = None,
-    event_date: date | None = None,
     category_id: int | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
@@ -43,8 +42,6 @@ def read_events(
     scalar = select(Event)
     if event_ids:
         scalar = scalar.where(col(Event.id).in_(event_ids))
-    if event_date:
-        scalar = scalar.where(func.date(Event.timestamp) == event_date)
     if category_id:
         # distinct() only for the join, which can fan out an event into one row
         # per matching entry. Postgres rejects SELECT DISTINCT ... FOR UPDATE.

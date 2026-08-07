@@ -126,14 +126,6 @@ def test_read_events_all(session: Session):
     assert len(read_events(session)) == 10
 
 
-def test_read_events_by_date(session: Session):
-    EventFactory(timestamp=datetime(2025, 1, 1))
-    EventFactory(timestamp=datetime(2025, 1, 2))
-
-    assert len(read_events(session, event_date="2025-01-01")) == 1
-    assert len(read_events(session, event_date="2025-01-02")) == 1
-
-
 def test_read_events_start_is_inclusive(session: Session):
     start = datetime(2026, 1, 1, tzinfo=UTC)
     EventFactory(timestamp=datetime(2025, 12, 31, tzinfo=UTC))
