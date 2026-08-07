@@ -134,6 +134,43 @@ def test_read_events_by_date(session: Session):
     assert len(read_events(session, event_date="2025-01-02")) == 1
 
 
+def test_read_events_start_is_inclusive(session: Session):
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    EventFactory(timestamp=datetime(2025, 12, 31, tzinfo=UTC))
+    on_start = EventFactory(timestamp=start)
+    after = EventFactory(timestamp=datetime(2026, 2, 1, tzinfo=UTC))
+
+    results = read_events(session, start=start)
+
+    assert len(results) == 2
+    assert {event.id for event in results} == {on_start.id, after.id}
+
+
+def test_read_events_end_is_exclusive(session: Session):
+    end = datetime(2026, 2, 1, tzinfo=UTC)
+    before = EventFactory(timestamp=datetime(2026, 1, 15, tzinfo=UTC))
+    EventFactory(timestamp=end)
+    EventFactory(timestamp=datetime(2026, 3, 1, tzinfo=UTC))
+
+    results = read_events(session, end=end)
+
+    assert len(results) == 1
+    assert {event.id for event in results} == {before.id}
+
+
+def test_read_events_start_and_end_window(session: Session):
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    end = datetime(2026, 2, 1, tzinfo=UTC)
+    EventFactory(timestamp=datetime(2025, 12, 31, tzinfo=UTC))
+    in_window = EventFactory(timestamp=datetime(2026, 1, 15, tzinfo=UTC))
+    EventFactory(timestamp=end)
+
+    results = read_events(session, start=start, end=end)
+
+    assert len(results) == 1
+    assert {event.id for event in results} == {in_window.id}
+
+
 def test_read_events_by_category(session: Session):
     category_1 = CategoryFactory()
     category_2 = CategoryFactory()

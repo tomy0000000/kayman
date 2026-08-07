@@ -1,5 +1,5 @@
 from collections.abc import Collection, Sequence
-from datetime import date
+from datetime import date, datetime
 from typing import Literal
 
 from sqlmodel import Session, col, func, select
@@ -34,6 +34,8 @@ def read_events(
     event_ids: Collection[int] | None = None,
     event_date: date | None = None,
     category_id: int | None = None,
+    start: datetime | None = None,
+    end: datetime | None = None,
     order_by: EventOrderBy | None = None,
     descending: bool = False,
     for_update: bool = False,
@@ -51,6 +53,10 @@ def read_events(
             .where(EventEntry.category_id == category_id)
             .distinct()
         )
+    if start is not None:
+        scalar = scalar.where(Event.timestamp >= start)
+    if end is not None:
+        scalar = scalar.where(Event.timestamp < end)
     column = getattr(Event, order_by) if order_by is not None else col(Event.timestamp)
     scalar = scalar.order_by(column.desc() if descending else column.asc())
     if for_update:
