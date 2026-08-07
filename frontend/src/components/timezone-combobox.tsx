@@ -73,7 +73,9 @@ export function TimezoneCombobox({
       id={id}
       items={TIMEZONE_GROUPS}
       value={selected}
-      onValueChange={(option) => onValueChange(option?.value ?? '')}
+      onValueChange={(option) => {
+        if (option) onValueChange(option.value)
+      }}
     >
       <div ref={anchor}>
         <ComboboxInput placeholder="Select timezone">
