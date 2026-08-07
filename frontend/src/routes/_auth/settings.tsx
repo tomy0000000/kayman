@@ -1,14 +1,47 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { TimezoneCombobox } from '@/components/timezone-combobox'
+import { Button } from '@/components/ui/button'
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
+import { CLIENT_TIMEZONE } from '@/lib/constants'
+
 export const Route = createFileRoute('/_auth/settings')({
   component: SettingsPage
 })
 
 function SettingsPage() {
+  const { timezone, isOverridden, setTimezone, reset } = useClientTimezone()
+
   return (
-    <div className="w-full p-4">
+    <div className="w-full max-w-md p-4">
       <h1 className="text-lg font-semibold">Settings</h1>
-      <p className="text-muted-foreground mt-2 text-sm">Nothing here yet.</p>
+
+      <Field className="mt-6">
+        <FieldLabel htmlFor="client-timezone">Timezone</FieldLabel>
+        <TimezoneCombobox
+          id="client-timezone"
+          value={timezone}
+          onValueChange={setTimezone}
+        />
+        <FieldDescription>
+          {isOverridden
+            ? `Overriding your browser timezone (${CLIENT_TIMEZONE}).`
+            : 'Using your browser timezone.'}
+        </FieldDescription>
+      </Field>
+
+      {isOverridden && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="mt-2"
+          onClick={reset}
+        >
+          Reset to browser timezone
+        </Button>
+      )}
     </div>
   )
 }

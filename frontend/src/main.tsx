@@ -12,6 +12,7 @@ import { App } from '@/app'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import '@/index.css'
 import { AuthProvider } from '@/lib/auth'
+import { ClientTimezoneProvider } from '@/lib/client-timezone'
 
 function metaErrorMessage(meta: Record<string, unknown> | undefined) {
   return typeof meta?.errorMessage === 'string' ? meta.errorMessage : undefined
@@ -44,9 +45,11 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AuthProvider>
-          <App queryClient={queryClient} />
-        </AuthProvider>
+        <ClientTimezoneProvider>
+          <AuthProvider>
+            <App queryClient={queryClient} />
+          </AuthProvider>
+        </ClientTimezoneProvider>
       </TooltipProvider>
     </QueryClientProvider>
   </StrictMode>
