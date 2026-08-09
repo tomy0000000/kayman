@@ -23,6 +23,7 @@ import {
   readTransactionTagsOptions,
   readTransactionsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
+import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { syncEventEntries } from '@/lib/event-entries'
 import { hasEventChanges, syncEventTransactions } from '@/lib/events'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
@@ -151,16 +152,21 @@ function HomePage() {
 
   const { data: currencies } = useQuery({
     ...readCurrenciesOptions(),
-    enabled: fabOpen
+    enabled: fabOpen,
+    staleTime: REFERENCE_STALE_TIME
   })
 
   const { data: transactionTags } = useQuery({
     ...readTransactionTagsOptions(),
-    enabled: fabOpen
+    enabled: fabOpen,
+    staleTime: REFERENCE_STALE_TIME
   })
 
   // Categories back both the FAB and the table's summary column.
-  const { data: categories } = useQuery(readCategoriesOptions())
+  const { data: categories } = useQuery({
+    ...readCategoriesOptions(),
+    staleTime: REFERENCE_STALE_TIME
+  })
 
   return (
     <>

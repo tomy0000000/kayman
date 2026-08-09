@@ -12,6 +12,7 @@ import {
   readAccountsQueryKey,
   readCurrenciesOptions
 } from '@/lib/client/@tanstack/react-query.gen'
+import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { cn, formatCurrency } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/account/')({
@@ -30,7 +31,8 @@ function AccountListPage() {
   // Backs the FAB's currency field, so only fetched once the sheet opens.
   const { data: currencies } = useQuery({
     ...readCurrenciesOptions(),
-    enabled: fabOpen
+    enabled: fabOpen,
+    staleTime: REFERENCE_STALE_TIME
   })
 
   const { mutate, isPending } = useMutation({

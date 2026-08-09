@@ -9,6 +9,7 @@ import { Tree } from '@/components/tree'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { readCategoriesOptions } from '@/lib/client/@tanstack/react-query.gen'
+import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { categoryToTreeItem } from '@/lib/types'
 
 export const Route = createFileRoute('/_auth/category')({
@@ -35,6 +36,7 @@ function CategoryPage() {
 
   const { data: categories } = useQuery({
     ...readCategoriesOptions(),
+    staleTime: REFERENCE_STALE_TIME,
     meta: { errorMessage: 'Failed to fetch categories' }
   })
 

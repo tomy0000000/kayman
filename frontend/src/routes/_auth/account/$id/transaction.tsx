@@ -30,6 +30,7 @@ import {
   readEventsQueryKey,
   readTransactionTagsOptions
 } from '@/lib/client/@tanstack/react-query.gen'
+import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { syncEventEntries } from '@/lib/event-entries'
 import { syncEventTransactions } from '@/lib/events'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
@@ -171,15 +172,20 @@ function AccountTransactionPage() {
   // Back the create-event sheet's entry fields, fetched once it opens.
   const { data: categories } = useQuery({
     ...readCategoriesOptions(),
-    enabled: creatingEventTransaction != null
+    enabled: creatingEventTransaction != null,
+    staleTime: REFERENCE_STALE_TIME
   })
 
-  const { data: currencies } = useQuery(readCurrenciesOptions())
+  const { data: currencies } = useQuery({
+    ...readCurrenciesOptions(),
+    staleTime: REFERENCE_STALE_TIME
+  })
 
   // Backs the create-event sheet's tag pickers, fetched once it opens.
   const { data: transactionTags } = useQuery({
     ...readTransactionTagsOptions(),
-    enabled: creatingEventTransaction != null
+    enabled: creatingEventTransaction != null,
+    staleTime: REFERENCE_STALE_TIME
   })
 
   const { isPending: isTransactionsPending, data: transactions } = useQuery({
