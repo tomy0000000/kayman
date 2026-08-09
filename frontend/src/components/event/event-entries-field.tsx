@@ -23,7 +23,7 @@ import {
   TableRow
 } from '@/components/ui/table'
 import { type CategoryReadWithChildren, type CurrencyRead } from '@/lib/client'
-import { type EventEntryDraft } from '@/lib/types'
+import { type EventEntryDraft, componentKey } from '@/lib/types'
 
 interface EventEntriesFieldProps {
   categories: CategoryReadWithChildren[]
@@ -55,7 +55,7 @@ export function EventEntriesField({
     onChange([
       ...value,
       {
-        key: crypto.randomUUID(),
+        key: componentKey(),
         id: null,
         categoryId: null,
         amount: '',

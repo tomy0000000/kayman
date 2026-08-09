@@ -52,6 +52,13 @@ export type EventEntryPayload = {
   index: number
 }
 
+let componentKeyCount = 0
+
+export function componentKey(): string {
+  componentKeyCount += 1
+  return `component-${componentKeyCount}`
+}
+
 export function toTransactionDraft(transaction: {
   id: number
   account_id: number

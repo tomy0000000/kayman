@@ -16,7 +16,11 @@ import {
   TableRow
 } from '@/components/ui/table'
 import { type AccountRead } from '@/lib/client'
-import { type TransactionDraft, toTransactionDraft } from '@/lib/types'
+import {
+  type TransactionDraft,
+  componentKey,
+  toTransactionDraft
+} from '@/lib/types'
 
 interface TransactionsFieldProps {
   accounts: AccountRead[]
@@ -44,7 +48,7 @@ export function TransactionsField({
   const addTransaction = () =>
     onChange([
       ...value,
-      { key: crypto.randomUUID(), id: null, accountId: null, amount: '' }
+      { key: componentKey(), id: null, accountId: null, amount: '' }
     ])
 
   const linkTransactions = (selection: SelectedTransaction[]) => {
