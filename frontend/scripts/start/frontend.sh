@@ -5,4 +5,4 @@ set -euo pipefail
 
 trap 'exit 0' INT TERM
 
-pnpm exec vite
+pnpm exec vite --host

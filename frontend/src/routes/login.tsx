@@ -26,7 +26,10 @@ import {
 } from '@/components/ui/popover'
 import { useAuth } from '@/hooks/use-auth'
 
-const LOCAL_BACKEND: string = 'http://localhost:8000'
+const LOCAL_BACKEND: string =
+  typeof window !== 'undefined'
+    ? window.location.origin.replace(/:\d+$/, ':8000')
+    : 'http://localhost:8000'
 const PRESET_HOSTS: Record<string, string> = {
   'Local Backend': LOCAL_BACKEND
 }
