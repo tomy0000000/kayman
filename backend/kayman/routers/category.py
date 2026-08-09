@@ -1,10 +1,11 @@
 from collections.abc import Sequence
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, col, select
+from sqlmodel import Session
 
 from kayman.auth import get_client
 from kayman.core.db import get_session
+from kayman.crud.category import read_categories
 from kayman.schemas.category import (
     Category,
     CategoryBase,
@@ -42,10 +43,7 @@ def create(
     "", name="Read Categories", response_model=list[CategoryReadWithChildren]
 )
 def reads(*, session: Session = Depends(get_session)) -> Sequence[CategoryBase]:
-    categories = session.exec(
-        select(Category).where(col(Category.parent_id).is_(None))
-    ).all()
-    return categories
+    return read_categories(session, parent_id="empty")
 
 
 @category_router.get(
