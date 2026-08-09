@@ -13,7 +13,7 @@ import { useMemo, useState } from 'react'
 
 import { AccountSelect } from '@/components/account-select'
 import { Amount } from '@/components/amount'
-import { TransactionStatusBadge } from '@/components/transaction-status-badge'
+import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {

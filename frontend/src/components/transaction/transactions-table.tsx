@@ -7,7 +7,7 @@ import {
 import { useMemo } from 'react'
 
 import { Amount } from '@/components/amount'
-import { TransactionStatusBadge } from '@/components/transaction-status-badge'
+import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
 import {
   ContextMenu,
   ContextMenuContent,
