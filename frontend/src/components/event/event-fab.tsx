@@ -5,7 +5,8 @@ import {
   type CategoryReadWithChildren,
   type CurrencyRead,
   type EventCreate,
-  type EventReadDetailed
+  type EventReadDetailed,
+  type TransactionTagRead
 } from '@/lib/client'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 
@@ -13,6 +14,7 @@ interface EventFabProps {
   accounts: AccountRead[]
   categories: CategoryReadWithChildren[]
   currencies: CurrencyRead[]
+  transactionTags: TransactionTagRead[]
   open: boolean
   onOpenChange: (open: boolean) => void
   editingEvent: EventReadDetailed | null
@@ -28,6 +30,7 @@ export function EventFab({
   accounts,
   categories,
   currencies,
+  transactionTags,
   open,
   onOpenChange,
   editingEvent,
@@ -49,6 +52,7 @@ export function EventFab({
         accounts={accounts}
         categories={categories}
         currencies={currencies}
+        transactionTags={transactionTags}
         editingEvent={editingEvent}
         onSubmit={onSubmit}
         isPending={isPending}

@@ -20,6 +20,7 @@ import {
   readCurrenciesOptions,
   readEventsOptions,
   readEventsQueryKey,
+  readTransactionTagsOptions,
   readTransactionsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
 import { syncEventEntries } from '@/lib/event-entries'
@@ -143,6 +144,8 @@ function HomePage() {
 
   const { data: currencies } = useQuery(readCurrenciesOptions())
 
+  const { data: transactionTags } = useQuery(readTransactionTagsOptions())
+
   return (
     <>
       <div className="flex h-full gap-4">
@@ -171,6 +174,7 @@ function HomePage() {
         accounts={accounts ?? []}
         categories={categories ?? []}
         currencies={currencies ?? []}
+        transactionTags={transactionTags ?? []}
         open={fabOpen}
         onOpenChange={handleFabOpenChange}
         editingEvent={editingEvent}

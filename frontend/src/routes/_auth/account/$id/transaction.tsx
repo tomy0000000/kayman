@@ -27,7 +27,8 @@ import {
   readCategoriesOptions,
   readCurrenciesOptions,
   readEventsOptions,
-  readEventsQueryKey
+  readEventsQueryKey,
+  readTransactionTagsOptions
 } from '@/lib/client/@tanstack/react-query.gen'
 import { syncEventEntries } from '@/lib/event-entries'
 import { syncEventTransactions } from '@/lib/events'
@@ -167,6 +168,12 @@ function AccountTransactionPage() {
 
   const { data: currencies } = useQuery(readCurrenciesOptions())
 
+  // Backs the create-event sheet's tag pickers, fetched once it opens.
+  const { data: transactionTags } = useQuery({
+    ...readTransactionTagsOptions(),
+    enabled: creatingEventTransaction != null
+  })
+
   const { isPending: isTransactionsPending, data: transactions } = useQuery({
     ...readAccountTransactionsWithRunningBalanceOptions({
       path: { account_id: accountId },
@@ -253,6 +260,7 @@ function AccountTransactionPage() {
         accounts={accounts ?? []}
         categories={categories ?? []}
         currencies={currencies ?? []}
+        transactionTags={transactionTags ?? []}
         open={creatingEventTransaction != null}
         onOpenChange={(open) => {
           if (!open) setCreatingEventTransaction(null)

@@ -23,7 +23,8 @@ import {
   type CurrencyRead,
   type EventCreate,
   type EventReadDetailed,
-  type EventType
+  type EventType,
+  type TransactionTagRead
 } from '@/lib/client'
 import { eventTypeTabActiveClass } from '@/lib/event-types'
 import {
@@ -47,6 +48,7 @@ interface EventFormProps {
   accounts: AccountRead[]
   categories: CategoryReadWithChildren[]
   currencies: CurrencyRead[]
+  transactionTags: TransactionTagRead[]
   editingEvent: EventReadDetailed | null
   // Seeds a new event from a transaction: prefills the timestamp, zone, and
   // linked transaction. Ignored when editing an existing event.
@@ -63,6 +65,7 @@ export function EventForm({
   accounts,
   categories,
   currencies,
+  transactionTags,
   editingEvent,
   seedTransaction,
   onSubmit,
@@ -169,6 +172,7 @@ export function EventForm({
         <TransactionsField
           accounts={accounts}
           currencies={currencies}
+          transactionTags={transactionTags}
           value={transactions}
           onChange={setTransactions}
         />

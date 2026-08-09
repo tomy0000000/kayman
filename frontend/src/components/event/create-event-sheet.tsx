@@ -5,7 +5,8 @@ import {
   type CategoryReadWithChildren,
   type CurrencyRead,
   type EventCreate,
-  type TransactionReadWithBalance
+  type TransactionReadWithBalance,
+  type TransactionTagRead
 } from '@/lib/client'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 
@@ -15,6 +16,7 @@ interface CreateEventSheetProps {
   accounts: AccountRead[]
   categories: CategoryReadWithChildren[]
   currencies: CurrencyRead[]
+  transactionTags: TransactionTagRead[]
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (
@@ -31,6 +33,7 @@ export function CreateEventSheet({
   accounts,
   categories,
   currencies,
+  transactionTags,
   open,
   onOpenChange,
   onSubmit,
@@ -52,6 +55,7 @@ export function CreateEventSheet({
         accounts={accounts}
         categories={categories}
         currencies={currencies}
+        transactionTags={transactionTags}
         editingEvent={null}
         seedTransaction={seedTransaction}
         onSubmit={onSubmit}

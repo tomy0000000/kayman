@@ -7,6 +7,7 @@ import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { DragHandle } from '@/components/drag-handle'
 import { FieldEmpty } from '@/components/field-empty'
 import { type SelectedTransaction } from '@/components/link-transactions-table'
+import { TransactionTagsPopover } from '@/components/transaction/transaction-tags-popover'
 import { TransactionsLinkDialog } from '@/components/transaction/transactions-link-dialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,7 +17,11 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { type AccountRead, type CurrencyRead } from '@/lib/client'
+import {
+  type AccountRead,
+  type CurrencyRead,
+  type TransactionTagRead
+} from '@/lib/client'
 import {
   type TransactionDraft,
   componentKey,
@@ -26,6 +31,7 @@ import {
 interface TransactionsFieldProps {
   accounts: AccountRead[]
   currencies: CurrencyRead[]
+  transactionTags: TransactionTagRead[]
   value: TransactionDraft[]
   onChange: (value: TransactionDraft[]) => void
 }
@@ -34,6 +40,7 @@ interface TransactionRowProps {
   transaction: TransactionDraft
   accounts: AccountRead[]
   currencies: CurrencyRead[]
+  transactionTags: TransactionTagRead[]
   constraints: RefObject<HTMLTableSectionElement | null>
   onChange: (transaction: TransactionDraft) => void
   onRemove: (key: string) => void
@@ -42,6 +49,7 @@ interface TransactionRowProps {
 export function TransactionsField({
   accounts,
   currencies,
+  transactionTags,
   value,
   onChange
 }: TransactionsFieldProps) {
@@ -111,6 +119,7 @@ export function TransactionsField({
               <TableHead>Account</TableHead>
               <TableHead className="w-44">Amount</TableHead>
               <TableHead className="w-8 px-0" />
+              <TableHead className="w-8 px-0" />
             </TableRow>
           </TableHeader>
           <Reorder.Group
@@ -127,6 +136,7 @@ export function TransactionsField({
                 transaction={transaction}
                 accounts={accounts}
                 currencies={currencies}
+                transactionTags={transactionTags}
                 constraints={body}
                 onChange={updateTransaction}
                 onRemove={removeTransaction}
@@ -144,6 +154,7 @@ function TransactionRow({
   transaction,
   accounts,
   currencies,
+  transactionTags,
   constraints,
   onChange,
   onRemove
@@ -182,6 +193,13 @@ function TransactionRow({
           currency={currency}
           amount={transaction.amount}
           onAmountChange={(amount) => onChange({ ...transaction, amount })}
+        />
+      </TableCell>
+      <TableCell className="px-0">
+        <TransactionTagsPopover
+          tags={transactionTags}
+          value={transaction.tagIds}
+          onValueChange={(tagIds) => onChange({ ...transaction, tagIds })}
         />
       </TableCell>
       <TableCell className="px-0">
