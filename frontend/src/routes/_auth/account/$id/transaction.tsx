@@ -21,7 +21,6 @@ import {
 } from '@/lib/client'
 import {
   postTransactionMutation,
-  readAccountOptions,
   readAccountTransactionsWithRunningBalanceOptions,
   readAccountTransactionsWithRunningBalanceQueryKey,
   readAccountsOptions,
@@ -155,12 +154,13 @@ function AccountTransactionPage() {
     : null
   const end = dateRange?.to ? zonedDayRange(dateRange.to, timezone).end : null
 
-  const { data: account } = useQuery({
-    ...readAccountOptions({ path: { account_id: accountId } }),
-    meta: { errorMessage: 'Failed to fetch account' }
+  const { data: accounts } = useQuery({
+    ...readAccountsOptions(),
+    meta: { errorMessage: 'Failed to fetch accounts' }
   })
 
-  const { data: accounts } = useQuery(readAccountsOptions())
+  // The page's account is just a row of the list the FAB already needs.
+  const account = accounts?.find((a) => a.id === accountId)
 
   // Backs the FAB's event field, so only fetched once the sheet opens.
   const { data: events } = useQuery({
