@@ -10,6 +10,7 @@ import { TransactionFab } from '@/components/transaction/transaction-fab'
 import { TransactionPostSheet } from '@/components/transaction/transaction-post-sheet'
 import { TransactionsTable } from '@/components/transaction/transactions-table'
 import { Separator } from '@/components/ui/separator'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
   type EventCreate,
   type TransactionCreate,
@@ -33,7 +34,7 @@ import {
 import { syncEventEntries } from '@/lib/event-entries'
 import { syncEventTransactions } from '@/lib/events'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
-import { endExclusive } from '@/lib/utils'
+import { endExclusive, zonedCalendarDate } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/account/$id/transaction')({
   component: AccountTransactionPage
@@ -45,6 +46,7 @@ function AccountTransactionPage() {
   const accountId = Number(id)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const { timezone } = useClientTimezone()
 
   const [fabOpen, setFabOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] =
@@ -210,13 +212,15 @@ function AccountTransactionPage() {
           onTransactionCreateEvent={setCreatingEventTransaction}
           onTransactionGoToEvent={(transaction) => {
             if (!transaction.event) return
+            // The day view buckets events by the client timezone, so name the
+            // day the event falls on there rather than in the browser zone.
+            const day = zonedCalendarDate(
+              new Date(transaction.event.timestamp),
+              timezone
+            )
             navigate({
               to: '/',
-              search: {
-                date: new Date(transaction.event.timestamp).toLocaleDateString(
-                  'en-CA'
-                )
-              }
+              search: { date: day.toLocaleDateString('en-CA') }
             })
           }}
         />
