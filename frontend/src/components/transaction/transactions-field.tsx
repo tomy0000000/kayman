@@ -3,11 +3,11 @@ import { Reorder, useDragControls } from 'motion/react'
 import { type RefObject, useRef } from 'react'
 
 import { AccountSelect } from '@/components/account-select'
+import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { type SelectedTransaction } from '@/components/link-transactions-table'
 import { TransactionEmpty } from '@/components/transaction/transaction-empty'
 import { TransactionsLinkDialog } from '@/components/transaction/transactions-link-dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableCell,
@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { type AccountRead } from '@/lib/client'
+import { type AccountRead, type CurrencyRead } from '@/lib/client'
 import {
   type TransactionDraft,
   componentKey,
@@ -24,6 +24,7 @@ import {
 
 interface TransactionsFieldProps {
   accounts: AccountRead[]
+  currencies: CurrencyRead[]
   value: TransactionDraft[]
   onChange: (value: TransactionDraft[]) => void
 }
@@ -31,6 +32,7 @@ interface TransactionsFieldProps {
 interface TransactionRowProps {
   transaction: TransactionDraft
   accounts: AccountRead[]
+  currencies: CurrencyRead[]
   constraints: RefObject<HTMLTableSectionElement | null>
   onChange: (transaction: TransactionDraft) => void
   onRemove: (key: string) => void
@@ -38,6 +40,7 @@ interface TransactionRowProps {
 
 export function TransactionsField({
   accounts,
+  currencies,
   value,
   onChange
 }: TransactionsFieldProps) {
@@ -97,7 +100,7 @@ export function TransactionsField({
             <TableRow>
               <TableHead className="w-6 px-0" />
               <TableHead>Account</TableHead>
-              <TableHead className="w-32">Amount</TableHead>
+              <TableHead className="w-44">Amount</TableHead>
               <TableHead className="w-8 px-0" />
             </TableRow>
           </TableHeader>
@@ -114,6 +117,7 @@ export function TransactionsField({
                 key={transaction.key}
                 transaction={transaction}
                 accounts={accounts}
+                currencies={currencies}
                 constraints={body}
                 onChange={updateTransaction}
                 onRemove={removeTransaction}
@@ -130,6 +134,7 @@ export function TransactionsField({
 function TransactionRow({
   transaction,
   accounts,
+  currencies,
   constraints,
   onChange,
   onRemove
@@ -137,6 +142,9 @@ function TransactionRow({
   const dragControls = useDragControls()
   const account =
     accounts.find((item) => item.id === transaction.accountId) ?? null
+  const currency = currencies.find(
+    (item) => item.code === account?.currency_code
+  )
 
   return (
     <Reorder.Item
@@ -172,12 +180,10 @@ function TransactionRow({
         />
       </TableCell>
       <TableCell>
-        <Input
-          type="number"
-          inputMode="decimal"
-          placeholder="0.00"
-          value={transaction.amount}
-          onChange={(e) => onChange({ ...transaction, amount: e.target.value })}
+        <CurrencyAmountInput
+          currency={currency}
+          amount={transaction.amount}
+          onAmountChange={(amount) => onChange({ ...transaction, amount })}
         />
       </TableCell>
       <TableCell className="px-0">

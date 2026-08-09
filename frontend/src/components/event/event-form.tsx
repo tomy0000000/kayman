@@ -167,6 +167,7 @@ export function EventForm({
         <FieldLabel>Transactions</FieldLabel>
         <TransactionsField
           accounts={accounts}
+          currencies={currencies}
           value={transactions}
           onChange={setTransactions}
         />
