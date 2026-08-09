@@ -113,7 +113,7 @@ export function TransactionsField({
     <div className="space-y-3">
       <div className="rounded-md border">
         <Table>
-          <TableHeader>
+          <TableHeader className="max-sm:hidden">
             <TableRow>
               <TableHead className="w-6 px-0" />
               <TableHead>Account</TableHead>
@@ -174,12 +174,12 @@ function TransactionRow({
       dragControls={dragControls}
       dragConstraints={constraints}
       dragElastic={0}
-      className="relative border-b bg-background"
+      className="relative border-b bg-background max-sm:grid max-sm:grid-cols-[auto_1fr_auto_auto] max-sm:items-center"
     >
-      <TableCell className="px-0">
-        <DragHandle dragControls={dragControls} />
+      <TableCell className="px-0 max-sm:row-span-2">
+        <DragHandle dragControls={dragControls} className="max-sm:px-2" />
       </TableCell>
-      <TableCell>
+      <TableCell className="max-sm:col-span-2">
         <AccountSelect
           accounts={accounts}
           value={account}
@@ -188,7 +188,7 @@ function TransactionRow({
           }
         />
       </TableCell>
-      <TableCell>
+      <TableCell className="max-sm:col-start-2">
         <CurrencyAmountInput
           currency={currency}
           amount={transaction.amount}
@@ -202,7 +202,7 @@ function TransactionRow({
           onValueChange={(tagIds) => onChange({ ...transaction, tagIds })}
         />
       </TableCell>
-      <TableCell className="px-0">
+      <TableCell className="px-0 max-sm:col-start-4 max-sm:row-span-2 max-sm:row-start-1">
         <Button
           type="button"
           variant="ghost"

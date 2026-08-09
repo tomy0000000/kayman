@@ -84,7 +84,7 @@ export function EventEntriesField({
     <div className="space-y-3">
       <div className="rounded-md border">
         <Table>
-          <TableHeader>
+          <TableHeader className="max-sm:hidden">
             <TableRow>
               <TableHead className="w-6 px-0" />
               <TableHead>Category</TableHead>
@@ -141,19 +141,19 @@ function EventEntryRow({
       dragControls={dragControls}
       dragConstraints={constraints}
       dragElastic={0}
-      className="relative border-b bg-background"
+      className="relative border-b bg-background max-sm:grid max-sm:grid-cols-[auto_1fr_auto_auto_auto] max-sm:items-center"
     >
-      <TableCell className="px-0">
-        <DragHandle dragControls={dragControls} />
+      <TableCell className="px-0 max-sm:row-span-2">
+        <DragHandle dragControls={dragControls} className="max-sm:px-2" />
       </TableCell>
-      <TableCell>
+      <TableCell className="max-sm:col-span-3">
         <CategoryCombobox
           categories={categories}
           value={entry.categoryId}
           onValueChange={(categoryId) => onChange({ ...entry, categoryId })}
         />
       </TableCell>
-      <TableCell>
+      <TableCell className="max-sm:col-start-2">
         <CurrencyAmountInput
           currencies={currencies}
           currency={currencies.find((c) => c.code === entry.currencyCode)}
@@ -164,7 +164,7 @@ function EventEntryRow({
           onAmountChange={(amount) => onChange({ ...entry, amount })}
         />
       </TableCell>
-      <TableCell>
+      <TableCell className="max-sm:w-20">
         <Input
           type="number"
           min={1}
@@ -179,7 +179,7 @@ function EventEntryRow({
           onValueChange={(description) => onChange({ ...entry, description })}
         />
       </TableCell>
-      <TableCell className="px-0">
+      <TableCell className="px-0 max-sm:col-start-5 max-sm:row-span-2 max-sm:row-start-1">
         <Button
           type="button"
           variant="ghost"

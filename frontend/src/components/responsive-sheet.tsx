@@ -36,10 +36,12 @@ export function ResponsiveSheet({
     return (
       <Drawer open={open} onOpenChange={onOpenChange} showSwipeHandle>
         <DrawerContent className={className}>
-          <DrawerHeader>
-            <DrawerTitle>{title}</DrawerTitle>
-          </DrawerHeader>
-          {children}
+          <div data-base-ui-swipe-ignore className="contents">
+            <DrawerHeader>
+              <DrawerTitle>{title}</DrawerTitle>
+            </DrawerHeader>
+            {children}
+          </div>
         </DrawerContent>
       </Drawer>
     )

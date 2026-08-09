@@ -1,5 +1,6 @@
 import {
   ArrowLeftRight,
+  ChevronDown,
   type LucideIcon,
   Repeat,
   TrendingDown,
@@ -12,6 +13,11 @@ import { KbdForm } from '@/components/kbd-form'
 import { type SelectedTransaction } from '@/components/link-transactions-table'
 import { TimezoneCombobox } from '@/components/timezone-combobox'
 import { TransactionsField } from '@/components/transaction/transactions-field'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -189,15 +195,6 @@ export function EventForm({
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="event-timezone">Timezone</FieldLabel>
-        <TimezoneCombobox
-          id="event-timezone"
-          value={timezone}
-          onValueChange={setTimezone}
-        />
-      </Field>
-
-      <Field>
         <FieldLabel htmlFor="event-timestamp">Timestamp</FieldLabel>
         <ZonedTimePicker
           id="event-timestamp"
@@ -207,15 +204,32 @@ export function EventForm({
         />
       </Field>
 
-      <Field>
-        <FieldLabel htmlFor="event-description">Description</FieldLabel>
-        <Input
-          id="event-description"
-          placeholder="Optional"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </Field>
+      <Collapsible className="space-y-5">
+        <CollapsibleTrigger className="group flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          Advanced
+          <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-5">
+          <Field>
+            <FieldLabel htmlFor="event-description">Description</FieldLabel>
+            <Input
+              id="event-description"
+              placeholder="Optional"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="event-timezone">Timezone</FieldLabel>
+            <TimezoneCombobox
+              id="event-timezone"
+              value={timezone}
+              onValueChange={setTimezone}
+            />
+          </Field>
+        </CollapsibleContent>
+      </Collapsible>
     </KbdForm>
   )
 }
