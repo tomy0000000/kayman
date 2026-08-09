@@ -1,6 +1,7 @@
 from collections.abc import Collection, Sequence
 from typing import Literal
 
+from sqlalchemy.orm import aliased
 from sqlmodel import Session, col, select
 
 from kayman.schemas.category import Category, CategoryUpdate
@@ -25,6 +26,23 @@ def read_categories(
         scalar = scalar.with_for_update()
     categories = session.exec(scalar).all()
     return categories
+
+
+def read_category_ancestors(session: Session, category_id: int) -> Sequence[Category]:
+    """The category itself plus every ancestor above it, in no particular order.
+
+    Deliberately carries no depth column. UNION dedup is what stops the
+    recursion, and a depth would make every row distinct, so a cyclic tree
+    would recurse forever instead of terminating (verified on both dialects).
+    """
+    base = (
+        select(Category)
+        .where(Category.id == category_id)
+        .cte("ancestors", recursive=True)
+    )
+    step = select(Category).join(base, col(Category.id) == base.c.parent_id)
+    cte = base.union(step)
+    return session.exec(select(aliased(Category, cte))).all()
 
 
 def update_categories(

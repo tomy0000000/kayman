@@ -1,6 +1,10 @@
 from sqlmodel import Session
 
-from kayman.crud.category import read_categories, update_categories
+from kayman.crud.category import (
+    read_categories,
+    read_category_ancestors,
+    update_categories,
+)
 from kayman.schemas.category import Category, CategoryUpdate
 from kayman.tests.factories import CategoryFactory
 
@@ -83,6 +87,48 @@ def test_read_categories_for_update(session: Session):
 
     assert len(categories) == 1
     assert categories[0].id == category.id
+
+
+def test_read_category_ancestors_root(session: Session):
+    root = CategoryFactory(name="Root")
+    CategoryFactory(name="Child", parent_id=root.id)
+
+    ancestors = read_category_ancestors(session, root.id)
+
+    assert len(ancestors) == 1
+    assert ancestors[0].id == root.id
+
+
+def test_read_category_ancestors_chain(session: Session):
+    root = CategoryFactory(name="Root")
+    child = CategoryFactory(name="Child", parent_id=root.id)
+    grandchild = CategoryFactory(name="Grandchild", parent_id=child.id)
+    CategoryFactory(name="Sibling", parent_id=root.id)
+    CategoryFactory(name="Unrelated")
+
+    ancestors = read_category_ancestors(session, grandchild.id)
+
+    assert len(ancestors) == 3
+    assert {category.id for category in ancestors} == {
+        grandchild.id,
+        child.id,
+        root.id,
+    }
+
+
+def test_read_category_ancestors_terminates_on_cycle(session: Session):
+    # The logics guard keeps cycles out of the database, but this query must
+    # survive one anyway: it is only bounded by UNION dedup, which a depth
+    # column would silently defeat and turn into an infinite recursion.
+    first = CategoryFactory(name="Alpha")
+    second = CategoryFactory(name="Beta", parent_id=first.id)
+    first.parent_id = second.id
+    session.commit()
+
+    ancestors = read_category_ancestors(session, second.id)
+
+    assert len(ancestors) == 2
+    assert {category.id for category in ancestors} == {first.id, second.id}
 
 
 def test_update_categories(session: Session):
