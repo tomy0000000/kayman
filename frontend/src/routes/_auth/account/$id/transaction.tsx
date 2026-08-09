@@ -165,10 +165,7 @@ function AccountTransactionPage() {
     enabled: creatingEventTransaction != null
   })
 
-  const { data: currencies } = useQuery({
-    ...readCurrenciesOptions(),
-    enabled: creatingEventTransaction != null
-  })
+  const { data: currencies } = useQuery(readCurrenciesOptions())
 
   const { isPending: isTransactionsPending, data: transactions } = useQuery({
     ...readAccountTransactionsWithRunningBalanceOptions({
@@ -221,6 +218,7 @@ function AccountTransactionPage() {
       <TransactionFab
         accounts={accounts ?? []}
         account={account}
+        currencies={currencies ?? []}
         events={events}
         open={fabOpen}
         onOpenChange={handleFabOpenChange}
@@ -232,6 +230,9 @@ function AccountTransactionPage() {
       <TransactionPostSheet
         transaction={postingTransaction}
         account={account}
+        currency={currencies?.find(
+          (c) => c.code === postingTransaction?.currency_code
+        )}
         open={postingTransaction != null}
         onOpenChange={(open) => {
           if (!open) setPostingTransaction(null)

@@ -3,6 +3,7 @@ import { TransactionForm } from '@/components/transaction-form'
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
   type AccountRead,
+  type CurrencyRead,
   type EventReadDetailed,
   type TransactionCreate,
   type TransactionRead
@@ -11,6 +12,7 @@ import {
 interface TransactionFabProps {
   accounts: AccountRead[]
   account?: AccountRead
+  currencies: CurrencyRead[]
   events: EventReadDetailed[] | undefined
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -22,6 +24,7 @@ interface TransactionFabProps {
 export function TransactionFab({
   accounts,
   account,
+  currencies,
   events,
   open,
   onOpenChange,
@@ -46,6 +49,7 @@ export function TransactionFab({
         key={editingTransaction?.id ?? 'new'}
         accounts={accounts}
         account={account}
+        currencies={currencies}
         events={events}
         editingTransaction={editingTransaction}
         onSubmit={onSubmit}

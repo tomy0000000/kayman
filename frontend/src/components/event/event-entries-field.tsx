@@ -180,7 +180,7 @@ function EventEntryRow({
       <TableCell>
         <CurrencyAmountInput
           currencies={currencies}
-          currencyCode={entry.currencyCode}
+          currency={currencies.find((c) => c.code === entry.currencyCode)}
           onCurrencyChange={(currencyCode) =>
             onChange({ ...entry, currencyCode })
           }

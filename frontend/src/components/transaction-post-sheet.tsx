@@ -1,15 +1,8 @@
-import { Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 
+import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { KbdForm } from '@/components/kbd-form'
 import { Field, FieldLabel } from '@/components/ui/field'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-  InputGroupText
-} from '@/components/ui/input-group'
 import {
   Sheet,
   SheetContent,
@@ -20,14 +13,16 @@ import { ZonedTimePicker } from '@/components/zoned-time-picker'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
   type AccountRead,
+  type CurrencyRead,
   type TransactionPost,
   type TransactionReadWithBalance
 } from '@/lib/client'
-import { toZonedISOString } from '@/lib/utils'
+import { isAmount, toZonedISOString } from '@/lib/utils'
 
 interface TransactionPostSheetProps {
   transaction: TransactionReadWithBalance | null
   account?: AccountRead
+  currency: CurrencyRead | null | undefined
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (body: TransactionPost) => void
@@ -37,6 +32,7 @@ interface TransactionPostSheetProps {
 export function TransactionPostSheet({
   transaction,
   account,
+  currency,
   open,
   onOpenChange,
   onSubmit,
@@ -49,20 +45,14 @@ export function TransactionPostSheet({
   )
   // The bank may post a different amount than the pending value; pre-fill
   // with the current amount and let the user adjust.
-  const [amount, setAmount] = useState(() =>
-    transaction ? Math.abs(parseFloat(transaction.amount)).toString() : ''
-  )
-  const [negative, setNegative] = useState(
-    () => transaction != null && parseFloat(transaction.amount) < 0
-  )
+  const [amount, setAmount] = useState(() => transaction?.amount ?? '')
 
   // Re-initialize the form whenever a different transaction is picked, while
   // keeping the sheet itself mounted so it can animate open/closed.
   if (transaction && transaction.id !== txnId) {
     setTxnId(transaction.id)
     setPostedAt(toZonedISOString(new Date(), clientTimezone))
-    setAmount(Math.abs(parseFloat(transaction.amount)).toString())
-    setNegative(parseFloat(transaction.amount) < 0)
+    setAmount(transaction.amount)
   }
 
   const timezone = account?.timezone ?? clientTimezone
@@ -70,7 +60,7 @@ export function TransactionPostSheet({
   const handleSubmit = () => {
     onSubmit({
       posted_at: postedAt,
-      amount: negative ? `-${amount}` : amount
+      amount
     })
   }
 
@@ -87,7 +77,7 @@ export function TransactionPostSheet({
         <KbdForm
           onSubmit={handleSubmit}
           isPending={isPending}
-          disabled={amount === ''}
+          disabled={!isAmount(amount)}
           submitLabel="Post"
           submitPendingLabel="Posting..."
         >
@@ -103,33 +93,13 @@ export function TransactionPostSheet({
 
           <Field>
             <FieldLabel htmlFor="post-amount">Amount</FieldLabel>
-            <InputGroup>
-              <InputGroupAddon>
-                <InputGroupButton
-                  size="icon-xs"
-                  aria-pressed={negative}
-                  aria-label={
-                    negative ? 'Make amount positive' : 'Make amount negative'
-                  }
-                  onClick={() => setNegative((v) => !v)}
-                >
-                  {negative ? <Minus /> : <Plus />}
-                </InputGroupButton>
-                <InputGroupText>$</InputGroupText>
-              </InputGroupAddon>
-              <InputGroupInput
-                id="post-amount"
-                type="number"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value.replace(/-/g, ''))}
-                required
-              />
-              <InputGroupAddon align="inline-end">
-                <InputGroupText>{transaction?.currency_code}</InputGroupText>
-              </InputGroupAddon>
-            </InputGroup>
+            <CurrencyAmountInput
+              id="post-amount"
+              amount={amount}
+              onAmountChange={setAmount}
+              currency={currency}
+              required
+            />
           </Field>
         </KbdForm>
       </SheetContent>

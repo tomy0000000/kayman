@@ -1,30 +1,25 @@
-import { Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 
 import { AccountSelect } from '@/components/account-select'
+import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { KbdForm } from '@/components/kbd-form'
 import { LinkEventField } from '@/components/link-event-field'
 import { Field, FieldLabel } from '@/components/ui/field'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-  InputGroupText
-} from '@/components/ui/input-group'
 import { ZonedTimePicker } from '@/components/zoned-time-picker'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
   type AccountRead,
+  type CurrencyRead,
   type EventReadDetailed,
   type TransactionCreate,
   type TransactionRead
 } from '@/lib/client'
-import { toZonedISOString } from '@/lib/utils'
+import { isAmount, toZonedISOString } from '@/lib/utils'
 
 interface TransactionFormProps {
   accounts: AccountRead[]
   account?: AccountRead
+  currencies: CurrencyRead[]
   events: EventReadDetailed[] | undefined
   editingTransaction: TransactionRead | null
   onSubmit: (body: TransactionCreate) => void
@@ -34,6 +29,7 @@ interface TransactionFormProps {
 export function TransactionForm({
   accounts,
   account,
+  currencies,
   events,
   editingTransaction,
   onSubmit,
@@ -42,10 +38,7 @@ export function TransactionForm({
   const { timezone: clientTimezone } = useClientTimezone()
   const isEditing = editingTransaction != null
   const [amount, setAmount] = useState(() =>
-    isEditing ? Math.abs(parseFloat(editingTransaction.amount)).toString() : ''
-  )
-  const [negative, setNegative] = useState(() =>
-    isEditing ? parseFloat(editingTransaction.amount) < 0 : false
+    isEditing ? editingTransaction.amount : ''
   )
   const [pickedAccount, setPickedAccount] = useState<AccountRead | null>(null)
   const [createdAt, setCreatedAt] = useState(() =>
@@ -59,12 +52,15 @@ export function TransactionForm({
 
   // A user pick wins; otherwise fall back to the account passed in.
   const selectedAccount = pickedAccount ?? account ?? null
+  const currency = currencies.find(
+    (c) => c.code === selectedAccount?.currency_code
+  )
 
   const handleSubmit = () => {
     if (selectedAccount == null) return
     onSubmit({
       account_id: selectedAccount.id,
-      amount: negative ? `-${amount}` : amount,
+      amount,
       created_at: createdAt,
       event_id: eventId
     })
@@ -74,7 +70,7 @@ export function TransactionForm({
     <KbdForm
       onSubmit={handleSubmit}
       isPending={isPending}
-      disabled={selectedAccount == null || amount === ''}
+      disabled={selectedAccount == null || !isAmount(amount)}
       isEditing={isEditing}
     >
       <Field>
@@ -89,33 +85,13 @@ export function TransactionForm({
 
       <Field>
         <FieldLabel htmlFor="txn-amount">Amount</FieldLabel>
-        <InputGroup>
-          <InputGroupAddon>
-            <InputGroupButton
-              size="icon-xs"
-              aria-pressed={negative}
-              aria-label={
-                negative ? 'Make amount positive' : 'Make amount negative'
-              }
-              onClick={() => setNegative((v) => !v)}
-            >
-              {negative ? <Minus /> : <Plus />}
-            </InputGroupButton>
-            <InputGroupText>$</InputGroupText>
-          </InputGroupAddon>
-          <InputGroupInput
-            id="txn-amount"
-            type="number"
-            inputMode="decimal"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/-/g, ''))}
-            required
-          />
-          <InputGroupAddon align="inline-end">
-            <InputGroupText>{selectedAccount?.currency_code}</InputGroupText>
-          </InputGroupAddon>
-        </InputGroup>
+        <CurrencyAmountInput
+          id="txn-amount"
+          amount={amount}
+          onAmountChange={setAmount}
+          currency={currency}
+          required
+        />
       </Field>
 
       <Field>

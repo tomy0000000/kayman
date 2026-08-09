@@ -10,6 +10,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// The amount input is free text, so a half-typed value like `-` or `.` reads as
+// non-empty while being unparseable.
+export function isAmount(value: string): boolean {
+  return value !== '' && !Number.isNaN(Number(value))
+}
+
 export function formatCurrency(amount: number, currencyCode: string): string {
   return new Intl.NumberFormat(browserLocale, {
     style: 'currency',
