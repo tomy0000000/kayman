@@ -32,13 +32,12 @@ const TIMEZONE_GROUPS: TimezoneGroup[] = (() => {
   const byArea = new Map<string, (TimezoneOption & { offset: number })[]>()
   for (const tz of Intl.supportedValuesOf('timeZone')) {
     const area = tz.split('/')[0]
-    const gmt = gmtLabel(tz)
     const city = tz.split('/').pop()?.replace(/_/g, ' ') ?? tz
     const items = byArea.get(area) ?? []
     items.push({
       value: tz,
-      label: `(${gmt}) ${city}`,
-      offset: offsetMinutes(gmt)
+      label: `(${gmtLabel(tz)}) ${city}`,
+      offset: offsetMinutes(tz)
     })
     byArea.set(area, items)
   }

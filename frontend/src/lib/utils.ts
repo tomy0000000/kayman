@@ -43,20 +43,17 @@ export function formatTime(value: string | Date, timeZone: string): string {
 }
 
 // Short rendering of the instant `date` as seen in `timeZone` (a IANA name),
-// e.g. "Jul 1 11:00" (no year, no seconds). For display only; use
+// e.g. "Jul 1, 11:00" (no year, no seconds). For display only, use
 // `toZonedISOString` for anything that goes to the API.
 export function formatZonedDateTime(date: Date, timeZone: string): string {
-  const parts = new Intl.DateTimeFormat(browserLocale, {
+  return date.toLocaleString(browserLocale, {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
     timeZone
-  }).formatToParts(date)
-  const get = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((p) => p.type === type)?.value ?? ''
-  return `${get('month')} ${get('day')} ${get('hour')}:${get('minute')}`
+  })
 }
 
 // The instant `date` read as a wall clock in `timeZone`. Every wall-clock read
@@ -85,14 +82,11 @@ export function parseLocalDate(value: string): Date {
   return new Date(y, m - 1, d)
 }
 
-export function pad(n: number) {
-  return String(n).padStart(2, '0')
-}
-
 // "HH:MM:SS" of the instant `date` as read in `timeZone`.
 export function formatTimePart(date: Date, timeZone: string) {
-  const { hour, minute, second } = zoned(date, timeZone)
-  return `${pad(hour)}:${pad(minute)}:${pad(second)}`
+  return zoned(date, timeZone)
+    .toPlainTime()
+    .toString({ smallestUnit: 'second' })
 }
 
 // react-day-picker and date-fns read a Date's Y/M/D with browser-local getters,
@@ -159,9 +153,9 @@ export function gmtLabel(timeZone: string): string {
   return name ?? 'GMT'
 }
 
-export function offsetMinutes(gmt: string): number {
-  const match = gmt.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/)
-  if (!match) return 0
-  const sign = match[1] === '-' ? -1 : 1
-  return sign * (Number(match[2]) * 60 + Number(match[3] ?? 0))
+// The zone's current offset from UTC, in minutes.
+export function offsetMinutes(timeZone: string): number {
+  return (
+    Temporal.Now.zonedDateTimeISO(timeZone).offsetNanoseconds / 60_000_000_000
+  )
 }
