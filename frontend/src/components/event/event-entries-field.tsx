@@ -1,10 +1,11 @@
-import { GripVertical, Receipt, X } from 'lucide-react'
+import { Receipt, X } from 'lucide-react'
 import { Reorder, useDragControls } from 'motion/react'
 import { type RefObject, useRef } from 'react'
 
 import { CategoryCombobox } from '@/components/category-combobox'
 import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { DescriptionPopover } from '@/components/description-popover'
+import { DragHandle } from '@/components/drag-handle'
 import { Button } from '@/components/ui/button'
 import {
   Empty,
@@ -157,18 +158,7 @@ function EventEntryRow({
       className="relative border-b bg-background"
     >
       <TableCell className="px-0">
-        <span
-          aria-label="Drag to reorder"
-          className="flex cursor-grab touch-none items-center text-muted-foreground select-none active:cursor-grabbing"
-          // Suppress the compatibility mousedown, which would otherwise start a
-          // text selection that follows the drag across the page.
-          onPointerDown={(e) => {
-            e.preventDefault()
-            dragControls.start(e)
-          }}
-        >
-          <GripVertical className="size-4" />
-        </span>
+        <DragHandle dragControls={dragControls} />
       </TableCell>
       <TableCell>
         <CategoryCombobox

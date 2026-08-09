@@ -1,9 +1,10 @@
-import { GripVertical, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Reorder, useDragControls } from 'motion/react'
 import { type RefObject, useRef } from 'react'
 
 import { AccountSelect } from '@/components/account-select'
 import { CurrencyAmountInput } from '@/components/currency-amount-input'
+import { DragHandle } from '@/components/drag-handle'
 import { type SelectedTransaction } from '@/components/link-transactions-table'
 import { TransactionEmpty } from '@/components/transaction/transaction-empty'
 import { TransactionsLinkDialog } from '@/components/transaction/transactions-link-dialog'
@@ -157,18 +158,7 @@ function TransactionRow({
       className="relative border-b bg-background"
     >
       <TableCell className="px-0">
-        <span
-          aria-label="Drag to reorder"
-          className="flex cursor-grab touch-none items-center text-muted-foreground select-none active:cursor-grabbing"
-          // Suppress the compatibility mousedown, which would otherwise start a
-          // text selection that follows the drag across the page.
-          onPointerDown={(e) => {
-            e.preventDefault()
-            dragControls.start(e)
-          }}
-        >
-          <GripVertical className="size-4" />
-        </span>
+        <DragHandle dragControls={dragControls} />
       </TableCell>
       <TableCell>
         <AccountSelect
