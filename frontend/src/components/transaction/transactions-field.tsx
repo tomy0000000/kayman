@@ -1,12 +1,12 @@
-import { X } from 'lucide-react'
+import { ArrowLeftRight, X } from 'lucide-react'
 import { Reorder, useDragControls } from 'motion/react'
 import { type RefObject, useRef } from 'react'
 
 import { AccountSelect } from '@/components/account-select'
 import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { DragHandle } from '@/components/drag-handle'
+import { FieldEmpty } from '@/components/field-empty'
 import { type SelectedTransaction } from '@/components/link-transactions-table'
-import { TransactionEmpty } from '@/components/transaction/transaction-empty'
 import { TransactionsLinkDialog } from '@/components/transaction/transactions-link-dialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -90,7 +90,15 @@ export function TransactionsField({
   )
 
   if (value.length === 0) {
-    return <TransactionEmpty>{actions}</TransactionEmpty>
+    return (
+      <FieldEmpty
+        icon={ArrowLeftRight}
+        title="No transactions"
+        description="Record the money movement behind this event."
+      >
+        {actions}
+      </FieldEmpty>
+    )
   }
 
   return (

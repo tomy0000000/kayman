@@ -2,6 +2,7 @@ import { Link2, X } from 'lucide-react'
 import { useState } from 'react'
 
 import { EventTypeBadge } from '@/components/event/event-type-badge'
+import { FieldEmpty } from '@/components/field-empty'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -13,14 +14,6 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle
-} from '@/components/ui/empty'
 import {
   Item,
   ItemActions,
@@ -108,24 +101,17 @@ export function LinkEventField({
           </ItemContent>
         </Item>
       ) : (
-        <Empty className="border border-dashed py-8">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Link2 />
-            </EmptyMedia>
-            <EmptyTitle>No event linked</EmptyTitle>
-            <EmptyDescription>
-              Link an event to this transaction.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <DialogTrigger asChild>
-              <Button type="button" variant="outline" size="sm">
-                Link event
-              </Button>
-            </DialogTrigger>
-          </EmptyContent>
-        </Empty>
+        <FieldEmpty
+          icon={Link2}
+          title="No event linked"
+          description="Link an event to this transaction."
+        >
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline" size="sm">
+              Link event
+            </Button>
+          </DialogTrigger>
+        </FieldEmpty>
       )}
 
       <DialogContent className="min-w-sm sm:min-w-sm sm:max-w-[min(calc(100%-2rem),48rem)]">

@@ -6,15 +6,8 @@ import { CategoryCombobox } from '@/components/category-combobox'
 import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { DescriptionPopover } from '@/components/description-popover'
 import { DragHandle } from '@/components/drag-handle'
+import { FieldEmpty } from '@/components/field-empty'
 import { Button } from '@/components/ui/button'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle
-} from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
 import {
   Table,
@@ -75,22 +68,15 @@ export function EventEntriesField({
 
   if (value.length === 0) {
     return (
-      <Empty className="border border-dashed py-8">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <Receipt />
-          </EmptyMedia>
-          <EmptyTitle>No entries</EmptyTitle>
-          <EmptyDescription>
-            Itemize this event with one or more entries.
-          </EmptyDescription>
-        </EmptyHeader>
-        <EmptyContent>
-          <Button type="button" variant="outline" size="sm" onClick={addEntry}>
-            Add entry
-          </Button>
-        </EmptyContent>
-      </Empty>
+      <FieldEmpty
+        icon={Receipt}
+        title="No entries"
+        description="Itemize this event with one or more entries."
+      >
+        <Button type="button" variant="outline" size="sm" onClick={addEntry}>
+          Add entry
+        </Button>
+      </FieldEmpty>
     )
   }
 
