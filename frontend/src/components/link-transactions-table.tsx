@@ -31,6 +31,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
   type AccountRead,
   type TransactionRead,
@@ -118,6 +119,7 @@ export function LinkTransactionsTable({
   selection,
   onSelectionChange
 }: LinkTransactionsTableProps) {
+  const { timezone } = useClientTimezone()
   const [selectedAccount, setSelectedAccount] = useState<AccountRead | null>(
     null
   )
@@ -144,7 +146,7 @@ export function LinkTransactionsTable({
       {
         accessorKey: 'created_at',
         header: 'Created',
-        cell: ({ row }) => formatDateTime(row.original.created_at)
+        cell: ({ row }) => formatDateTime(row.original.created_at, timezone)
       },
       {
         accessorKey: 'amount',
@@ -165,7 +167,7 @@ export function LinkTransactionsTable({
         )
       }
     ],
-    [currencyCode]
+    [currencyCode, timezone]
   )
 
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])

@@ -31,10 +31,11 @@ export function endExclusive(date: Date | undefined): string | null {
   return next.toISOString()
 }
 
-export function formatDateTime(value: string | Date): string {
+export function formatDateTime(value: string | Date, timeZone: string): string {
   return new Date(value).toLocaleString(browserLocale, {
     dateStyle: 'medium',
-    timeStyle: 'short'
+    timeStyle: 'short',
+    timeZone
   })
 }
 

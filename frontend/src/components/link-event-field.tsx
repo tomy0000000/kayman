@@ -29,6 +29,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
 import type { EventReadDetailed } from '@/lib/client'
 import { formatDateTime } from '@/lib/utils'
 
@@ -50,6 +51,7 @@ export function LinkEventField({
   eventId,
   onChange
 }: LinkEventFieldProps) {
+  const { timezone } = useClientTimezone()
   const [selection, setSelection] = useState<EventReadDetailed | null>(null)
 
   const linkedEvent = events?.find((event) => event.id === eventId) ?? null
@@ -73,7 +75,7 @@ export function LinkEventField({
                 {linkedEvent.description || 'No description'}
               </ItemTitle>
               <ItemDescription>
-                {formatDateTime(linkedEvent.timestamp)}
+                {formatDateTime(linkedEvent.timestamp, timezone)}
               </ItemDescription>
             </ItemContent>
             <ItemActions>
@@ -152,6 +154,8 @@ function LinkEventTable({
   selection,
   onSelectionChange
 }: LinkEventTableProps) {
+  const { timezone } = useClientTimezone()
+
   const toggleEvent = (event: EventReadDetailed) =>
     onSelectionChange(selection?.id === event.id ? null : event)
 
@@ -178,7 +182,9 @@ function LinkEventTable({
                   <EventTypeBadge type={event.type} />
                 </TableCell>
                 <TableCell>{event.description}</TableCell>
-                <TableCell>{formatDateTime(event.timestamp)}</TableCell>
+                <TableCell>
+                  {formatDateTime(event.timestamp, timezone)}
+                </TableCell>
               </TableRow>
             ))
           ) : (
