@@ -24,16 +24,15 @@ import {
 } from '@/components/ui/table'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import type {
-  AccountRead,
   CategoryReadWithChildren,
-  EventReadDetailed
+  EventReadDetailed,
+  TransactionRead
 } from '@/lib/client'
 import { buildCategoryNameMap } from '@/lib/types'
 import { formatCurrency, formatTime } from '@/lib/utils'
 
 interface EventsTableProps {
   events: EventReadDetailed[] | undefined
-  accounts: AccountRead[]
   categories: CategoryReadWithChildren[]
   isPending: boolean
   onEventEdit?: (event: EventReadDetailed) => void
@@ -45,7 +44,6 @@ const EMPTY_EVENTS: EventReadDetailed[] = []
 
 export function EventsTable({
   events,
-  accounts,
   categories,
   isPending,
   onEventEdit
@@ -55,21 +53,15 @@ export function EventsTable({
     () => buildCategoryNameMap(categories),
     [categories]
   )
-  const accountCurrencies = useMemo(
-    () =>
-      new Map(accounts.map((account) => [account.id, account.currency_code])),
-    [accounts]
-  )
 
   const columns = useMemo<ColumnDef<EventReadDetailed>[]>(() => {
-    // A transaction's currency is its account's currency (transactions carry no
-    // currency of their own). Formats the magnitude; falls back to the raw
-    // number until accounts have loaded.
-    const formatTransaction = (accountId: number, amount: string) => {
-      const currency = accountCurrencies.get(accountId)
-      const value = Math.abs(Number(amount))
-      return currency ? formatCurrency(value, currency) : String(value)
-    }
+    // A transaction's currency is its account's currency, already denormalized
+    // onto the row as `currency_code` by the backend.
+    const formatTransaction = (transaction: TransactionRead) =>
+      formatCurrency(
+        Math.abs(Number(transaction.amount)),
+        transaction.currency_code
+      )
 
     const renderAmount = (event: EventReadDetailed) => {
       if (event.type === 'Expense' || event.type === 'Income') {
@@ -87,15 +79,11 @@ export function EventsTable({
       }
       if (event.type === 'Transfer') {
         const [transaction] = event.transactions
-        return transaction
-          ? formatTransaction(transaction.account_id, transaction.amount)
-          : '—'
+        return transaction ? formatTransaction(transaction) : '—'
       }
       // Exchange: each leg in its own account's currency.
       return event.transactions
-        .map((transaction) =>
-          formatTransaction(transaction.account_id, transaction.amount)
-        )
+        .map((transaction) => formatTransaction(transaction))
         .join(' / ')
     }
 
@@ -145,7 +133,7 @@ export function EventsTable({
         )
       }
     ]
-  }, [categoryNames, accountCurrencies, timezone])
+  }, [categoryNames, timezone])
 
   // TanStack Table manages its own memoization; the React Compiler bail-out
   // for `useReactTable` is expected and safe here.

@@ -167,7 +167,6 @@ function HomePage() {
         <div className="w-full">
           <EventsTable
             events={events}
-            accounts={accounts ?? []}
             categories={categories ?? []}
             isPending={isPending}
             onEventEdit={handleEventClick}
