@@ -26,7 +26,12 @@ import {
 import { syncEventEntries } from '@/lib/event-entries'
 import { hasEventChanges, syncEventTransactions } from '@/lib/events'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
-import { parseLocalDate, zonedCalendarDate, zonedDayRange } from '@/lib/utils'
+import {
+  formatCalendarDate,
+  parseLocalDate,
+  zonedCalendarDate,
+  zonedDayRange
+} from '@/lib/utils'
 
 const searchSchema = z.object({
   date: z.iso.date().optional()
@@ -51,7 +56,7 @@ function HomePage() {
 
   const handleDateSelect = (next: Date | undefined) => {
     setDate(next)
-    navigate({ search: { date: next?.toLocaleDateString('en-CA') } })
+    navigate({ search: { date: next && formatCalendarDate(next) } })
   }
   // The picked day is read in the client timezone, so its bounds are that day's
   // midnight and the next day's midnight there, sent as UTC instants.

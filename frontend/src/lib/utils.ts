@@ -76,10 +76,26 @@ export function toZonedISOString(date: Date, timeZone: string) {
 }
 
 // Parse a "YYYY-MM-DD" string into a Date at local midnight (inverse of
-// `toLocaleDateString('en-CA')`). Avoids the UTC shift of `new Date(value)`.
+// `formatCalendarDate`). Avoids the UTC shift of `new Date(value)`.
 export function parseLocalDate(value: string): Date {
   const [y = 0, m = 1, d = 1] = value.split('-').map(Number)
   return new Date(y, m - 1, d)
+}
+
+// The calendar day a `zonedCalendarDate` stand-in names, read back through the
+// same browser-local getters that produced it.
+function calendarPlainDate(picked: Date) {
+  return Temporal.PlainDate.from({
+    year: picked.getFullYear(),
+    month: picked.getMonth() + 1,
+    day: picked.getDate()
+  })
+}
+
+// "YYYY-MM-DD" for the day a `zonedCalendarDate` stand-in names, the inverse of
+// `parseLocalDate`. This is the form the `date` search param takes.
+export function formatCalendarDate(picked: Date): string {
+  return calendarPlainDate(picked).toString()
 }
 
 // "HH:MM:SS" of the instant `date` as read in `timeZone`.
@@ -101,11 +117,7 @@ export function zonedCalendarDate(date: Date, timeZone: string) {
 // `zonedCalendarDate` stand-in), as that day runs in `timeZone`. Aug 5 in
 // Taipei is [2026-08-04T16:00Z, 2026-08-05T16:00Z).
 export function zonedDayRange(picked: Date, timeZone: string) {
-  const start = Temporal.PlainDate.from({
-    year: picked.getFullYear(),
-    month: picked.getMonth() + 1,
-    day: picked.getDate()
-  }).toZonedDateTime(timeZone)
+  const start = calendarPlainDate(picked).toZonedDateTime(timeZone)
   return {
     start: new Date(start.epochMilliseconds).toISOString(),
     end: new Date(start.add({ days: 1 }).epochMilliseconds).toISOString()

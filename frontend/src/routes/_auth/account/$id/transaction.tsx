@@ -34,7 +34,11 @@ import {
 import { syncEventEntries } from '@/lib/event-entries'
 import { syncEventTransactions } from '@/lib/events'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
-import { zonedCalendarDate, zonedDayRange } from '@/lib/utils'
+import {
+  formatCalendarDate,
+  zonedCalendarDate,
+  zonedDayRange
+} from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/account/$id/transaction')({
   component: AccountTransactionPage
@@ -222,7 +226,7 @@ function AccountTransactionPage() {
             )
             navigate({
               to: '/',
-              search: { date: day.toLocaleDateString('en-CA') }
+              search: { date: formatCalendarDate(day) }
             })
           }}
         />
