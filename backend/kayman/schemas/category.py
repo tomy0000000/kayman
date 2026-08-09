@@ -39,3 +39,12 @@ class CategoryRead(CategoryBase):
 
 class CategoryReadWithChildren(CategoryRead):
     sub_categories: list["CategoryReadWithChildren"] | None = None
+
+
+class CategoryUpdate(SQLModel):
+    id: int
+    name: str | None = None
+    description: str | None = None
+    disabled: bool | None = None
+    parent_id: int | None = None
+    index: int | None = Field(default=None, ge=0)
