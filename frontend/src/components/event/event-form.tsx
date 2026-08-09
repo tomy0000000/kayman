@@ -118,6 +118,7 @@ export function EventForm({
         id: transaction.id,
         account_id: transaction.accountId as number,
         amount: transaction.amount,
+        tag_ids: transaction.tagIds,
         index
       })),
       entries.map((entry, index) => ({

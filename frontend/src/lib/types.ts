@@ -30,6 +30,7 @@ export type TransactionDraft = {
   id: number | null
   accountId: number | null
   amount: string
+  tagIds: number[]
 }
 
 // What the event form hands back per transaction row, once the row is complete.
@@ -37,6 +38,7 @@ export type TransactionPayload = {
   id: number | null
   account_id: number
   amount: string
+  tag_ids: number[]
   index: number
 }
 
@@ -63,12 +65,14 @@ export function toTransactionDraft(transaction: {
   id: number
   account_id: number
   amount: string
+  tags?: { id: number }[]
 }): TransactionDraft {
   return {
     key: String(transaction.id),
     id: transaction.id,
     accountId: transaction.account_id,
-    amount: transaction.amount
+    amount: transaction.amount,
+    tagIds: (transaction.tags ?? []).map(({ id }) => id)
   }
 }
 

@@ -31,6 +31,13 @@ export function hasEventChanges(body: EventCreate, event: EventReadDetailed) {
   )
 }
 
+// Whether a row's tags match the ones it already carries, ignoring order.
+function sameTagIds(next: number[], previous: { id: number }[]) {
+  if (next.length !== previous.length) return false
+  const nextIds = new Set(next)
+  return previous.every(({ id }) => nextIds.has(id))
+}
+
 // Reconcile an event's transactions with the rows the form submitted: existing
 // rows are patched onto the event, dropped rows are unlinked (the API has no
 // delete), and new rows are created.
@@ -57,20 +64,24 @@ export async function syncEventTransactions({
       !previous ||
       previous.account_id !== transaction.account_id ||
       previous.amount !== transaction.amount ||
-      (previous.index ?? null) !== transaction.index
+      (previous.index ?? null) !== transaction.index ||
+      !sameTagIds(transaction.tag_ids, previous.tags ?? [])
     )
   })
   if (changed || unlinked.length > 0) {
     await updateTransactions({
       client,
       body: [
-        ...existing.map(({ id, account_id, amount, index }) => ({
+        ...existing.map(({ id, account_id, amount, tag_ids, index }) => ({
           id: id as number,
           account_id,
           amount,
+          tag_ids,
           index,
           event_id: eventId
         })),
+        // Unlinked rows keep their tags: omitting `tag_ids` leaves them alone,
+        // where `[]` would clear them.
         ...unlinked.map(({ id }) => ({ id, event_id: null }))
       ],
       throwOnError: true
@@ -79,7 +90,7 @@ export async function syncEventTransactions({
 
   // Created one at a time: the API has no batch create, and the account balance
   // is server-derived, so concurrent creates on one account would race.
-  for (const { account_id, amount, index } of transactions.filter(
+  for (const { account_id, amount, tag_ids, index } of transactions.filter(
     ({ id }) => id == null
   )) {
     await createTransaction({
@@ -87,6 +98,7 @@ export async function syncEventTransactions({
       body: {
         account_id,
         amount,
+        tag_ids,
         index,
         event_id: eventId,
         created_at: createdAt

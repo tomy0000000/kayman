@@ -52,7 +52,7 @@ export function TransactionsField({
   const addTransaction = () =>
     onChange([
       ...value,
-      { key: componentKey(), id: null, accountId: null, amount: '' }
+      { key: componentKey(), id: null, accountId: null, amount: '', tagIds: [] }
     ])
 
   const linkTransactions = (selection: SelectedTransaction[]) => {
