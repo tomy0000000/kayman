@@ -143,13 +143,24 @@ function HomePage() {
     meta: { errorMessage: 'Failed to fetch events' }
   })
 
-  const { data: accounts } = useQuery(readAccountsOptions())
+  // Back the FAB's form fields, so only fetched once the sheet opens.
+  const { data: accounts } = useQuery({
+    ...readAccountsOptions(),
+    enabled: fabOpen
+  })
 
+  const { data: currencies } = useQuery({
+    ...readCurrenciesOptions(),
+    enabled: fabOpen
+  })
+
+  const { data: transactionTags } = useQuery({
+    ...readTransactionTagsOptions(),
+    enabled: fabOpen
+  })
+
+  // Categories back both the FAB and the table's summary column.
   const { data: categories } = useQuery(readCategoriesOptions())
-
-  const { data: currencies } = useQuery(readCurrenciesOptions())
-
-  const { data: transactionTags } = useQuery(readTransactionTagsOptions())
 
   return (
     <>
