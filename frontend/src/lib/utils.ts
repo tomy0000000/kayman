@@ -23,14 +23,6 @@ export function formatCurrency(amount: number, currencyCode: string): string {
   }).format(amount)
 }
 
-// `end` is exclusive (half-open interval), so callers pass the start of the day
-// after the picked end date to include all transactions on that day.
-export function endExclusive(date: Date | undefined): string | null {
-  if (!date) return null
-  const next = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
-  return next.toISOString()
-}
-
 export function formatDateTime(value: string | Date, timeZone: string): string {
   return new Date(value).toLocaleString(browserLocale, {
     dateStyle: 'medium',

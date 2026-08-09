@@ -34,7 +34,7 @@ import {
 import { syncEventEntries } from '@/lib/event-entries'
 import { syncEventTransactions } from '@/lib/events'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
-import { endExclusive, zonedCalendarDate } from '@/lib/utils'
+import { zonedCalendarDate, zonedDayRange } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/account/$id/transaction')({
   component: AccountTransactionPage
@@ -146,8 +146,10 @@ function AccountTransactionPage() {
     })
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
-  const start = dateRange?.from?.toISOString() ?? null
-  const end = endExclusive(dateRange?.to)
+  const start = dateRange?.from
+    ? zonedDayRange(dateRange.from, timezone).start
+    : null
+  const end = dateRange?.to ? zonedDayRange(dateRange.to, timezone).end : null
 
   const { data: account } = useQuery({
     ...readAccountOptions({ path: { account_id: accountId } }),
