@@ -22,9 +22,9 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { type TransactionReadWithBalance } from '@/lib/client'
-import { BROWSER_TIMEZONE } from '@/lib/constants'
-import { formatCurrency, formatTime } from '@/lib/utils'
+import { formatCurrency, formatDate, formatTime } from '@/lib/utils'
 
 interface TransactionsTableProps {
   transactions: TransactionReadWithBalance[] | undefined
@@ -49,6 +49,8 @@ export function TransactionsTable({
   onTransactionCreateEvent,
   onTransactionGoToEvent
 }: TransactionsTableProps) {
+  const { timezone } = useClientTimezone()
+
   const columns = useMemo<ColumnDef<TransactionReadWithBalance>[]>(
     () => [
       {
@@ -57,10 +59,10 @@ export function TransactionsTable({
         // Only render the date when it changes from the previous row, so
         // consecutive transactions on the same day read as one group.
         cell: ({ row, table }) => {
-          const date = new Date(row.original.created_at).toLocaleDateString()
+          const date = formatDate(row.original.created_at, timezone)
           const prev = table.getRowModel().rows[row.index - 1]
           const prevDate = prev
-            ? new Date(prev.original.created_at).toLocaleDateString()
+            ? formatDate(prev.original.created_at, timezone)
             : null
           return date === prevDate ? '' : date
         }
@@ -68,7 +70,7 @@ export function TransactionsTable({
       {
         id: 'time',
         header: 'Time',
-        cell: ({ row }) => formatTime(row.original.created_at, BROWSER_TIMEZONE)
+        cell: ({ row }) => formatTime(row.original.created_at, timezone)
       },
       {
         accessorKey: 'description',
@@ -114,7 +116,7 @@ export function TransactionsTable({
         )
       }
     ],
-    [currencyCode]
+    [currencyCode, timezone]
   )
 
   // TanStack Table manages its own memoization; the React Compiler bail-out

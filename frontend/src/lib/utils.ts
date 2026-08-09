@@ -39,6 +39,10 @@ export function formatDateTime(value: string | Date, timeZone: string): string {
   })
 }
 
+export function formatDate(value: string | Date, timeZone: string): string {
+  return new Date(value).toLocaleDateString(browserLocale, { timeZone })
+}
+
 export function formatTime(value: string | Date, timeZone: string): string {
   return new Date(value).toLocaleTimeString(browserLocale, {
     timeStyle: 'short',
