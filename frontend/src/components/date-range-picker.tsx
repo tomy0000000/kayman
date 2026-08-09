@@ -28,7 +28,8 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn, isSameRange } from '@/lib/utils'
+import { useClientTimezone } from '@/hooks/use-client-timezone'
+import { cn, isSameRange, zonedCalendarDate } from '@/lib/utils'
 
 interface DatePickerWithRangeProps {
   dateRange: DateRange | undefined
@@ -37,59 +38,44 @@ interface DatePickerWithRangeProps {
 
 interface Preset {
   label: string
-  getRange: () => DateRange
+  getRange: (today: Date) => DateRange
 }
 
 const PRESETS: Preset[] = [
   {
     label: 'Today',
-    getRange: () => {
-      const today = new Date()
-      return { from: today, to: today }
-    }
+    getRange: (today) => ({ from: today, to: today })
   },
   {
     label: 'Yesterday',
-    getRange: () => {
-      const yesterday = subDays(new Date(), 1)
+    getRange: (today) => {
+      const yesterday = subDays(today, 1)
       return { from: yesterday, to: yesterday }
     }
   },
   {
     label: 'Last 7 days',
-    getRange: () => {
-      const today = new Date()
-      return { from: subDays(today, 6), to: today }
-    }
+    getRange: (today) => ({ from: subDays(today, 6), to: today })
   },
   {
     label: 'Last 30 days',
-    getRange: () => {
-      const today = new Date()
-      return { from: subDays(today, 29), to: today }
-    }
+    getRange: (today) => ({ from: subDays(today, 29), to: today })
   },
   {
     label: 'Last 90 days',
-    getRange: () => {
-      const today = new Date()
-      return { from: subDays(today, 89), to: today }
-    }
+    getRange: (today) => ({ from: subDays(today, 89), to: today })
   },
   {
     label: 'This week',
-    getRange: () => {
-      const today = new Date()
-      return {
-        from: startOfWeek(today, { weekStartsOn: 1 }),
-        to: endOfWeek(today, { weekStartsOn: 1 })
-      }
-    }
+    getRange: (today) => ({
+      from: startOfWeek(today, { weekStartsOn: 1 }),
+      to: endOfWeek(today, { weekStartsOn: 1 })
+    })
   },
   {
     label: 'Last week',
-    getRange: () => {
-      const lastWeek = subWeeks(new Date(), 1)
+    getRange: (today) => {
+      const lastWeek = subWeeks(today, 1)
       return {
         from: startOfWeek(lastWeek, { weekStartsOn: 1 }),
         to: endOfWeek(lastWeek, { weekStartsOn: 1 })
@@ -98,36 +84,33 @@ const PRESETS: Preset[] = [
   },
   {
     label: 'Month to date',
-    getRange: () => {
-      const today = new Date()
-      return { from: startOfMonth(today), to: today }
-    }
+    getRange: (today) => ({ from: startOfMonth(today), to: today })
   },
   {
     label: 'This month',
-    getRange: () => {
-      const today = new Date()
-      return { from: startOfMonth(today), to: endOfMonth(today) }
-    }
+    getRange: (today) => ({
+      from: startOfMonth(today),
+      to: endOfMonth(today)
+    })
   },
   {
     label: 'Last month',
-    getRange: () => {
-      const lastMonth = subMonths(new Date(), 1)
+    getRange: (today) => {
+      const lastMonth = subMonths(today, 1)
       return { from: startOfMonth(lastMonth), to: endOfMonth(lastMonth) }
     }
   },
   {
     label: 'This quarter',
-    getRange: () => {
-      const today = new Date()
-      return { from: startOfQuarter(today), to: endOfQuarter(today) }
-    }
+    getRange: (today) => ({
+      from: startOfQuarter(today),
+      to: endOfQuarter(today)
+    })
   },
   {
     label: 'Last quarter',
-    getRange: () => {
-      const lastQuarter = subQuarters(new Date(), 1)
+    getRange: (today) => {
+      const lastQuarter = subQuarters(today, 1)
       return {
         from: startOfQuarter(lastQuarter),
         to: endOfQuarter(lastQuarter)
@@ -136,24 +119,21 @@ const PRESETS: Preset[] = [
   },
   {
     label: 'This year',
-    getRange: () => {
-      const today = new Date()
-      return { from: startOfYear(today), to: endOfYear(today) }
-    }
+    getRange: (today) => ({
+      from: startOfYear(today),
+      to: endOfYear(today)
+    })
   },
   {
     label: 'Last year',
-    getRange: () => {
-      const lastYear = subYears(new Date(), 1)
+    getRange: (today) => {
+      const lastYear = subYears(today, 1)
       return { from: startOfYear(lastYear), to: endOfYear(lastYear) }
     }
   },
   {
     label: 'Year to date',
-    getRange: () => {
-      const today = new Date()
-      return { from: startOfYear(today), to: today }
-    }
+    getRange: (today) => ({ from: startOfYear(today), to: today })
   }
 ]
 
@@ -161,7 +141,10 @@ export function DatePickerWithRange({
   dateRange,
   setDateRange
 }: DatePickerWithRangeProps) {
+  const { timezone } = useClientTimezone()
   const [open, setOpen] = useState(false)
+
+  const today = zonedCalendarDate(new Date(), timezone)
 
   return (
     <Field className="w-60 shrink-0">
@@ -202,7 +185,7 @@ export function DatePickerWithRange({
           <ScrollArea className="absolute! inset-y-0 right-0 w-36 border-l">
             <div className="flex flex-col gap-0.5 p-2">
               {PRESETS.map((preset) => {
-                const range = preset.getRange()
+                const range = preset.getRange(today)
                 const active = isSameRange(dateRange, range)
                 return (
                   <Button
