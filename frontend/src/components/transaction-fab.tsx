@@ -1,6 +1,5 @@
 import { FabSheet } from '@/components/fab-sheet'
 import { TransactionForm } from '@/components/transaction-form'
-import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
   type AccountRead,
   type CurrencyRead,
@@ -38,12 +37,8 @@ export function TransactionFab({
       onOpenChange={onOpenChange}
       hotkey="n"
       label="New transaction"
+      title={editingTransaction ? 'Edit transaction' : 'New transaction'}
     >
-      <SheetHeader>
-        <SheetTitle>
-          {editingTransaction ? 'Edit transaction' : 'New transaction'}
-        </SheetTitle>
-      </SheetHeader>
       {/* Keyed so the form re-initializes from the picked transaction. */}
       <TransactionForm
         key={editingTransaction?.id ?? 'new'}

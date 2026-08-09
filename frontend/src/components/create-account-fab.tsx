@@ -1,6 +1,5 @@
 import { CreateAccountForm } from '@/components/create-account-form'
 import { FabSheet } from '@/components/fab-sheet'
-import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { type AccountCreate, type CurrencyRead } from '@/lib/client'
 
 interface CreateAccountFabProps {
@@ -24,11 +23,8 @@ export function CreateAccountFab({
       onOpenChange={onOpenChange}
       hotkey="n"
       label="New account"
+      title="New account"
     >
-      <SheetHeader>
-        <SheetTitle>New account</SheetTitle>
-      </SheetHeader>
-
       <CreateAccountForm
         currencies={currencies}
         onSubmit={onSubmit}

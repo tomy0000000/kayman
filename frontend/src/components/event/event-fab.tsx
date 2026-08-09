@@ -1,6 +1,5 @@
 import { EventForm } from '@/components/event/event-form'
 import { FabSheet } from '@/components/fab-sheet'
-import { SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
   type AccountRead,
   type CategoryReadWithChildren,
@@ -41,11 +40,9 @@ export function EventFab({
       onOpenChange={onOpenChange}
       hotkey="n"
       label="New event"
+      title={editingEvent ? 'Edit event' : 'New event'}
       className="data-[side=right]:sm:max-w-2xl"
     >
-      <SheetHeader>
-        <SheetTitle>{editingEvent ? 'Edit event' : 'New event'}</SheetTitle>
-      </SheetHeader>
       {/* Keyed so the form re-initializes from the picked event. */}
       <EventForm
         key={editingEvent?.id ?? 'new'}
