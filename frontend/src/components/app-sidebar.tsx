@@ -24,7 +24,8 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
+  SidebarMenuItem,
+  useSidebar
 } from '@/components/ui/sidebar'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -36,6 +37,8 @@ const links = [
 
 export function AppSidebar() {
   const { username } = useAuth()
+  const { setOpenMobile } = useSidebar()
+  const closeMobileSidebar = () => setOpenMobile(false)
 
   return (
     <Sidebar collapsible="icon">
@@ -43,7 +46,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link to="/">
+              <Link to="/" onClick={closeMobileSidebar}>
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                   K
                 </div>
@@ -61,7 +64,7 @@ export function AppSidebar() {
               {links.map((link) => (
                 <SidebarMenuItem key={link.to}>
                   <SidebarMenuButton tooltip={link.label} asChild>
-                    <Link to={link.to}>
+                    <Link to={link.to} onClick={closeMobileSidebar}>
                       <link.icon />
                       <span>{link.label}</span>
                     </Link>
@@ -88,13 +91,17 @@ export function AppSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="end" className="w-48">
                 <DropdownMenuItem asChild>
-                  <Link to="/settings">
+                  <Link to="/settings" onClick={closeMobileSidebar}>
                     <Settings />
                     <span>Settings</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/logout" preload={false}>
+                  <Link
+                    to="/logout"
+                    preload={false}
+                    onClick={closeMobileSidebar}
+                  >
                     <LogOut />
                     <span>Logout</span>
                   </Link>
