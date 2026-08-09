@@ -12,3 +12,4 @@ class CategoryFactory(SQLAlchemyModelFactory):
     id = factory.Sequence(lambda n: n + 1)
     name = factory.Faker("name")
     description = factory.Faker("sentence")
+    index = 0
