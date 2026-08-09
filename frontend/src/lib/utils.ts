@@ -124,6 +124,19 @@ export function zonedDayRange(picked: Date, timeZone: string) {
   }
 }
 
+// The half-open instant range covering the calendar month `picked` falls in (a
+// `zonedCalendarDate` stand-in), as that month runs in `timeZone`. August in
+// Taipei is [2026-07-31T16:00Z, 2026-08-31T16:00Z).
+export function zonedMonthRange(picked: Date, timeZone: string) {
+  const start = calendarPlainDate(picked)
+    .with({ day: 1 })
+    .toZonedDateTime(timeZone)
+  return {
+    start: new Date(start.epochMilliseconds).toISOString(),
+    end: new Date(start.add({ months: 1 }).epochMilliseconds).toISOString()
+  }
+}
+
 // Move `value` to the calendar day `picked` names (a `zonedCalendarDate`
 // stand-in), keeping its wall-clock time in `timeZone`.
 export function withDate(value: Date, picked: Date, timeZone: string) {

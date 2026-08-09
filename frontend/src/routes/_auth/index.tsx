@@ -6,7 +6,7 @@ import { z } from 'zod'
 
 import { EventFab } from '@/components/event/event-fab'
 import { EventsTable } from '@/components/event/events-table'
-import { Calendar } from '@/components/ui/calendar'
+import { ResponsiveCalendar } from '@/components/responsive-calendar'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
   type EventCreate,
@@ -31,7 +31,8 @@ import {
   formatCalendarDate,
   parseLocalDate,
   zonedCalendarDate,
-  zonedDayRange
+  zonedDayRange,
+  zonedMonthRange
 } from '@/lib/utils'
 
 const searchSchema = z.object({
@@ -54,16 +55,18 @@ function HomePage() {
       ? parseLocalDate(dateParam)
       : zonedCalendarDate(new Date(), timezone)
   )
+  const [month, setMonth] = useState<Date>(
+    () => date ?? zonedCalendarDate(new Date(), timezone)
+  )
 
   const handleDateSelect = (next: Date | undefined) => {
     setDate(next)
     navigate({ search: { date: next && formatCalendarDate(next) } })
   }
-  // The picked day is read in the client timezone, so its bounds are that day's
-  // midnight and the next day's midnight there, sent as UTC instants.
+
   const { start, end } = date
     ? zonedDayRange(date, timezone)
-    : { start: null, end: null }
+    : zonedMonthRange(month, timezone)
 
   const [fabOpen, setFabOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<EventReadDetailed | null>(
@@ -170,16 +173,13 @@ function HomePage() {
 
   return (
     <>
-      <div className="flex h-full gap-4">
-        <div>
-          <Calendar
-            mode="single"
-            selected={date}
-            defaultMonth={date}
-            onSelect={handleDateSelect}
-            className="rounded-md border"
-          />
-        </div>
+      <div className="flex flex-col gap-4">
+        <ResponsiveCalendar
+          date={date}
+          onDateSelect={handleDateSelect}
+          month={month}
+          onMonthChange={setMonth}
+        />
 
         <div className="w-full">
           <EventsTable
