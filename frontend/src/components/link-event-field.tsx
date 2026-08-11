@@ -160,7 +160,7 @@ function LinkEventTable({
     onSelectionChange(selection?.id === event.id ? null : event)
 
   return (
-    <div className="min-h-66 rounded-md border">
+    <div className="h-66 overflow-y-auto rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>

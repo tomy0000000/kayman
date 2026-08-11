@@ -230,7 +230,7 @@ export function LinkTransactionsTable({
         onValueChange={setSelectedAccount}
       />
 
-      <div className="min-h-66 rounded-md border">
+      <div className="h-66 overflow-y-auto rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
