@@ -4,6 +4,7 @@ import { AccountSelect } from '@/components/account-select'
 import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { KbdForm } from '@/components/kbd-form'
 import { LinkEventField } from '@/components/link-event-field'
+import { TransactionTagsPopover } from '@/components/transaction/transaction-tags-popover'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { ZonedTimePicker } from '@/components/zoned-time-picker'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
@@ -12,7 +13,8 @@ import {
   type CurrencyRead,
   type EventReadDetailed,
   type TransactionCreate,
-  type TransactionRead
+  type TransactionRead,
+  type TransactionTagRead
 } from '@/lib/client'
 import { isAmount, toZonedISOString } from '@/lib/utils'
 
@@ -20,6 +22,7 @@ interface TransactionFormProps {
   accounts: AccountRead[]
   account?: AccountRead
   currencies: CurrencyRead[]
+  transactionTags: TransactionTagRead[]
   events: EventReadDetailed[] | undefined
   editingTransaction: TransactionRead | null
   onSubmit: (body: TransactionCreate) => void
@@ -30,6 +33,7 @@ export function TransactionForm({
   accounts,
   account,
   currencies,
+  transactionTags,
   events,
   editingTransaction,
   onSubmit,
@@ -49,6 +53,9 @@ export function TransactionForm({
   const [eventId, setEventId] = useState<number | null>(
     editingTransaction?.event_id ?? null
   )
+  const [tagIds, setTagIds] = useState<number[]>(
+    () => editingTransaction?.tags?.map((tag) => tag.id) ?? []
+  )
 
   // A user pick wins; otherwise fall back to the account passed in.
   const selectedAccount = pickedAccount ?? account ?? null
@@ -62,7 +69,8 @@ export function TransactionForm({
       account_id: selectedAccount.id,
       amount,
       created_at: createdAt,
-      event_id: eventId
+      event_id: eventId,
+      tag_ids: tagIds
     })
   }
 
@@ -85,13 +93,20 @@ export function TransactionForm({
 
       <Field>
         <FieldLabel htmlFor="txn-amount">Amount</FieldLabel>
-        <CurrencyAmountInput
-          id="txn-amount"
-          amount={amount}
-          onAmountChange={setAmount}
-          currency={currency}
-          required
-        />
+        <div className="flex items-center gap-1">
+          <CurrencyAmountInput
+            id="txn-amount"
+            amount={amount}
+            onAmountChange={setAmount}
+            currency={currency}
+            required
+          />
+          <TransactionTagsPopover
+            tags={transactionTags}
+            value={tagIds}
+            onValueChange={setTagIds}
+          />
+        </div>
       </Field>
 
       <Field>

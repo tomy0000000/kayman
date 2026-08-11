@@ -5,13 +5,15 @@ import {
   type CurrencyRead,
   type EventReadDetailed,
   type TransactionCreate,
-  type TransactionRead
+  type TransactionRead,
+  type TransactionTagRead
 } from '@/lib/client'
 
 interface TransactionFabProps {
   accounts: AccountRead[]
   account?: AccountRead
   currencies: CurrencyRead[]
+  transactionTags: TransactionTagRead[]
   events: EventReadDetailed[] | undefined
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -24,6 +26,7 @@ export function TransactionFab({
   accounts,
   account,
   currencies,
+  transactionTags,
   events,
   open,
   onOpenChange,
@@ -45,6 +48,7 @@ export function TransactionFab({
         accounts={accounts}
         account={account}
         currencies={currencies}
+        transactionTags={transactionTags}
         events={events}
         editingTransaction={editingTransaction}
         onSubmit={onSubmit}

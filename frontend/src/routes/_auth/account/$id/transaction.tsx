@@ -181,10 +181,11 @@ function AccountTransactionPage() {
     staleTime: REFERENCE_STALE_TIME
   })
 
-  // Backs the create-event sheet's tag pickers, fetched once it opens.
+  // Backs the FAB's and the create-event sheet's tag pickers, fetched once
+  // either opens.
   const { data: transactionTags } = useQuery({
     ...readTransactionTagsOptions(),
-    enabled: creatingEventTransaction != null,
+    enabled: fabOpen || creatingEventTransaction != null,
     staleTime: REFERENCE_STALE_TIME
   })
 
@@ -242,6 +243,7 @@ function AccountTransactionPage() {
         accounts={accounts ?? []}
         account={account}
         currencies={currencies ?? []}
+        transactionTags={transactionTags ?? []}
         events={events}
         open={fabOpen}
         onOpenChange={handleFabOpenChange}
