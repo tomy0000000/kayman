@@ -42,7 +42,14 @@ import {
   toEventEntryDraft,
   toTransactionDraft
 } from '@/lib/types'
-import { cn, toZonedISOString } from '@/lib/utils'
+import {
+  cn,
+  formatCalendarDate,
+  toZonedISOString,
+  withDate,
+  withTime,
+  zonedCalendarDate
+} from '@/lib/utils'
 
 const EVENT_TYPES: { value: EventType; icon: LucideIcon }[] = [
   { value: 'Expense', icon: TrendingDown },
@@ -63,6 +70,10 @@ interface EventFormProps {
   // Seeds a new event from an existing one: prefills everything but the
   // timestamp and zone, which come from the client. Ignored when editing.
   seedEvent?: EventReadDetailed | null
+  // Calendar day (a `zonedCalendarDate` stand-in) to default a new event's
+  // timestamp to, at midnight. Today defaults to now instead. Ignored when
+  // editing or seeding from a transaction.
+  seedDate?: Date
   onSubmit: (
     body: EventCreate,
     transactions: TransactionPayload[],
@@ -79,6 +90,7 @@ export function EventForm({
   editingEvent,
   seedTransaction,
   seedEvent,
+  seedDate,
   onSubmit,
   isPending
 }: EventFormProps) {
@@ -98,7 +110,21 @@ export function EventForm({
   const [timestamp, setTimestamp] = useState(() => {
     if (isEditing) return editingEvent.timestamp
     if (seedTransaction) return seedTransaction.transaction.created_at
-    return toZonedISOString(new Date(), clientTimezone)
+    const now = new Date()
+    const isToday =
+      seedDate &&
+      formatCalendarDate(seedDate) ===
+        formatCalendarDate(zonedCalendarDate(now, clientTimezone))
+    if (seedDate && !isToday)
+      return toZonedISOString(
+        withTime(
+          withDate(now, seedDate, clientTimezone),
+          '00:00:00',
+          clientTimezone
+        ),
+        clientTimezone
+      )
+    return toZonedISOString(now, clientTimezone)
   })
   const [transactions, setTransactions] = useState<TransactionDraft[]>(() => {
     if (isEditing) return editingEvent.transactions.map(toTransactionDraft)

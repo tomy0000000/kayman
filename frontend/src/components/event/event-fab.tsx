@@ -20,6 +20,8 @@ interface EventFabProps {
   editingEvent: EventReadDetailed | null
   // Seeds a new event from an existing one. Ignored when editing.
   seedEvent?: EventReadDetailed | null
+  // Calendar day to default a new event's timestamp to. See EventForm.
+  seedDate?: Date
   onSubmit: (
     body: EventCreate,
     transactions: TransactionPayload[],
@@ -37,6 +39,7 @@ export function EventFab({
   onOpenChange,
   editingEvent,
   seedEvent,
+  seedDate,
   onSubmit,
   isPending
 }: EventFabProps) {
@@ -70,6 +73,7 @@ export function EventFab({
         transactionTags={transactionTags}
         editingEvent={editingEvent}
         seedEvent={seedEvent}
+        seedDate={seedDate}
         onSubmit={onSubmit}
         isPending={isPending}
       />

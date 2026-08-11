@@ -212,6 +212,7 @@ function HomePage() {
         onOpenChange={handleFabOpenChange}
         editingEvent={editingEvent}
         seedEvent={seedEvent}
+        seedDate={date}
         onSubmit={(body, transactions, entries) =>
           mutate({ body, transactions, entries })
         }
