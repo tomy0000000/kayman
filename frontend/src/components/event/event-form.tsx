@@ -38,6 +38,7 @@ import {
   type EventEntryPayload,
   type TransactionDraft,
   type TransactionPayload,
+  detachDraft,
   toEventEntryDraft,
   toTransactionDraft
 } from '@/lib/types'
@@ -59,6 +60,9 @@ interface EventFormProps {
   // Seeds a new event from a transaction: prefills the timestamp, zone, and
   // linked transaction. Ignored when editing an existing event.
   seedTransaction?: SelectedTransaction
+  // Seeds a new event from an existing one: prefills everything but the
+  // timestamp and zone, which come from the client. Ignored when editing.
+  seedEvent?: EventReadDetailed | null
   onSubmit: (
     body: EventCreate,
     transactions: TransactionPayload[],
@@ -74,14 +78,17 @@ export function EventForm({
   transactionTags,
   editingEvent,
   seedTransaction,
+  seedEvent,
   onSubmit,
   isPending
 }: EventFormProps) {
   const { timezone: clientTimezone } = useClientTimezone()
   const isEditing = editingEvent != null
-  const [type, setType] = useState<EventType>(editingEvent?.type ?? 'Expense')
+  const [type, setType] = useState<EventType>(
+    editingEvent?.type ?? seedEvent?.type ?? 'Expense'
+  )
   const [description, setDescription] = useState(
-    editingEvent?.description ?? ''
+    editingEvent?.description ?? seedEvent?.description ?? ''
   )
   const [timezone, setTimezone] = useState<string>(
     editingEvent?.timezone ??
@@ -95,13 +102,20 @@ export function EventForm({
   })
   const [transactions, setTransactions] = useState<TransactionDraft[]>(() => {
     if (isEditing) return editingEvent.transactions.map(toTransactionDraft)
+    // Detached, so submitting creates copies instead of moving the seed event's
+    // own transactions onto the new event.
+    if (seedEvent)
+      return seedEvent.transactions.map(toTransactionDraft).map(detachDraft)
     return seedTransaction
       ? [toTransactionDraft(seedTransaction.transaction)]
       : []
   })
-  const [entries, setEntries] = useState<EventEntryDraft[]>(() =>
-    isEditing ? editingEvent.entries.map(toEventEntryDraft) : []
-  )
+  const [entries, setEntries] = useState<EventEntryDraft[]>(() => {
+    if (isEditing) return editingEvent.entries.map(toEventEntryDraft)
+    if (seedEvent)
+      return seedEvent.entries.map(toEventEntryDraft).map(detachDraft)
+    return []
+  })
 
   const incompleteEntry = entries.some(
     (entry) =>

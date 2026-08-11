@@ -69,17 +69,28 @@ function HomePage() {
     : zonedMonthRange(month, timezone)
 
   const [fabOpen, setFabOpen] = useState(false)
-  const [editingEvent, setEditingEvent] = useState<EventReadDetailed | null>(
-    null
-  )
+  // The sheet either edits an existing event or seeds a new one from it, never
+  // both, so one slot rather than two states that could disagree.
+  const [sheetEvent, setSheetEvent] = useState<{
+    mode: 'edit' | 'duplicate'
+    event: EventReadDetailed
+  } | null>(null)
+
+  const editingEvent = sheetEvent?.mode === 'edit' ? sheetEvent.event : null
+  const seedEvent = sheetEvent?.mode === 'duplicate' ? sheetEvent.event : null
 
   const handleFabOpenChange = (open: boolean) => {
     setFabOpen(open)
-    if (open) setEditingEvent(null)
+    if (open) setSheetEvent(null)
   }
 
   const handleEventClick = (event: EventReadDetailed) => {
-    setEditingEvent(event)
+    setSheetEvent({ mode: 'edit', event })
+    setFabOpen(true)
+  }
+
+  const handleEventDuplicate = (event: EventReadDetailed) => {
+    setSheetEvent({ mode: 'duplicate', event })
     setFabOpen(true)
   }
 
@@ -187,6 +198,7 @@ function HomePage() {
             categories={categories ?? []}
             isPending={isPending}
             onEventEdit={handleEventClick}
+            onEventDuplicate={handleEventDuplicate}
           />
         </div>
       </div>
@@ -199,6 +211,7 @@ function HomePage() {
         open={fabOpen}
         onOpenChange={handleFabOpenChange}
         editingEvent={editingEvent}
+        seedEvent={seedEvent}
         onSubmit={(body, transactions, entries) =>
           mutate({ body, transactions, entries })
         }

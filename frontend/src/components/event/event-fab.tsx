@@ -18,6 +18,8 @@ interface EventFabProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   editingEvent: EventReadDetailed | null
+  // Seeds a new event from an existing one. Ignored when editing.
+  seedEvent?: EventReadDetailed | null
   onSubmit: (
     body: EventCreate,
     transactions: TransactionPayload[],
@@ -34,26 +36,40 @@ export function EventFab({
   open,
   onOpenChange,
   editingEvent,
+  seedEvent,
   onSubmit,
   isPending
 }: EventFabProps) {
+  const title = editingEvent
+    ? 'Edit event'
+    : seedEvent
+      ? 'Duplicate event'
+      : 'New event'
+  // Qualified by mode, so editing then duplicating the same event still remounts.
+  const formKey = editingEvent
+    ? `edit-${editingEvent.id}`
+    : seedEvent
+      ? `duplicate-${seedEvent.id}`
+      : 'new'
+
   return (
     <FabSheet
       open={open}
       onOpenChange={onOpenChange}
       hotkey="n"
       label="New event"
-      title={editingEvent ? 'Edit event' : 'New event'}
+      title={title}
       className="data-[side=right]:sm:max-w-2xl"
     >
       {/* Keyed so the form re-initializes from the picked event. */}
       <EventForm
-        key={editingEvent?.id ?? 'new'}
+        key={formKey}
         accounts={accounts}
         categories={categories}
         currencies={currencies}
         transactionTags={transactionTags}
         editingEvent={editingEvent}
+        seedEvent={seedEvent}
         onSubmit={onSubmit}
         isPending={isPending}
       />

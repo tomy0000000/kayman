@@ -36,6 +36,7 @@ interface EventsTableProps {
   categories: CategoryReadWithChildren[]
   isPending: boolean
   onEventEdit?: (event: EventReadDetailed) => void
+  onEventDuplicate?: (event: EventReadDetailed) => void
 }
 
 // Stable reference for the empty state. A fresh `[]` per render makes
@@ -46,7 +47,8 @@ export function EventsTable({
   events,
   categories,
   isPending,
-  onEventEdit
+  onEventEdit,
+  onEventDuplicate
 }: EventsTableProps) {
   const { timezone } = useClientTimezone()
   const categoryNames = useMemo(
@@ -184,6 +186,11 @@ export function EventsTable({
                 >
                   <ContextMenuItem onSelect={() => onEventEdit?.(row.original)}>
                     Edit
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    onSelect={() => onEventDuplicate?.(row.original)}
+                  >
+                    Duplicate
                   </ContextMenuItem>
                 </ContextMenuContent>
               </ContextMenu>

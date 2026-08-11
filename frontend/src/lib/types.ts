@@ -61,6 +61,14 @@ export function componentKey(): string {
   return `component-${componentKeyCount}`
 }
 
+// Strips a draft's identity so submitting creates a new row instead of patching
+// the row it was copied from. Used when seeding a new event from an existing one.
+export function detachDraft<T extends { key: string; id: number | null }>(
+  draft: T
+): T {
+  return { ...draft, key: componentKey(), id: null }
+}
+
 export function toTransactionDraft(transaction: {
   id: number
   account_id: number
