@@ -17,7 +17,7 @@ import {
   type TransactionPost,
   type TransactionReadWithBalance
 } from '@/lib/client'
-import { isAmount, toZonedISOString } from '@/lib/utils'
+import { isAmount, toZonedISOString, withTime } from '@/lib/utils'
 
 interface TransactionPostSheetProps {
   transaction: TransactionReadWithBalance | null
@@ -41,7 +41,10 @@ export function TransactionPostSheet({
   const { timezone: clientTimezone } = useClientTimezone()
   const [txnId, setTxnId] = useState(transaction?.id)
   const [postedAt, setPostedAt] = useState(() =>
-    toZonedISOString(new Date(), clientTimezone)
+    toZonedISOString(
+      withTime(new Date(), '00:00:00', clientTimezone),
+      clientTimezone
+    )
   )
   // The bank may post a different amount than the pending value; pre-fill
   // with the current amount and let the user adjust.
@@ -51,7 +54,12 @@ export function TransactionPostSheet({
   // keeping the sheet itself mounted so it can animate open/closed.
   if (transaction && transaction.id !== txnId) {
     setTxnId(transaction.id)
-    setPostedAt(toZonedISOString(new Date(), clientTimezone))
+    setPostedAt(
+      toZonedISOString(
+        withTime(new Date(), '00:00:00', clientTimezone),
+        clientTimezone
+      )
+    )
     setAmount(transaction.amount)
   }
 
