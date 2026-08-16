@@ -1,9 +1,9 @@
 import { format } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
-import { useState } from 'react'
+import { type ComponentProps, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
+import { Calendar, CalendarDayButton } from '@/components/ui/calendar'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Popover,
@@ -11,22 +11,29 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { formatCalendarDate } from '@/lib/utils'
 
 interface ResponsiveCalendarProps {
   date: Date | undefined
   onDateSelect: (date: Date | undefined) => void
   month: Date
   onMonthChange: (month: Date) => void
+  eventDays: Set<string>
 }
+
+type EventDayButtonProps = ComponentProps<typeof CalendarDayButton>
 
 export function ResponsiveCalendar({
   date,
   onDateSelect,
   month,
-  onMonthChange
+  onMonthChange,
+  eventDays
 }: ResponsiveCalendarProps) {
   const isMobile = useIsMobile()
   const [open, setOpen] = useState(false)
+
+  const hasEvent = (day: Date) => eventDays.has(formatCalendarDate(day))
 
   if (isMobile) {
     return (
@@ -50,6 +57,8 @@ export function ResponsiveCalendar({
             }}
             month={month}
             onMonthChange={onMonthChange}
+            modifiers={{ hasEvent }}
+            components={{ DayButton: EventDayButton }}
             fixedWeeks
             captionLayout="dropdown"
             className="[--cell-size:--spacing(9.5)]"
@@ -68,11 +77,27 @@ export function ResponsiveCalendar({
           onSelect={onDateSelect}
           month={month}
           onMonthChange={onMonthChange}
+          modifiers={{ hasEvent }}
+          components={{ DayButton: EventDayButton }}
           fixedWeeks
           captionLayout="dropdown"
           className="p-0 [--cell-size:--spacing(9.5)]"
         />
       </CardContent>
     </Card>
+  )
+}
+
+// The day cell plus a dot for days that hold an event. The dot is absolute so it
+// sits under the centered day number instead of shifting it, and `bg-current`
+// keeps it legible on the selected day's inverted colors.
+function EventDayButton({ children, ...props }: EventDayButtonProps) {
+  return (
+    <CalendarDayButton {...props}>
+      {children}
+      {props.modifiers.hasEvent && (
+        <span className="absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full bg-current" />
+      )}
+    </CalendarDayButton>
   )
 }

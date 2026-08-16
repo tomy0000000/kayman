@@ -105,6 +105,12 @@ export function formatTimePart(date: Date, timeZone: string) {
     .toString({ smallestUnit: 'second' })
 }
 
+// "YYYY-MM-DD" for the calendar day the instant `value` falls on in `timeZone`,
+// comparable with `formatCalendarDate` of the day a picker hands back.
+export function zonedDayKey(value: string | Date, timeZone: string): string {
+  return zoned(new Date(value), timeZone).toPlainDate().toString()
+}
+
 // react-day-picker and date-fns read a Date's Y/M/D with browser-local getters,
 // so hand them a stand-in whose *local* calendar day is the day `date` falls on
 // in `timeZone`. For display and selection only: never store this instant.
@@ -124,16 +130,19 @@ export function zonedDayRange(picked: Date, timeZone: string) {
   }
 }
 
-// The half-open instant range covering the calendar month `picked` falls in (a
-// `zonedCalendarDate` stand-in), as that month runs in `timeZone`. August in
-// Taipei is [2026-07-31T16:00Z, 2026-08-31T16:00Z).
-export function zonedMonthRange(picked: Date, timeZone: string) {
-  const start = calendarPlainDate(picked)
-    .with({ day: 1 })
+// The half-open instant range covering the whole grid the calendar draws for
+// the month `picked` falls in (a `zonedCalendarDate` stand-in), as those days
+// run in `timeZone`. The calendar sets `fixedWeeks` and takes react-day-picker's
+// Sunday week start, so it is always the six weeks from the Sunday on or before
+// the 1st: August 2026 is Jul 26 through Sep 5.
+export function zonedCalendarGridRange(picked: Date, timeZone: string) {
+  const first = calendarPlainDate(picked).with({ day: 1 })
+  const start = first
+    .subtract({ days: first.dayOfWeek % 7 })
     .toZonedDateTime(timeZone)
   return {
     start: new Date(start.epochMilliseconds).toISOString(),
-    end: new Date(start.add({ months: 1 }).epochMilliseconds).toISOString()
+    end: new Date(start.add({ weeks: 6 }).epochMilliseconds).toISOString()
   }
 }
 

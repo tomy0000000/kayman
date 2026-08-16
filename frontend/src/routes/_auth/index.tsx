@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
@@ -31,8 +31,8 @@ import {
   formatCalendarDate,
   parseLocalDate,
   zonedCalendarDate,
-  zonedDayRange,
-  zonedMonthRange
+  zonedCalendarGridRange,
+  zonedDayKey
 } from '@/lib/utils'
 
 const searchSchema = z.object({
@@ -64,9 +64,7 @@ function HomePage() {
     navigate({ search: { date: next && formatCalendarDate(next) } })
   }
 
-  const { start, end } = date
-    ? zonedDayRange(date, timezone)
-    : zonedMonthRange(month, timezone)
+  const { start, end } = zonedCalendarGridRange(month, timezone)
 
   const [fabOpen, setFabOpen] = useState(false)
   // The sheet either edits an existing event or seeds a new one from it, never
@@ -158,6 +156,19 @@ function HomePage() {
     meta: { errorMessage: 'Failed to fetch events' }
   })
 
+  const eventDays = useMemo(
+    () =>
+      new Set(events?.map((event) => zonedDayKey(event.timestamp, timezone))),
+    [events, timezone]
+  )
+
+  const selectedDay = date && formatCalendarDate(date)
+  const visibleEvents = selectedDay
+    ? events?.filter(
+        (event) => zonedDayKey(event.timestamp, timezone) === selectedDay
+      )
+    : events
+
   // Back the FAB's form fields, so only fetched once the sheet opens.
   const { data: accounts } = useQuery({
     ...readAccountsOptions(),
@@ -190,11 +201,12 @@ function HomePage() {
           onDateSelect={handleDateSelect}
           month={month}
           onMonthChange={setMonth}
+          eventDays={eventDays}
         />
 
         <div className="w-full">
           <EventsTable
-            events={events}
+            events={visibleEvents}
             categories={categories ?? []}
             isPending={isPending}
             onEventEdit={handleEventClick}
