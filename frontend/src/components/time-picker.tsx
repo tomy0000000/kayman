@@ -20,12 +20,21 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover'
+import { useIsMobile } from '@/hooks/use-mobile'
 import {
+  cn,
   formatTimePart,
+  parseLocalDate,
   withDate,
   withTime,
-  zonedCalendarDate
+  zonedCalendarDate,
+  zonedDayKey
 } from '@/lib/utils'
+
+const FIELD_CLASS = cn(
+  'text-sm font-medium text-muted-foreground',
+  '[&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none'
+)
 
 interface TimePickerProps {
   id: string
@@ -36,38 +45,55 @@ interface TimePickerProps {
 
 export function TimePicker({ id, value, timezone, onChange }: TimePickerProps) {
   const [open, setOpen] = useState(false)
+  const isMobile = useIsMobile()
   const time = formatTimePart(value, timezone)
   const calendarDate = zonedCalendarDate(value, timezone)
 
   return (
     <InputGroup>
-      <InputGroupAddon className="flex-1">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <InputGroupButton className="w-full justify-between">
-              {format(calendarDate, 'PP')}
-              <ChevronDownIcon />
-            </InputGroupButton>
-          </PopoverTrigger>
-          <PopoverContent
-            className="w-auto overflow-hidden p-0"
-            align="start"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Calendar
-              mode="single"
-              selected={calendarDate}
-              captionLayout="dropdown"
-              defaultMonth={calendarDate}
-              onSelect={(picked) => {
-                if (!picked) return
-                onChange(withDate(value, picked, timezone))
-                setOpen(false)
-              }}
-            />
-          </PopoverContent>
-        </Popover>
-      </InputGroupAddon>
+      {isMobile ? (
+        // Mobile browsers open their own date picker for `type="date"`, which
+        // beats the popover calendar on a touch screen.
+        <InputGroupInput
+          type="date"
+          aria-label="Date"
+          value={zonedDayKey(value, timezone)}
+          onChange={(e) => {
+            if (!e.target.value) return
+            onChange(withDate(value, parseLocalDate(e.target.value), timezone))
+          }}
+          required
+          className={FIELD_CLASS}
+        />
+      ) : (
+        <InputGroupAddon className="flex-1">
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <InputGroupButton className="w-full justify-between">
+                {format(calendarDate, 'PP')}
+                <ChevronDownIcon />
+              </InputGroupButton>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-auto overflow-hidden p-0"
+              align="start"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Calendar
+                mode="single"
+                selected={calendarDate}
+                captionLayout="dropdown"
+                defaultMonth={calendarDate}
+                onSelect={(picked) => {
+                  if (!picked) return
+                  onChange(withDate(value, picked, timezone))
+                  setOpen(false)
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+        </InputGroupAddon>
+      )}
       <InputGroupInput
         type="time"
         id={id}
@@ -75,7 +101,7 @@ export function TimePicker({ id, value, timezone, onChange }: TimePickerProps) {
         value={time}
         onChange={(e) => onChange(withTime(value, e.target.value, timezone))}
         required
-        className="[&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+        className={FIELD_CLASS}
       />
       <InputGroupAddon align="inline-end">
         <DropdownMenu>
