@@ -1,8 +1,9 @@
-import { format } from 'date-fns'
-import { CalendarIcon } from 'lucide-react'
+import { addDays, format, isSameMonth } from 'date-fns'
+import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import { type ComponentProps, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import { Calendar, CalendarDayButton } from '@/components/ui/calendar'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -35,36 +36,63 @@ export function ResponsiveCalendar({
 
   const hasEvent = (day: Date) => eventDays.has(formatCalendarDate(day))
 
+  const stepDay = (amount: number) => {
+    if (!date) return
+    const next = addDays(date, amount)
+    onDateSelect(next)
+    if (!isSameMonth(next, month)) onMonthChange(next)
+  }
+
   if (isMobile) {
     return (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-full justify-start px-2.5 font-normal"
-          >
-            <CalendarIcon />
-            {date ? format(date, 'LLL dd, y') : <span>Pick a date</span>}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="center">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={(next) => {
-              onDateSelect(next)
-              setOpen(false)
-            }}
-            month={month}
-            onMonthChange={onMonthChange}
-            modifiers={{ hasEvent }}
-            components={{ DayButton: EventDayButton }}
-            fixedWeeks
-            captionLayout="dropdown"
-            className="[--cell-size:--spacing(9.5)]"
-          />
-        </PopoverContent>
-      </Popover>
+      <ButtonGroup className="w-full">
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Previous day"
+          disabled={!date}
+          onClick={() => stepDay(-1)}
+        >
+          <ChevronLeftIcon />
+        </Button>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="flex-1 justify-start px-2.5 font-normal"
+            >
+              <CalendarIcon />
+              {date ? format(date, 'LLL dd, y') : <span>Pick a date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="center">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={(next) => {
+                onDateSelect(next)
+                setOpen(false)
+              }}
+              month={month}
+              onMonthChange={onMonthChange}
+              modifiers={{ hasEvent }}
+              components={{ DayButton: EventDayButton }}
+              fixedWeeks
+              captionLayout="dropdown"
+              className="[--cell-size:--spacing(9.5)]"
+            />
+          </PopoverContent>
+        </Popover>
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Next day"
+          disabled={!date}
+          onClick={() => stepDay(1)}
+        >
+          <ChevronRightIcon />
+        </Button>
+      </ButtonGroup>
     )
   }
 
