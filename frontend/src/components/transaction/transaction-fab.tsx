@@ -18,6 +18,7 @@ interface TransactionFabProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   editingTransaction: TransactionRead | null
+  seedTransaction?: TransactionRead | null
   onSubmit: (body: TransactionCreate) => void
   isPending: boolean
 }
@@ -31,26 +32,39 @@ export function TransactionFab({
   open,
   onOpenChange,
   editingTransaction,
+  seedTransaction,
   onSubmit,
   isPending
 }: TransactionFabProps) {
+  const title = editingTransaction
+    ? 'Edit transaction'
+    : seedTransaction
+      ? 'Duplicate transaction'
+      : 'New transaction'
+  const formKey = editingTransaction
+    ? `edit-${editingTransaction.id}`
+    : seedTransaction
+      ? `duplicate-${seedTransaction.id}`
+      : 'new'
+
   return (
     <FabSheet
       open={open}
       onOpenChange={onOpenChange}
       hotkey="n"
       label="New transaction"
-      title={editingTransaction ? 'Edit transaction' : 'New transaction'}
+      title={title}
     >
       {/* Keyed so the form re-initializes from the picked transaction. */}
       <TransactionForm
-        key={editingTransaction?.id ?? 'new'}
+        key={formKey}
         accounts={accounts}
         account={account}
         currencies={currencies}
         transactionTags={transactionTags}
         events={events}
         editingTransaction={editingTransaction}
+        seedTransaction={seedTransaction}
         onSubmit={onSubmit}
         isPending={isPending}
       />

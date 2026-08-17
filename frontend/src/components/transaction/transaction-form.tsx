@@ -25,6 +25,7 @@ interface TransactionFormProps {
   transactionTags: TransactionTagRead[]
   events: EventReadDetailed[] | undefined
   editingTransaction: TransactionRead | null
+  seedTransaction?: TransactionRead | null
   onSubmit: (body: TransactionCreate) => void
   isPending: boolean
 }
@@ -36,14 +37,14 @@ export function TransactionForm({
   transactionTags,
   events,
   editingTransaction,
+  seedTransaction,
   onSubmit,
   isPending
 }: TransactionFormProps) {
   const { timezone: clientTimezone } = useClientTimezone()
   const isEditing = editingTransaction != null
-  const [amount, setAmount] = useState(() =>
-    isEditing ? editingTransaction.amount : ''
-  )
+  const source = editingTransaction ?? seedTransaction
+  const [amount, setAmount] = useState(() => source?.amount ?? '')
   const [pickedAccount, setPickedAccount] = useState<AccountRead | null>(null)
   const [createdAt, setCreatedAt] = useState(() =>
     isEditing
@@ -51,10 +52,10 @@ export function TransactionForm({
       : toZonedISOString(new Date(), clientTimezone)
   )
   const [eventId, setEventId] = useState<number | null>(
-    editingTransaction?.event_id ?? null
+    source?.event_id ?? null
   )
   const [tagIds, setTagIds] = useState<number[]>(
-    () => editingTransaction?.tags?.map((tag) => tag.id) ?? []
+    () => source?.tags?.map((tag) => tag.id) ?? []
   )
 
   // A user pick wins; otherwise fall back to the account passed in.

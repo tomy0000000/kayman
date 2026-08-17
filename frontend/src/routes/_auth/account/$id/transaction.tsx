@@ -53,16 +53,23 @@ function AccountTransactionPage() {
   const { timezone } = useClientTimezone()
 
   const [fabOpen, setFabOpen] = useState(false)
-  const [editingTransaction, setEditingTransaction] =
-    useState<TransactionReadWithBalance | null>(null)
+  const [sheetTransaction, setSheetTransaction] = useState<{
+    mode: 'edit' | 'duplicate'
+    transaction: TransactionReadWithBalance
+  } | null>(null)
   const [postingTransaction, setPostingTransaction] =
     useState<TransactionReadWithBalance | null>(null)
   const [creatingEventTransaction, setCreatingEventTransaction] =
     useState<TransactionReadWithBalance | null>(null)
 
+  const editingTransaction =
+    sheetTransaction?.mode === 'edit' ? sheetTransaction.transaction : null
+  const seedTransaction =
+    sheetTransaction?.mode === 'duplicate' ? sheetTransaction.transaction : null
+
   const handleFabOpenChange = (open: boolean) => {
     setFabOpen(open)
-    if (open) setEditingTransaction(null)
+    if (open) setSheetTransaction(null)
   }
 
   const invalidateTransactions = () => {
@@ -218,7 +225,11 @@ function AccountTransactionPage() {
           currencyCode={account?.currency_code}
           isPending={isTransactionsPending}
           onTransactionEdit={(transaction) => {
-            setEditingTransaction(transaction)
+            setSheetTransaction({ mode: 'edit', transaction })
+            setFabOpen(true)
+          }}
+          onTransactionDuplicate={(transaction) => {
+            setSheetTransaction({ mode: 'duplicate', transaction })
             setFabOpen(true)
           }}
           onTransactionPost={setPostingTransaction}
@@ -248,6 +259,7 @@ function AccountTransactionPage() {
         open={fabOpen}
         onOpenChange={handleFabOpenChange}
         editingTransaction={editingTransaction}
+        seedTransaction={seedTransaction}
         onSubmit={mutate}
         isPending={isPending}
       />

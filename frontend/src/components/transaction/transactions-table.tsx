@@ -31,6 +31,7 @@ interface TransactionsTableProps {
   currencyCode?: string
   isPending: boolean
   onTransactionEdit?: (transaction: TransactionReadWithBalance) => void
+  onTransactionDuplicate?: (transaction: TransactionReadWithBalance) => void
   onTransactionPost?: (transaction: TransactionReadWithBalance) => void
   onTransactionCreateEvent?: (transaction: TransactionReadWithBalance) => void
   onTransactionGoToEvent?: (transaction: TransactionReadWithBalance) => void
@@ -45,6 +46,7 @@ export function TransactionsTable({
   currencyCode,
   isPending,
   onTransactionEdit,
+  onTransactionDuplicate,
   onTransactionPost,
   onTransactionCreateEvent,
   onTransactionGoToEvent
@@ -170,6 +172,11 @@ export function TransactionsTable({
                     onSelect={() => onTransactionEdit?.(row.original)}
                   >
                     Edit
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    onSelect={() => onTransactionDuplicate?.(row.original)}
+                  >
+                    Duplicate
                   </ContextMenuItem>
                   <ContextMenuItem
                     disabled={row.original.status !== 'PENDING'}
