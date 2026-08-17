@@ -4,16 +4,15 @@ import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
-import { EventFab } from '@/components/event/event-fab'
+import {
+  EventSheet,
+  type EventSheetState
+} from '@/components/event/event-sheet'
 import { EventsTable } from '@/components/event/events-table'
+import { Fab } from '@/components/fab'
 import { ResponsiveCalendar } from '@/components/responsive-calendar'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
-import {
-  type EventCreate,
-  type EventReadDetailed,
-  createEvent,
-  updateEvent
-} from '@/lib/client'
+import { type EventCreate, createEvent, updateEvent } from '@/lib/client'
 import {
   readAccountsOptions,
   readCategoriesOptions,
@@ -66,31 +65,15 @@ function HomePage() {
 
   const { start, end } = zonedCalendarGridRange(month, timezone)
 
-  const [fabOpen, setFabOpen] = useState(false)
-  // The sheet either edits an existing event or seeds a new one from it, never
-  // both, so one slot rather than two states that could disagree.
-  const [sheetEvent, setSheetEvent] = useState<{
-    mode: 'edit' | 'duplicate'
-    event: EventReadDetailed
-  } | null>(null)
+  // The state outlives `open` so the sheet keeps its body while closing.
+  const [sheet, setSheet] = useState<{
+    open: boolean
+    state: EventSheetState
+  }>({ open: false, state: { mode: 'new' } })
 
-  const editingEvent = sheetEvent?.mode === 'edit' ? sheetEvent.event : null
-  const seedEvent = sheetEvent?.mode === 'duplicate' ? sheetEvent.event : null
+  const editingEvent = sheet.state.mode === 'edit' ? sheet.state.event : null
 
-  const handleFabOpenChange = (open: boolean) => {
-    setFabOpen(open)
-    if (open) setSheetEvent(null)
-  }
-
-  const handleEventClick = (event: EventReadDetailed) => {
-    setSheetEvent({ mode: 'edit', event })
-    setFabOpen(true)
-  }
-
-  const handleEventDuplicate = (event: EventReadDetailed) => {
-    setSheetEvent({ mode: 'duplicate', event })
-    setFabOpen(true)
-  }
+  const openSheet = (state: EventSheetState) => setSheet({ open: true, state })
 
   const { mutate, isPending: isMutationPending } = useMutation({
     mutationFn: async ({
@@ -138,7 +121,7 @@ function HomePage() {
     },
     onSuccess: () => {
       toast.success(`Event ${editingEvent ? 'updated' : 'created'}`)
-      setFabOpen(false)
+      setSheet((current) => ({ ...current, open: false }))
     },
     // Settled, not success: the submit spans several calls, so a failure partway
     // can still have deleted or changed rows the table is now showing stale.
@@ -169,25 +152,25 @@ function HomePage() {
       )
     : events
 
-  // Back the FAB's form fields, so only fetched once the sheet opens.
+  // Back the form's fields, so only fetched once the sheet opens.
   const { data: accounts } = useQuery({
     ...readAccountsOptions(),
-    enabled: fabOpen
+    enabled: sheet.open
   })
 
   const { data: currencies } = useQuery({
     ...readCurrenciesOptions(),
-    enabled: fabOpen,
+    enabled: sheet.open,
     staleTime: REFERENCE_STALE_TIME
   })
 
   const { data: transactionTags } = useQuery({
     ...readTransactionTagsOptions(),
-    enabled: fabOpen,
+    enabled: sheet.open,
     staleTime: REFERENCE_STALE_TIME
   })
 
-  // Categories back both the FAB and the table's summary column.
+  // Categories back both the form and the table's summary column.
   const { data: categories } = useQuery({
     ...readCategoriesOptions(),
     staleTime: REFERENCE_STALE_TIME
@@ -209,21 +192,28 @@ function HomePage() {
             events={visibleEvents}
             categories={categories ?? []}
             isPending={isPending}
-            onEventEdit={handleEventClick}
-            onEventDuplicate={handleEventDuplicate}
+            onEventEdit={(event) => openSheet({ mode: 'edit', event })}
+            onEventDuplicate={(event) =>
+              openSheet({ mode: 'duplicate', event })
+            }
           />
         </div>
       </div>
 
-      <EventFab
+      <Fab
+        hotkey="n"
+        label="New event"
+        onOpen={() => openSheet({ mode: 'new' })}
+      />
+
+      <EventSheet
+        open={sheet.open}
+        state={sheet.state}
+        onOpenChange={(open) => setSheet((current) => ({ ...current, open }))}
         accounts={accounts ?? []}
         categories={categories ?? []}
         currencies={currencies ?? []}
         transactionTags={transactionTags ?? []}
-        open={fabOpen}
-        onOpenChange={handleFabOpenChange}
-        editingEvent={editingEvent}
-        seedEvent={seedEvent}
         seedDate={date}
         onSubmit={(body, transactions, entries) =>
           mutate({ body, transactions, entries })

@@ -1,5 +1,5 @@
 import { EventForm } from '@/components/event/event-form'
-import { FabSheet } from '@/components/fab-sheet'
+import { ResponsiveSheet } from '@/components/responsive-sheet'
 import {
   type AccountRead,
   type CategoryReadWithChildren,
@@ -10,16 +10,22 @@ import {
 } from '@/lib/client'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 
-interface EventFabProps {
+// What the sheet is showing. One slot rather than a flag per mode, so the
+// modes cannot disagree.
+export type EventSheetState =
+  | { mode: 'new' }
+  | { mode: 'edit'; event: EventReadDetailed }
+  | { mode: 'duplicate'; event: EventReadDetailed }
+
+interface EventSheetProps {
+  open: boolean
+  // Kept while closing, so the body does not vanish mid animation.
+  state: EventSheetState
+  onOpenChange: (open: boolean) => void
   accounts: AccountRead[]
   categories: CategoryReadWithChildren[]
   currencies: CurrencyRead[]
   transactionTags: TransactionTagRead[]
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  editingEvent: EventReadDetailed | null
-  // Seeds a new event from an existing one. Ignored when editing.
-  seedEvent?: EventReadDetailed | null
   // Calendar day to default a new event's timestamp to. See EventForm.
   seedDate?: Date
   onSubmit: (
@@ -30,38 +36,33 @@ interface EventFabProps {
   isPending: boolean
 }
 
-export function EventFab({
+const TITLES: Record<EventSheetState['mode'], string> = {
+  new: 'New event',
+  edit: 'Edit event',
+  duplicate: 'Duplicate event'
+}
+
+export function EventSheet({
+  open,
+  state,
+  onOpenChange,
   accounts,
   categories,
   currencies,
   transactionTags,
-  open,
-  onOpenChange,
-  editingEvent,
-  seedEvent,
   seedDate,
   onSubmit,
   isPending
-}: EventFabProps) {
-  const title = editingEvent
-    ? 'Edit event'
-    : seedEvent
-      ? 'Duplicate event'
-      : 'New event'
+}: EventSheetProps) {
   // Qualified by mode, so editing then duplicating the same event still remounts.
-  const formKey = editingEvent
-    ? `edit-${editingEvent.id}`
-    : seedEvent
-      ? `duplicate-${seedEvent.id}`
-      : 'new'
+  const formKey =
+    state.mode === 'new' ? 'new' : `${state.mode}-${state.event.id}`
 
   return (
-    <FabSheet
+    <ResponsiveSheet
       open={open}
       onOpenChange={onOpenChange}
-      hotkey="n"
-      label="New event"
-      title={title}
+      title={TITLES[state.mode]}
       className="data-[side=right]:sm:max-w-2xl"
     >
       {/* Keyed so the form re-initializes from the picked event. */}
@@ -71,12 +72,12 @@ export function EventFab({
         categories={categories}
         currencies={currencies}
         transactionTags={transactionTags}
-        editingEvent={editingEvent}
-        seedEvent={seedEvent}
+        editingEvent={state.mode === 'edit' ? state.event : null}
+        seedEvent={state.mode === 'duplicate' ? state.event : null}
         seedDate={seedDate}
         onSubmit={onSubmit}
         isPending={isPending}
       />
-    </FabSheet>
+    </ResponsiveSheet>
   )
 }
