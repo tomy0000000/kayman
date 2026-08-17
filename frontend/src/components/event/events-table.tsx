@@ -43,6 +43,11 @@ interface EventsTableProps {
 // react-table treat `data` as changed every render and loops forever.
 const EMPTY_EVENTS: EventReadDetailed[] = []
 
+const COLUMN_WIDTHS: Record<string, string> = {
+  timestamp: 'w-24',
+  amount: 'w-32'
+}
+
 export function EventsTable({
   events,
   categories,
@@ -111,7 +116,7 @@ export function EventsTable({
             )
           ]
           return (
-            <div className="flex max-w-xs flex-col">
+            <div className="flex flex-col">
               <span className="truncate font-semibold">
                 {row.original.description}
               </span>
@@ -128,9 +133,11 @@ export function EventsTable({
         id: 'amount',
         header: 'Amount',
         cell: ({ row }) => (
-          <div className="flex flex-col items-start">
+          <div className="flex max-w-full flex-col items-start">
             <EventTypeBadge type={row.original.type} />
-            {renderAmount(row.original)}
+            <span className="max-w-full truncate">
+              {renderAmount(row.original)}
+            </span>
           </div>
         )
       }
@@ -148,12 +155,15 @@ export function EventsTable({
 
   return (
     <div className="overflow-hidden rounded-md border">
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
+                <TableHead
+                  key={header.id}
+                  className={COLUMN_WIDTHS[header.column.id]}
+                >
                   {header.isPlaceholder
                     ? null
                     : flexRender(
