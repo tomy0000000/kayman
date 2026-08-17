@@ -11,4 +11,5 @@ class TransactionTagFactory(SQLAlchemyModelFactory):
 
     # Sequence, not Faker: names must stay unique per the table constraint
     name = factory.Sequence(lambda n: f"tag-{n}")
+    color = factory.Faker("hex_color")
     archived = False

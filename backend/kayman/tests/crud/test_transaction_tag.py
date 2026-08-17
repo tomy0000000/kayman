@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
@@ -28,11 +29,30 @@ def test_create_transaction_tags(session: Session):
     for db_tag, tag in zip(db_tags, tags, strict=True):
         assert db_tag.id is not None
         assert db_tag.name == tag.name
+        assert db_tag.color == tag.color
         assert db_tag.archived == tag.archived
 
 
 def test_create_transaction_tags_empty(session: Session):
     assert create_transaction_tags(session, []) == []
+
+
+def test_create_transaction_tags_without_color(session: Session):
+    db_tag = create_transaction_tags(session, [TransactionTagCreate(name="no-color")])[
+        0
+    ]
+
+    assert db_tag.color is None
+
+
+@pytest.mark.parametrize(
+    "color",
+    ["red", "#ff", "#GGGGGG", "4f46e5", "#4f46e55"],
+    ids=["name", "too-short", "non-hex", "no-hash", "too-long"],
+)
+def test_create_transaction_tags_invalid_color(color):
+    with pytest.raises(ValidationError):
+        TransactionTagCreate(name="bad-color", color=color)
 
 
 def test_create_transaction_tags_no_commit(session: Session, session_2: Session):
@@ -42,6 +62,7 @@ def test_create_transaction_tags_no_commit(session: Session, session_2: Session)
     session_tag = create_transaction_tags(session, [tag], commit=False)[0]
     assert session_tag.id is not None  # Auto int should be set
     assert session_tag.name == tag.name
+    assert session_tag.color == tag.color
     assert session_tag.archived == tag.archived
 
     # The tag should not be visible to other sessions (yet)
@@ -54,6 +75,7 @@ def test_create_transaction_tags_no_commit(session: Session, session_2: Session)
     session_2_tag = session_2.get(TransactionTag, session_tag.id)
     assert session_2_tag is not None
     assert session_2_tag.name == tag.name
+    assert session_2_tag.color == tag.color
     assert session_2_tag.archived == tag.archived
 
 
@@ -125,13 +147,14 @@ def test_read_transaction_tags_for_update(session: Session):
     ("field", "new_value"),
     [
         ("name", "renamed-tag"),
+        ("color", "#4f46e5"),
         ("archived", True),
     ],
-    ids=["name", "archived"],
+    ids=["name", "color", "archived"],
 )
 def test_update_transaction_tag_field(session: Session, field, new_value):
     tag = TransactionTagFactory(archived=False)
-    originals = {"name": tag.name, "archived": tag.archived}
+    originals = {"name": tag.name, "color": tag.color, "archived": tag.archived}
 
     updated = update_transaction_tags(
         session, [tag.id], [TransactionTagUpdate(**{field: new_value})]

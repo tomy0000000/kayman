@@ -1,16 +1,19 @@
 [
   {
     "archived": false,
+    "color": "#1d1d1f",
     "id": 1,
     "name": "Apple Pay"
   },
   {
     "archived": false,
+    "color": "#003087",
     "id": 2,
     "name": "PayPal"
   },
   {
     "archived": false,
+    "color": "#6d1ed4",
     "id": 3,
     "name": "Zelle"
   },
@@ -21,6 +24,7 @@
   },
   {
     "archived": true,
+    "color": "#008cff",
     "id": 5,
     "name": "Venmo"
   }

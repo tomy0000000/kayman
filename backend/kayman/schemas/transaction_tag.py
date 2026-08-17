@@ -1,9 +1,13 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
+from pydantic import StringConstraints
 from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
 
 if TYPE_CHECKING:
     from kayman.schemas.transaction import Transaction
+
+HEX_COLOR_PATTERN = r"^#[0-9A-Fa-f]{6}$"
+HexColor = Annotated[str, StringConstraints(pattern=HEX_COLOR_PATTERN)]
 
 
 class TransactionTagLink(SQLModel, table=True):
@@ -19,6 +23,7 @@ class TransactionTagLink(SQLModel, table=True):
 
 class TransactionTagBase(SQLModel):
     name: str
+    color: HexColor | None = Field(default=None, max_length=7)
     archived: bool = Field(default=False)
 
 
@@ -41,4 +46,5 @@ class TransactionTagRead(TransactionTagBase):
 
 class TransactionTagUpdate(SQLModel):
     name: str | None = None
+    color: HexColor | None = None
     archived: bool | None = None
