@@ -1,4 +1,5 @@
 import { EventForm } from '@/components/event/event-form'
+import { EventReceipt } from '@/components/event/event-receipt'
 import { ResponsiveSheet } from '@/components/responsive-sheet'
 import {
   type AccountRead,
@@ -16,6 +17,7 @@ export type EventSheetState =
   | { mode: 'new' }
   | { mode: 'edit'; event: EventReadDetailed }
   | { mode: 'duplicate'; event: EventReadDetailed }
+  | { mode: 'view'; event: EventReadDetailed }
 
 interface EventSheetProps {
   open: boolean
@@ -39,7 +41,8 @@ interface EventSheetProps {
 const TITLES: Record<EventSheetState['mode'], string> = {
   new: 'New event',
   edit: 'Edit event',
-  duplicate: 'Duplicate event'
+  duplicate: 'Duplicate event',
+  view: 'Event details'
 }
 
 export function EventSheet({
@@ -65,19 +68,27 @@ export function EventSheet({
       title={TITLES[state.mode]}
       className="data-[side=right]:sm:max-w-2xl"
     >
-      {/* Keyed so the form re-initializes from the picked event. */}
-      <EventForm
-        key={formKey}
-        accounts={accounts}
-        categories={categories}
-        currencies={currencies}
-        transactionTags={transactionTags}
-        editingEvent={state.mode === 'edit' ? state.event : null}
-        seedEvent={state.mode === 'duplicate' ? state.event : null}
-        seedDate={seedDate}
-        onSubmit={onSubmit}
-        isPending={isPending}
-      />
+      {state.mode === 'view' ? (
+        <EventReceipt
+          event={state.event}
+          categories={categories}
+          accounts={accounts}
+        />
+      ) : (
+        /* Keyed so the form re-initializes from the picked event. */
+        <EventForm
+          key={formKey}
+          accounts={accounts}
+          categories={categories}
+          currencies={currencies}
+          transactionTags={transactionTags}
+          editingEvent={state.mode === 'edit' ? state.event : null}
+          seedEvent={state.mode === 'duplicate' ? state.event : null}
+          seedDate={seedDate}
+          onSubmit={onSubmit}
+          isPending={isPending}
+        />
+      )}
     </ResponsiveSheet>
   )
 }

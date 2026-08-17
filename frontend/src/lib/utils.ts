@@ -23,6 +23,21 @@ export function formatCurrency(amount: number, currencyCode: string): string {
   }).format(amount)
 }
 
+// Totals grouped by currency, so legs held in different currencies (an Exchange
+// event) never sum into one meaningless number.
+export function sumByCurrency(
+  rows: { amount: number; currencyCode: string }[]
+): Map<string, number> {
+  const totals = new Map<string, number>()
+  for (const row of rows) {
+    totals.set(
+      row.currencyCode,
+      (totals.get(row.currencyCode) ?? 0) + row.amount
+    )
+  }
+  return totals
+}
+
 export function formatDateTime(value: string | Date, timeZone: string): string {
   return new Date(value).toLocaleString(browserLocale, {
     dateStyle: 'medium',

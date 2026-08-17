@@ -152,7 +152,8 @@ function HomePage() {
       )
     : events
 
-  // Back the form's fields, so only fetched once the sheet opens.
+  const isFormOpen = sheet.open && sheet.state.mode !== 'view'
+
   const { data: accounts } = useQuery({
     ...readAccountsOptions(),
     enabled: sheet.open
@@ -160,13 +161,13 @@ function HomePage() {
 
   const { data: currencies } = useQuery({
     ...readCurrenciesOptions(),
-    enabled: sheet.open,
+    enabled: isFormOpen,
     staleTime: REFERENCE_STALE_TIME
   })
 
   const { data: transactionTags } = useQuery({
     ...readTransactionTagsOptions(),
-    enabled: sheet.open,
+    enabled: isFormOpen,
     staleTime: REFERENCE_STALE_TIME
   })
 
@@ -192,6 +193,7 @@ function HomePage() {
             events={visibleEvents}
             categories={categories ?? []}
             isPending={isPending}
+            onEventView={(event) => openSheet({ mode: 'view', event })}
             onEventEdit={(event) => openSheet({ mode: 'edit', event })}
             onEventDuplicate={(event) =>
               openSheet({ mode: 'duplicate', event })

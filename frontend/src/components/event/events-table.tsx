@@ -35,6 +35,7 @@ interface EventsTableProps {
   events: EventReadDetailed[] | undefined
   categories: CategoryReadWithChildren[]
   isPending: boolean
+  onEventView?: (event: EventReadDetailed) => void
   onEventEdit?: (event: EventReadDetailed) => void
   onEventDuplicate?: (event: EventReadDetailed) => void
 }
@@ -52,6 +53,7 @@ export function EventsTable({
   events,
   categories,
   isPending,
+  onEventView,
   onEventEdit,
   onEventDuplicate
 }: EventsTableProps) {
@@ -194,6 +196,9 @@ export function EventsTable({
                 <ContextMenuContent
                   onCloseAutoFocus={(event) => event.preventDefault()}
                 >
+                  <ContextMenuItem onSelect={() => onEventView?.(row.original)}>
+                    View
+                  </ContextMenuItem>
                   <ContextMenuItem onSelect={() => onEventEdit?.(row.original)}>
                     Edit
                   </ContextMenuItem>
