@@ -23,13 +23,14 @@ import {
   TableRow
 } from '@/components/ui/table'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
+import { useIsMobile } from '@/hooks/use-mobile'
 import type {
   CategoryReadWithChildren,
   EventReadDetailed,
   TransactionRead
 } from '@/lib/client'
 import { buildCategoryNameMap } from '@/lib/types'
-import { formatCurrency, formatTime } from '@/lib/utils'
+import { cn, formatCurrency, formatTime } from '@/lib/utils'
 
 interface EventsTableProps {
   events: EventReadDetailed[] | undefined
@@ -58,6 +59,7 @@ export function EventsTable({
   onEventDuplicate
 }: EventsTableProps) {
   const { timezone } = useClientTimezone()
+  const isMobile = useIsMobile()
   const categoryNames = useMemo(
     () => buildCategoryNameMap(categories),
     [categories]
@@ -182,7 +184,23 @@ export function EventsTable({
             table.getRowModel().rows.map((row) => (
               <ContextMenu key={row.id}>
                 <ContextMenuTrigger asChild>
-                  <TableRow className="h-14">
+                  <TableRow
+                    className={cn('h-14', isMobile && 'cursor-pointer')}
+                    onClick={
+                      isMobile
+                        ? (clickEvent) => {
+                            // The long press that opens the context menu also
+                            // ends in a click, so skip while it is open.
+                            if (
+                              clickEvent.currentTarget.dataset.state === 'open'
+                            ) {
+                              return
+                            }
+                            onEventView?.(row.original)
+                          }
+                        : undefined
+                    }
+                  >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(
