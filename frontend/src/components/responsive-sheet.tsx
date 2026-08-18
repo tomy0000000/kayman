@@ -35,7 +35,12 @@ export function ResponsiveSheet({
     // useful left to reach behind it.
     return (
       <Drawer open={open} onOpenChange={onOpenChange} showSwipeHandle>
-        <DrawerContent className={className}>
+        <DrawerContent
+          className={cn(
+            'pb-[max(env(safe-area-inset-bottom),1rem)]',
+            className
+          )}
+        >
           <div data-base-ui-swipe-ignore className="contents">
             <DrawerHeader>
               <DrawerTitle>{title}</DrawerTitle>
