@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient
+} from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -31,7 +36,8 @@ import {
   parseLocalDate,
   zonedCalendarDate,
   zonedCalendarGridRange,
-  zonedDayKey
+  zonedDayKey,
+  zonedDayRange
 } from '@/lib/utils'
 
 const searchSchema = z.object({
@@ -63,7 +69,8 @@ function HomePage() {
     navigate({ search: { date: next && formatCalendarDate(next) } })
   }
 
-  const { start, end } = zonedCalendarGridRange(month, timezone)
+  const gridRange = zonedCalendarGridRange(month, timezone)
+  const dayRange = date ? zonedDayRange(date, timezone) : undefined
 
   // The state outlives `open` so the sheet keeps its body while closing.
   const [sheet, setSheet] = useState<{
@@ -134,23 +141,32 @@ function HomePage() {
     }
   })
 
-  const { isPending, data: events } = useQuery({
-    ...readEventsOptions({ query: { start, end } }),
+  // Two separate reads: the grid query only feeds the calendar's dots, so it
+  // stays out of the table's loading path and keeps showing the previous
+  // month's marks while it refetches. The table reads just the selected day.
+  const { isPending: isGridPending, data: gridEvents } = useQuery({
+    ...readEventsOptions({ query: gridRange }),
+    placeholderData: keepPreviousData,
+    meta: { errorMessage: 'Failed to fetch events' }
+  })
+
+  const { isPending: isDayPending, data: dayEvents } = useQuery({
+    ...readEventsOptions({ query: dayRange }),
+    enabled: dayRange !== undefined,
     meta: { errorMessage: 'Failed to fetch events' }
   })
 
   const eventDays = useMemo(
     () =>
-      new Set(events?.map((event) => zonedDayKey(event.timestamp, timezone))),
-    [events, timezone]
+      new Set(
+        gridEvents?.map((event) => zonedDayKey(event.timestamp, timezone))
+      ),
+    [gridEvents, timezone]
   )
 
-  const selectedDay = date && formatCalendarDate(date)
-  const visibleEvents = selectedDay
-    ? events?.filter(
-        (event) => zonedDayKey(event.timestamp, timezone) === selectedDay
-      )
-    : events
+  // With no day picked the table falls back to the whole grid.
+  const visibleEvents = dayRange ? dayEvents : gridEvents
+  const isPending = dayRange ? isDayPending : isGridPending
 
   const isFormOpen = sheet.open && sheet.state.mode !== 'view'
 
