@@ -26,8 +26,10 @@ import {
 } from '@/components/ui/popover'
 import { useAuth } from '@/hooks/use-auth'
 
+const PRIVATE_HOST =
+  /^(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$/
 const LOCAL_BACKEND: string =
-  typeof window !== 'undefined'
+  typeof window !== 'undefined' && PRIVATE_HOST.test(window.location.hostname)
     ? window.location.origin.replace(/:\d+$/, ':8000')
     : 'http://localhost:8000'
 const PRESET_HOSTS: Record<string, string> = {
