@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { Amount } from '@/components/amount'
 import { EventTypeBadge } from '@/components/event/event-type-badge'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
-import { Badge } from '@/components/ui/badge'
+import { TransactionTagBadge } from '@/components/transaction/transaction-tag-badge'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import type {
   AccountRead,
@@ -126,9 +126,7 @@ export function EventReceipt({
                 <>
                   <TransactionStatusBadge status={transaction.status} />
                   {transaction.tags?.map((tag) => (
-                    <Badge key={tag.id} variant="outline">
-                      {tag.name}
-                    </Badge>
+                    <TransactionTagBadge key={tag.id} tag={tag} />
                   ))}
                 </>
               }
