@@ -28,7 +28,7 @@ function AuthenticatedLayout() {
         <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger />
         </header>
-        <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
           <Outlet />
         </div>
       </SidebarInset>

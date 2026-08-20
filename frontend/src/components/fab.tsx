@@ -23,7 +23,7 @@ export function Fab({ hotkey, label, onOpen }: FabProps) {
       <TooltipTrigger asChild>
         <Button
           size="icon-lg"
-          className="fixed right-6 bottom-6 z-40 size-14 rounded-full shadow-lg"
+          className="fixed right-6 bottom-[calc(env(safe-area-inset-bottom,0)+1.5rem)] z-40 size-14 rounded-full shadow-lg"
           aria-label={label}
           onClick={onOpen}
         >
