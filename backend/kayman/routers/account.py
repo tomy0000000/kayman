@@ -9,6 +9,7 @@ from sqlmodel import Session
 from kayman.auth import get_client
 from kayman.core.db import get_session
 from kayman.crud.account import (
+    AccountOrderBy,
     create_accounts,
     read_account,
     read_accounts,
@@ -64,8 +65,13 @@ def read(*, session: Session = Depends(get_session), account_id: int) -> Account
 
 
 @account_router.get("", name="Read Accounts", response_model=list[AccountRead])
-def reads(*, session: Session = Depends(get_session)) -> Sequence[AccountBase]:
-    return read_accounts(session)
+def reads(
+    *,
+    session: Session = Depends(get_session),
+    order_by: AccountOrderBy | None = None,
+    descending: bool = False,
+) -> Sequence[AccountBase]:
+    return read_accounts(session, order_by=order_by, descending=descending)
 
 
 @account_router.get(
