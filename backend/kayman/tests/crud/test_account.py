@@ -216,6 +216,60 @@ def test_read_accounts_by_ids(session: Session):
         assert_account_matches(db_account, account)
 
 
+def test_read_accounts_order_by_name(session: Session):
+    charlie = AccountFactory(name="charlie")
+    alpha = AccountFactory(name="alpha")
+    bravo = AccountFactory(name="bravo")
+
+    results = read_accounts(session, order_by="name")
+
+    assert len(results) == 3
+    assert [account.id for account in results] == [alpha.id, bravo.id, charlie.id]
+
+
+def test_read_accounts_order_by_balance(session: Session):
+    high = AccountFactory(balance=Decimal("100"))
+    low = AccountFactory(balance=Decimal("-50"))
+    mid = AccountFactory(balance=Decimal("25"))
+
+    results = read_accounts(session, order_by="balance")
+
+    assert len(results) == 3
+    assert [account.id for account in results] == [low.id, mid.id, high.id]
+
+
+def test_read_accounts_order_by_created_at(session: Session):
+    d1 = datetime(2026, 1, 1, tzinfo=UTC)
+    d2 = datetime(2026, 1, 2, tzinfo=UTC)
+    d3 = datetime(2026, 1, 3, tzinfo=UTC)
+    middle = AccountFactory(created_at=d2)
+    first = AccountFactory(created_at=d1)
+    last = AccountFactory(created_at=d3)
+
+    results = read_accounts(session, order_by="created_at")
+
+    assert len(results) == 3
+    assert [account.id for account in results] == [first.id, middle.id, last.id]
+
+
+def test_read_accounts_without_order_by_defaults_to_id_ascending(session: Session):
+    first, second, third = AccountFactory.create_batch(3)
+
+    results = read_accounts(session)
+
+    assert len(results) == 3
+    assert [account.id for account in results] == [first.id, second.id, third.id]
+
+
+def test_read_accounts_descending_without_order_by_is_id_descending(session: Session):
+    first, second, third = AccountFactory.create_batch(3)
+
+    results = read_accounts(session, descending=True)
+
+    assert len(results) == 3
+    assert [account.id for account in results] == [third.id, second.id, first.id]
+
+
 def test_read_accounts_for_update(session: Session):
     AccountFactory()
 

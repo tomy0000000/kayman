@@ -1,12 +1,15 @@
 from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 
 from sqlalchemy import func
-from sqlmodel import Integer, Session, cast, select
+from sqlmodel import Integer, Session, cast, col, select
 
 from kayman.schemas.account import Account, AccountBase, AccountCreate, AccountUpdate
 from kayman.schemas.transaction import Transaction
+
+AccountOrderBy = Literal["name", "balance", "created_at", "id"]
 
 
 def create_accounts(
@@ -39,11 +42,17 @@ def read_account_balance(
 
 
 def read_accounts(
-    session: Session, account_ids: list[int] | None = None, for_update: bool = False
+    session: Session,
+    account_ids: list[int] | None = None,
+    order_by: AccountOrderBy | None = None,
+    descending: bool = False,
+    for_update: bool = False,
 ) -> Sequence[Account]:
     statement = select(Account)
     if account_ids:
         statement = statement.where(cast(Account.id, Integer).in_(account_ids))
+    column = getattr(Account, order_by) if order_by is not None else col(Account.id)
+    statement = statement.order_by(column.desc() if descending else column.asc())
     if for_update:
         statement = statement.with_for_update()
     return session.exec(statement).all()
