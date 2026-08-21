@@ -8,7 +8,7 @@ import { DatePickerWithRange } from '@/components/date-range-picker'
 import { Tree } from '@/components/tree'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { readCategoriesOptions } from '@/lib/client/@tanstack/react-query.gen'
+import { readCategoryTreeOptions } from '@/lib/client/@tanstack/react-query.gen'
 import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { categoryToTreeItem } from '@/lib/types'
 
@@ -35,7 +35,7 @@ function CategoryPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
   const { data: categories } = useQuery({
-    ...readCategoriesOptions(),
+    ...readCategoryTreeOptions(),
     staleTime: REFERENCE_STALE_TIME,
     meta: { errorMessage: 'Failed to fetch categories' }
   })

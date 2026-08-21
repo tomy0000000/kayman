@@ -24,7 +24,7 @@ import {
   readAccountTransactionsWithRunningBalanceOptions,
   readAccountTransactionsWithRunningBalanceQueryKey,
   readAccountsOptions,
-  readCategoriesOptions,
+  readCategoryTreeOptions,
   readCurrenciesOptions,
   readEventsOptions,
   readEventsQueryKey,
@@ -178,7 +178,7 @@ function AccountTransactionPage() {
 
   // Back the create-event sheet's entry fields, fetched once it opens.
   const { data: categories } = useQuery({
-    ...readCategoriesOptions(),
+    ...readCategoryTreeOptions(),
     enabled: creatingEventTransaction != null,
     staleTime: REFERENCE_STALE_TIME
   })
