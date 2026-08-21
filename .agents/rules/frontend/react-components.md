@@ -44,6 +44,15 @@ Pure helpers (formatters, date math, class-name builders, etc.) belong in `front
 
 Why: keeps component files lean and focused on rendering, and makes helpers reusable and testable without mounting React.
 
+## Loading skeletons for API data
+
+Any component that renders API-fetched data must render a skeleton state while that data is loading, using `Skeleton` from `@/components/ui/skeleton`. No "Loading..." text, no spinner, no blank area.
+
+- Shape the skeleton like the eventual content: same row heights and roughly the same layout (e.g. skeleton table rows with per-column blocks, not one big rectangle).
+- The pending flag arrives the same way the data does: fetched at the route and passed as a prop (e.g. `isPending`), or from the component's own query when it owns one (see the exception below).
+
+Why: skeletons keep the layout stable so content doesn't jump when loading finishes, and give the app one consistent loading language. Example: `EventsTable` renders three skeleton rows shaped like real event rows.
+
 ## Data hooks in `components/`
 
 Components in `frontend/src/components/` default to presentational: data and mutation handlers arrive through props.
