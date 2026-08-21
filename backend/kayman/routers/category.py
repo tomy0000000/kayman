@@ -42,11 +42,9 @@ def create(
     return db_category
 
 
-@category_router.get(
-    "", name="Read Categories", response_model=list[CategoryReadWithChildren]
-)
+@category_router.get("", name="Read Categories", response_model=list[CategoryRead])
 def reads(*, session: Session = Depends(get_session)) -> Sequence[CategoryBase]:
-    return read_categories(session, parent_id="empty")
+    return read_categories(session)
 
 
 @category_router.get(
