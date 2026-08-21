@@ -13,7 +13,7 @@ import {
   ComboboxSeparator,
   useComboboxAnchor
 } from '@/components/ui/combobox'
-import { type CategoryReadWithChildren } from '@/lib/client'
+import { type CategoryRead } from '@/lib/client'
 import {
   type CategoryGroup,
   type CategoryOption,
@@ -21,7 +21,7 @@ import {
 } from '@/lib/types'
 
 interface CategoryComboboxProps {
-  categories: CategoryReadWithChildren[]
+  categories: CategoryRead[]
   value: number | null
   onValueChange: (categoryId: number | null) => void
   id?: string

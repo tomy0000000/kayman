@@ -20,7 +20,7 @@ import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { type EventCreate, createEvent, updateEvent } from '@/lib/client'
 import {
   readAccountsOptions,
-  readCategoryTreeOptions,
+  readCategoriesOptions,
   readCurrenciesOptions,
   readEventsOptions,
   readEventsQueryKey,
@@ -189,7 +189,7 @@ function HomePage() {
 
   // Categories back both the form and the table's summary column.
   const { data: categories } = useQuery({
-    ...readCategoryTreeOptions(),
+    ...readCategoriesOptions(),
     staleTime: REFERENCE_STALE_TIME
   })
 

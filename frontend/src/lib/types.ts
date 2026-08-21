@@ -1,4 +1,8 @@
-import type { CategoryReadWithChildren, EventEntryRead } from '@/lib/client'
+import type {
+  CategoryRead,
+  CategoryReadWithChildren,
+  EventEntryRead
+} from '@/lib/client'
 
 export type TreeItem = {
   id: string
@@ -120,37 +124,39 @@ export type CategoryGroup = {
   items: CategoryOption[]
 }
 
-// Flatten a category tree into combobox groups
+// Group a flat category list into combobox groups: one group per root
+// category, holding the root and its descendants in pre-order. The list
+// arrives sorted by (index, name), which preserves sibling order.
 export function buildCategoryGroups(
-  categories: CategoryReadWithChildren[]
+  categories: CategoryRead[]
 ): CategoryGroup[] {
-  const walk = (category: CategoryReadWithChildren): CategoryOption[] => {
+  const childrenByParent = new Map<number, CategoryRead[]>()
+  const roots: CategoryRead[] = []
+  for (const category of categories) {
+    if (category.parent_id == null) {
+      roots.push(category)
+    } else {
+      const siblings = childrenByParent.get(category.parent_id) ?? []
+      siblings.push(category)
+      childrenByParent.set(category.parent_id, siblings)
+    }
+  }
+  const walk = (category: CategoryRead): CategoryOption[] => {
     const options: CategoryOption[] = [
       { value: category.id, label: category.name }
     ]
-    for (const subCategory of category.sub_categories ?? []) {
-      options.push(...walk(subCategory))
+    for (const child of childrenByParent.get(category.id) ?? []) {
+      options.push(...walk(child))
     }
     return options
   }
-  return categories.flatMap((root) => {
-    const items = walk(root)
-    return items.length > 0 ? [{ value: root.name, items }] : []
-  })
+  return roots.map((root) => ({ value: root.name, items: walk(root) }))
 }
 
-// Flatten a category tree into an id -> name lookup, including nested
-// sub-categories, so entries (which reference `category_id`) can render names.
+// An id -> name lookup so entries (which reference `category_id`) can render
+// names.
 export function buildCategoryNameMap(
-  categories: CategoryReadWithChildren[]
+  categories: CategoryRead[]
 ): Map<number, string> {
-  const map = new Map<number, string>()
-  const walk = (list: CategoryReadWithChildren[]) => {
-    for (const category of list) {
-      map.set(category.id, category.name)
-      if (category.sub_categories) walk(category.sub_categories)
-    }
-  }
-  walk(categories)
-  return map
+  return new Map(categories.map((category) => [category.id, category.name]))
 }

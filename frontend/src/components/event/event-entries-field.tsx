@@ -16,11 +16,11 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { type CategoryReadWithChildren, type CurrencyRead } from '@/lib/client'
+import { type CategoryRead, type CurrencyRead } from '@/lib/client'
 import { type EventEntryDraft, componentKey } from '@/lib/types'
 
 interface EventEntriesFieldProps {
-  categories: CategoryReadWithChildren[]
+  categories: CategoryRead[]
   currencies: CurrencyRead[]
   value: EventEntryDraft[]
   onChange: (value: EventEntryDraft[]) => void
@@ -28,7 +28,7 @@ interface EventEntriesFieldProps {
 
 interface EventEntryRowProps {
   entry: EventEntryDraft
-  categories: CategoryReadWithChildren[]
+  categories: CategoryRead[]
   currencies: CurrencyRead[]
   constraints: RefObject<HTMLTableSectionElement | null>
   onChange: (entry: EventEntryDraft) => void

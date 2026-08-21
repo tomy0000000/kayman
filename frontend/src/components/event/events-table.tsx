@@ -25,7 +25,7 @@ import {
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { useIsMobile } from '@/hooks/use-mobile'
 import type {
-  CategoryReadWithChildren,
+  CategoryRead,
   EventReadDetailed,
   TransactionRead
 } from '@/lib/client'
@@ -34,7 +34,7 @@ import { cn, formatCurrency, formatTime } from '@/lib/utils'
 
 interface EventsTableProps {
   events: EventReadDetailed[] | undefined
-  categories: CategoryReadWithChildren[]
+  categories: CategoryRead[]
   isPending: boolean
   onEventView?: (event: EventReadDetailed) => void
   onEventEdit?: (event: EventReadDetailed) => void

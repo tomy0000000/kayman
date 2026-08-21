@@ -2,7 +2,7 @@ import { EventForm } from '@/components/event/event-form'
 import { ResponsiveSheet } from '@/components/responsive-sheet'
 import {
   type AccountRead,
-  type CategoryReadWithChildren,
+  type CategoryRead,
   type CurrencyRead,
   type EventCreate,
   type TransactionReadWithBalance,
@@ -14,7 +14,7 @@ interface CreateEventSheetProps {
   transaction: TransactionReadWithBalance | null
   account?: AccountRead
   accounts: AccountRead[]
-  categories: CategoryReadWithChildren[]
+  categories: CategoryRead[]
   currencies: CurrencyRead[]
   transactionTags: TransactionTagRead[]
   open: boolean

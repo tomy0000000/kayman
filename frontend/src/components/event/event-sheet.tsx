@@ -3,7 +3,7 @@ import { EventReceipt } from '@/components/event/event-receipt'
 import { ResponsiveSheet } from '@/components/responsive-sheet'
 import {
   type AccountRead,
-  type CategoryReadWithChildren,
+  type CategoryRead,
   type CurrencyRead,
   type EventCreate,
   type EventReadDetailed,
@@ -25,7 +25,7 @@ interface EventSheetProps {
   state: EventSheetState
   onOpenChange: (open: boolean) => void
   accounts: AccountRead[]
-  categories: CategoryReadWithChildren[]
+  categories: CategoryRead[]
   currencies: CurrencyRead[]
   transactionTags: TransactionTagRead[]
   // Calendar day to default a new event's timestamp to. See EventForm.

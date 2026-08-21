@@ -25,7 +25,7 @@ import { ZonedTimePicker } from '@/components/zoned-time-picker'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
   type AccountRead,
-  type CategoryReadWithChildren,
+  type CategoryRead,
   type CurrencyRead,
   type EventCreate,
   type EventReadDetailed,
@@ -60,7 +60,7 @@ const EVENT_TYPES: { value: EventType; icon: LucideIcon }[] = [
 
 interface EventFormProps {
   accounts: AccountRead[]
-  categories: CategoryReadWithChildren[]
+  categories: CategoryRead[]
   currencies: CurrencyRead[]
   transactionTags: TransactionTagRead[]
   editingEvent: EventReadDetailed | null

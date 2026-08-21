@@ -5,17 +5,13 @@ import { EventTypeBadge } from '@/components/event/event-type-badge'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
 import { TransactionTagBadge } from '@/components/transaction/transaction-tag-badge'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
-import type {
-  AccountRead,
-  CategoryReadWithChildren,
-  EventReadDetailed
-} from '@/lib/client'
+import type { AccountRead, CategoryRead, EventReadDetailed } from '@/lib/client'
 import { buildCategoryNameMap } from '@/lib/types'
 import { formatCurrency, formatDateTime, sumByCurrency } from '@/lib/utils'
 
 interface EventReceiptProps {
   event: EventReadDetailed
-  categories: CategoryReadWithChildren[]
+  categories: CategoryRead[]
   accounts: AccountRead[]
 }
 
