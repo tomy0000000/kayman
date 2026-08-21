@@ -14,6 +14,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger
 } from '@/components/ui/context-menu'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -219,13 +220,33 @@ export function EventsTable({
                 </ContextMenuContent>
               </ContextMenu>
             ))
+          ) : isPending ? (
+            Array.from({ length: 3 }, (_, index) => (
+              <TableRow key={index} className="h-14">
+                <TableCell>
+                  <Skeleton className="h-4 w-12" />
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1.5">
+                    <Skeleton className="h-4 w-40 max-w-full" />
+                    <Skeleton className="h-3.5 w-24 max-w-full" />
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col items-start gap-1.5">
+                    <Skeleton className="h-4 w-14" />
+                    <Skeleton className="h-4 w-20 max-w-full" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
           ) : (
             <TableRow>
               <TableCell
                 colSpan={columns.length}
                 className="h-10 text-center text-neutral-500"
               >
-                {isPending ? 'Loading...' : 'No events'}
+                No events
               </TableCell>
             </TableRow>
           )}
