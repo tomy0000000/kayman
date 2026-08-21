@@ -50,6 +50,13 @@ def reads(*, session: Session = Depends(get_session)) -> Sequence[CategoryBase]:
 
 
 @category_router.get(
+    "/tree", name="Read Category Tree", response_model=list[CategoryReadWithChildren]
+)
+def read_tree(*, session: Session = Depends(get_session)) -> Sequence[CategoryBase]:
+    return read_categories(session, parent_id="empty")
+
+
+@category_router.get(
     "/{id}", name="Read Category", response_model=CategoryReadWithChildren
 )
 def read(*, session: Session = Depends(get_session), id: int) -> CategoryBase:
