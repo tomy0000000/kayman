@@ -24,17 +24,12 @@ import {
 } from '@/components/ui/table'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { useIsMobile } from '@/hooks/use-mobile'
-import type {
-  CategoryRead,
-  EventReadDetailed,
-  TransactionRead
-} from '@/lib/client'
-import { buildCategoryNameMap } from '@/lib/types'
+import type { EventReadDetailed, TransactionRead } from '@/lib/client'
 import { cn, formatCurrency, formatTime } from '@/lib/utils'
 
 interface EventsTableProps {
   events: EventReadDetailed[] | undefined
-  categories: CategoryRead[]
+  categoryNames: Map<number, string>
   isPending: boolean
   onEventView?: (event: EventReadDetailed) => void
   onEventEdit?: (event: EventReadDetailed) => void
@@ -52,7 +47,7 @@ const COLUMN_WIDTHS: Record<string, string> = {
 
 export function EventsTable({
   events,
-  categories,
+  categoryNames,
   isPending,
   onEventView,
   onEventEdit,
@@ -60,10 +55,6 @@ export function EventsTable({
 }: EventsTableProps) {
   const { timezone } = useClientTimezone()
   const isMobile = useIsMobile()
-  const categoryNames = useMemo(
-    () => buildCategoryNameMap(categories),
-    [categories]
-  )
 
   const columns = useMemo<ColumnDef<EventReadDetailed>[]>(() => {
     // A transaction's currency is its account's currency, already denormalized

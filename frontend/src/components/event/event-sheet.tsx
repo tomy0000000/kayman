@@ -26,6 +26,7 @@ interface EventSheetProps {
   onOpenChange: (open: boolean) => void
   accounts: AccountRead[]
   categories: CategoryRead[]
+  categoryNames: Map<number, string>
   currencies: CurrencyRead[]
   transactionTags: TransactionTagRead[]
   // Calendar day to default a new event's timestamp to. See EventForm.
@@ -51,6 +52,7 @@ export function EventSheet({
   onOpenChange,
   accounts,
   categories,
+  categoryNames,
   currencies,
   transactionTags,
   seedDate,
@@ -71,7 +73,7 @@ export function EventSheet({
       {state.mode === 'view' ? (
         <EventReceipt
           event={state.event}
-          categories={categories}
+          categoryNames={categoryNames}
           accounts={accounts}
         />
       ) : (

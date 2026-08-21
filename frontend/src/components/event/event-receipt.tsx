@@ -5,13 +5,12 @@ import { EventTypeBadge } from '@/components/event/event-type-badge'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
 import { TransactionTagBadge } from '@/components/transaction/transaction-tag-badge'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
-import type { AccountRead, CategoryRead, EventReadDetailed } from '@/lib/client'
-import { buildCategoryNameMap } from '@/lib/types'
+import type { AccountRead, EventReadDetailed } from '@/lib/client'
 import { formatCurrency, formatDateTime, sumByCurrency } from '@/lib/utils'
 
 interface EventReceiptProps {
   event: EventReadDetailed
-  categories: CategoryRead[]
+  categoryNames: Map<number, string>
   accounts: AccountRead[]
 }
 
@@ -31,14 +30,10 @@ interface ReceiptTotalProps {
 
 export function EventReceipt({
   event,
-  categories,
+  categoryNames,
   accounts
 }: EventReceiptProps) {
   const { timezone } = useClientTimezone()
-  const categoryNames = useMemo(
-    () => buildCategoryNameMap(categories),
-    [categories]
-  )
   const accountNames = useMemo(
     () => new Map(accounts.map((account) => [account.id, account.name])),
     [accounts]

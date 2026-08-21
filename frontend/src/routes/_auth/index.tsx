@@ -193,6 +193,16 @@ function HomePage() {
     staleTime: REFERENCE_STALE_TIME
   })
 
+  // An id -> name lookup so entries (which reference `category_id`) can render
+  // names.
+  const categoryNames = useMemo(
+    () =>
+      new Map(
+        (categories ?? []).map((category) => [category.id, category.name])
+      ),
+    [categories]
+  )
+
   return (
     <>
       <div className="flex flex-col gap-4">
@@ -207,7 +217,7 @@ function HomePage() {
         <div className="w-full">
           <EventsTable
             events={visibleEvents}
-            categories={categories ?? []}
+            categoryNames={categoryNames}
             isPending={isPending}
             onEventView={(event) => openSheet({ mode: 'view', event })}
             onEventEdit={(event) => openSheet({ mode: 'edit', event })}
@@ -230,6 +240,7 @@ function HomePage() {
         onOpenChange={(open) => setSheet((current) => ({ ...current, open }))}
         accounts={accounts ?? []}
         categories={categories ?? []}
+        categoryNames={categoryNames}
         currencies={currencies ?? []}
         transactionTags={transactionTags ?? []}
         seedDate={date}

@@ -152,11 +152,3 @@ export function buildCategoryGroups(
   }
   return roots.map((root) => ({ value: root.name, items: walk(root) }))
 }
-
-// An id -> name lookup so entries (which reference `category_id`) can render
-// names.
-export function buildCategoryNameMap(
-  categories: CategoryRead[]
-): Map<number, string> {
-  return new Map(categories.map((category) => [category.id, category.name]))
-}
