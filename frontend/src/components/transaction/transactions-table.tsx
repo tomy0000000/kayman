@@ -14,6 +14,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger
 } from '@/components/ui/context-menu'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -199,13 +200,39 @@ export function TransactionsTable({
                 </ContextMenuContent>
               </ContextMenu>
             ))
+          ) : isPending ? (
+            Array.from({ length: 3 }, (_, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <Skeleton className="h-4 w-12" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-10" />
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1.5">
+                    <Skeleton className="h-4 w-40 max-w-full" />
+                    <Skeleton className="h-3.5 w-24 max-w-full" />
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-16" />
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col items-end gap-1">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
           ) : (
             <TableRow>
               <TableCell
                 colSpan={columns.length}
                 className="h-10 text-center text-neutral-500"
               >
-                {isPending ? 'Loading...' : 'No transactions'}
+                No transactions
               </TableCell>
             </TableRow>
           )}
