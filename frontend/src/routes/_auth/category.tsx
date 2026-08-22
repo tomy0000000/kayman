@@ -34,7 +34,7 @@ const transactions = [
 function CategoryPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
-  const { data: categories } = useQuery({
+  const { isPending, data: categories } = useQuery({
     ...readCategoryTreeOptions(),
     staleTime: REFERENCE_STALE_TIME,
     meta: { errorMessage: 'Failed to fetch categories' }
@@ -47,7 +47,7 @@ function CategoryPage() {
   return (
     <div className="flex h-full">
       <div className="flex-1 p-4">
-        <Tree treeData={treeData} />
+        <Tree treeData={treeData} isPending={isPending} />
       </div>
 
       <Separator orientation="vertical" />

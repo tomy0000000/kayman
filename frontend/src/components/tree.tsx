@@ -6,11 +6,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from '@/components/ui/collapsible'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { TreeItem } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 interface TreeProps {
   treeData: TreeItem[] | undefined
+  isPending: boolean
 }
 
 interface TreeNodeProps {
@@ -20,8 +22,35 @@ interface TreeNodeProps {
   level: number
 }
 
-export function Tree({ treeData }: TreeProps) {
+const SKELETON_ROWS: { level: number; width: string }[] = [
+  { level: 0, width: 'w-32' },
+  { level: 1, width: 'w-24' },
+  { level: 1, width: 'w-28' },
+  { level: 0, width: 'w-36' },
+  { level: 1, width: 'w-24' }
+]
+
+export function Tree({ treeData, isPending }: TreeProps) {
   const [currentId, setCurrentId] = useState<string | null>(null)
+
+  if (isPending) {
+    return (
+      <ul role="tree" className="text-sm">
+        {SKELETON_ROWS.map(({ level, width }, index) => (
+          <li key={index}>
+            <div
+              className="flex items-center gap-1 py-1.5"
+              style={{ paddingLeft: level * 12 }}
+            >
+              <span className="w-5" />
+              <Skeleton className={cn('h-4', width)} />
+            </div>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
   return (
     <ul role="tree" className="text-sm">
       {treeData?.map((item) => (
