@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { CreateAccountFab } from '@/components/create-account-fab'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   createAccountMutation,
   readAccountsOptions,
@@ -23,7 +24,7 @@ function AccountListPage() {
   const queryClient = useQueryClient()
   const [fabOpen, setFabOpen] = useState(false)
 
-  const { data: accounts } = useQuery({
+  const { isPending: isAccountsPending, data: accounts } = useQuery({
     ...readAccountsOptions(),
     meta: { errorMessage: 'Failed to fetch accounts' }
   })
@@ -47,6 +48,20 @@ function AccountListPage() {
 
   return (
     <div className="w-full">
+      {isAccountsPending &&
+        Array.from({ length: 3 }, (_, index) => (
+          <div key={index}>
+            {index > 0 && <Separator />}
+            <div className="-mx-4 flex items-center gap-3 px-4 py-3">
+              <Skeleton className="size-6 shrink-0 rounded-full" />
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <Skeleton className="h-4 w-32 max-w-full" />
+                <Skeleton className="h-4 w-24 max-w-full" />
+              </div>
+            </div>
+          </div>
+        ))}
+
       {accounts?.map((account, index) => {
         const balance = parseFloat(account.balance)
         const isNegative = balance < 0
@@ -78,7 +93,7 @@ function AccountListPage() {
         )
       })}
 
-      {accounts?.length === 0 && (
+      {!isAccountsPending && accounts?.length === 0 && (
         <p className="text-muted-foreground p-4 text-sm">No accounts found.</p>
       )}
 
