@@ -21,6 +21,7 @@ import {
   ItemDescription,
   ItemTitle
 } from '@/components/ui/item'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -98,8 +99,12 @@ export function LinkEventField({
         </div>
       ) : eventId != null && events === undefined ? (
         <Item variant="outline" size="sm" className="bg-background">
+          <Skeleton className="h-5 w-14" />
           <ItemContent>
-            <ItemDescription>Loading event…</ItemDescription>
+            <div className="flex flex-col gap-1.5">
+              <Skeleton className="h-4 w-40 max-w-full" />
+              <Skeleton className="h-3.5 w-28 max-w-full" />
+            </div>
           </ItemContent>
         </Item>
       ) : (
@@ -184,6 +189,20 @@ function LinkEventTable({
                 <TableCell>{event.description}</TableCell>
                 <TableCell>
                   {formatDateTime(event.timestamp, timezone)}
+                </TableCell>
+              </TableRow>
+            ))
+          ) : events === undefined ? (
+            Array.from({ length: 3 }, (_, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <Skeleton className="h-5 w-14" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-40 max-w-full" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-28" />
                 </TableCell>
               </TableRow>
             ))
