@@ -23,6 +23,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -197,7 +198,10 @@ export function LinkTransactionsTable({
     )
   }
 
-  const { data } = useQuery({
+  // `isLoading`, not `isPending`: the query is disabled until an account is
+  // picked, and a disabled query stays pending, which would skeleton the
+  // empty table before any account is selected.
+  const { isLoading, data } = useQuery({
     ...readTransactionsOptions({
       query: { account_id: selectedAccount?.id, event_id: 'empty' }
     }),
@@ -267,6 +271,23 @@ export function LinkTransactionsTable({
                       )}
                     </TableCell>
                   ))}
+                </TableRow>
+              ))
+            ) : isLoading ? (
+              Array.from({ length: 3 }, (_, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <Skeleton className="size-4" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-32 max-w-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16" />
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
