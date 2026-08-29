@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { useClientCurrency } from '@/hooks/use-client-currency'
 import { type CategoryRead, type CurrencyRead } from '@/lib/client'
 import { type EventEntryDraft, componentKey } from '@/lib/types'
 
@@ -45,6 +46,13 @@ export function EventEntriesField({
   // wraps it in, so keep the drag inside the body.
   const body = useRef<HTMLTableSectionElement>(null)
 
+  const { currency: clientCurrency } = useClientCurrency()
+  // The saved code may no longer exist in the app's currency table, so only
+  // use the client currency when it does.
+  const defaultCurrency = currencies.some((c) => c.code === clientCurrency)
+    ? clientCurrency
+    : null
+
   const addEntry = () =>
     onChange([
       ...value,
@@ -55,7 +63,7 @@ export function EventEntriesField({
         amount: '',
         quantity: '1',
         // Entries in one event usually share a currency.
-        currencyCode: value.at(-1)?.currencyCode ?? null,
+        currencyCode: value.at(-1)?.currencyCode ?? defaultCurrency,
         description: ''
       }
     ])
