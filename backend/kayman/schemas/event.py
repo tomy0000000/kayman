@@ -46,6 +46,7 @@ class Event(EventBase, table=True):
     )
     entries: list["EventEntry"] = Relationship(
         back_populates="event",
+        cascade_delete=True,
         sa_relationship_kwargs={"order_by": "EventEntry.index"},
     )
 

@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 class EventEntryBase(SQLModel):
-    event_id: int = Field(foreign_key="event.id")
+    event_id: int = Field(foreign_key="event.id", ondelete="CASCADE")
     category_id: int = Field(foreign_key="category.id")
     amount: Decimal
     quantity: int
