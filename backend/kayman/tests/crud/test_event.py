@@ -3,10 +3,16 @@ from unittest.mock import patch
 
 import pytest
 from sqlalchemy import inspect
-from sqlmodel import Session
+from sqlmodel import Session, col, select
 
-from kayman.crud.event import create_events, read_events, update_events
+from kayman.crud.event import (
+    create_events,
+    delete_events,
+    read_events,
+    update_events,
+)
 from kayman.schemas.event import Event, EventType, EventUpdate
+from kayman.schemas.event_entry import EventEntry
 from kayman.tests.factories import (
     CategoryFactory,
     EventEntryFactory,
@@ -471,3 +477,76 @@ def test_update_events_length_mismatch(session: Session):
 
     with pytest.raises(ValueError, match="same length"):
         update_events(session, [event.id], [])
+
+
+def test_delete_events(session: Session):
+    events = EventFactory.create_batch(3)
+
+    # Ids out of insertion order: only the requested subset goes.
+    delete_events(session, [events[2], events[0]])
+
+    remaining = session.exec(select(Event).order_by(col(Event.id))).all()
+    assert len(remaining) == 1
+    assert remaining[0].id == events[1].id
+
+
+def test_delete_events_empty(session: Session):
+    event = EventFactory()
+
+    delete_events(session, [])
+
+    remaining = session.exec(select(Event)).all()
+    assert len(remaining) == 1
+    assert remaining[0].id == event.id
+
+
+def test_delete_events_no_commit(session: Session, session_2: Session):
+    event = EventFactory()
+    event_id = event.id
+
+    delete_events(session, [event], commit=False)
+
+    # The delete should not be visible to other sessions (yet)
+    session_2_events = session_2.exec(select(Event)).all()
+    assert len(session_2_events) == 1
+    assert session_2_events[0].id == event_id
+
+    # Commit the delete from main session
+    session.commit()
+
+    # The delete should now be visible to other sessions
+    session_2_events = session_2.exec(select(Event)).all()
+    assert len(session_2_events) == 0
+
+
+def test_delete_events_cascades_to_entries(session: Session):
+    event = EventFactory()
+    EventEntryFactory(event=event, index=0)
+    EventEntryFactory(event=event, index=1)
+
+    delete_events(session, [event])
+
+    # The entry rows must go with the event. Assert against the table rather
+    # than the in-memory objects, which say nothing about what the DB holds.
+    remaining_entries = session.exec(select(EventEntry)).all()
+    assert len(remaining_entries) == 0
+    remaining_events = session.exec(select(Event)).all()
+    assert len(remaining_events) == 0
+
+
+def test_delete_events_keeps_unrelated_events_and_entries(session: Session):
+    doomed = EventFactory()
+    EventEntryFactory(event=doomed, index=0)
+    survivor = EventFactory()
+    survivor_entry = EventEntryFactory(event=survivor, index=0)
+
+    delete_events(session, [doomed])
+
+    remaining_events = session.exec(select(Event)).all()
+    assert len(remaining_events) == 1
+    assert remaining_events[0].id == survivor.id
+
+    # The cascade reaches only the deleted event's own entries.
+    remaining_entries = session.exec(select(EventEntry)).all()
+    assert len(remaining_entries) == 1
+    assert remaining_entries[0].id == survivor_entry.id

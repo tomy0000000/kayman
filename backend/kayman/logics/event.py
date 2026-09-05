@@ -1,5 +1,10 @@
+from collections.abc import Collection
 from decimal import Decimal
 
+from sqlmodel import Session
+
+from kayman.crud.event import delete_events, read_events
+from kayman.crud.transaction import read_transactions
 from kayman.schemas.api_models import EventCreateDetailed
 from kayman.schemas.event import EventType
 
@@ -34,3 +39,32 @@ def validate_total(details: EventCreateDetailed) -> None:
                 f"Entries total ({entries_total}) and "
                 f"transactions total ({transactions_total}) do not match"
             )
+
+
+def event_has_transactions(
+    session: Session,
+    event_id: int,
+    for_update: bool = False,
+) -> bool:
+    if for_update:
+        read_events(session, event_ids=[event_id], for_update=True)
+
+    return bool(read_transactions(session, event_id=event_id))
+
+
+def delete_events_by_ids(
+    session: Session,
+    event_ids: Collection[int],
+    commit: bool = True,
+) -> None:
+    # Nothing to resolve, and an empty id set would read (and delete) every row
+    if not event_ids:
+        return
+
+    unique_ids = set(event_ids)
+    events = read_events(session, event_ids=unique_ids, for_update=True)
+    missing_ids = unique_ids - {event.id for event in events}
+    if missing_ids:
+        raise ValueError(f"Event id(s) not found: {missing_ids}")
+
+    delete_events(session, events, commit=commit)

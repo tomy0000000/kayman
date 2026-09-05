@@ -93,6 +93,20 @@ def update_events(
     return db_events
 
 
+def delete_events(
+    session: Session,
+    events: Sequence[Event],
+    commit: bool = True,
+) -> None:
+    for event in events:
+        session.delete(event)
+
+    if commit:
+        session.commit()
+    else:
+        session.flush()
+
+
 def _verify_event_ids(session: Session, event_ids: Sequence[int]) -> Sequence[Event]:
     db_events = read_events(session, event_ids=event_ids, for_update=True)
     missing_ids = set(event_ids) - {event.id for event in db_events}
