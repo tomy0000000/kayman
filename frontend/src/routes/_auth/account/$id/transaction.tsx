@@ -41,6 +41,9 @@ import {
 } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/account/$id/transaction')({
+  head: () => ({
+    meta: [{ title: 'Transaction · Kayman' }]
+  }),
   component: AccountTransactionPage
 })
 

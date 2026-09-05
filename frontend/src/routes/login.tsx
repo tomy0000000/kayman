@@ -41,6 +41,9 @@ const searchSchema = z.object({
 })
 
 export const Route = createFileRoute('/login')({
+  head: () => ({
+    meta: [{ title: 'Login · Kayman' }]
+  }),
   validateSearch: searchSchema,
   beforeLoad: ({ context, search }) => {
     if (context.auth.client) {

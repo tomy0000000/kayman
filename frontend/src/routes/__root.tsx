@@ -1,6 +1,10 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
+import {
+  HeadContent,
+  Outlet,
+  createRootRouteWithContext
+} from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Suspense, lazy, useEffect, useState } from 'react'
 
@@ -19,6 +23,9 @@ interface RouterContext {
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
+  head: () => ({
+    meta: [{ title: 'Kayman' }]
+  }),
   component: RootLayout
 })
 
@@ -39,6 +46,7 @@ function RootLayout() {
 
   return (
     <>
+      <HeadContent />
       <Outlet />
       <Toaster />
       <TanStackRouterDevtools position="bottom-right" />

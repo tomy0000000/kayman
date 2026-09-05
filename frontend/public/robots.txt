@@ -1,0 +1,3 @@
+# kayman is a self-hosted, authenticated app. Nothing here is public content.
+User-agent: *
+Disallow: /

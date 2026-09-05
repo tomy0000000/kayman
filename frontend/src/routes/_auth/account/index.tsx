@@ -17,6 +17,9 @@ import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { cn, formatCurrency } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/account/')({
+  head: () => ({
+    meta: [{ title: 'Account · Kayman' }]
+  }),
   component: AccountListPage
 })
 

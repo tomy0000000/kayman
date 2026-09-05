@@ -13,6 +13,9 @@ import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { categoryToTreeItem } from '@/lib/types'
 
 export const Route = createFileRoute('/_auth/category')({
+  head: () => ({
+    meta: [{ title: 'Category · Kayman' }]
+  }),
   component: CategoryPage
 })
 

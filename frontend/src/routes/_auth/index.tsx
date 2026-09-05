@@ -45,6 +45,9 @@ const searchSchema = z.object({
 })
 
 export const Route = createFileRoute('/_auth/')({
+  head: () => ({
+    meta: [{ title: 'Calendar · Kayman' }]
+  }),
   validateSearch: searchSchema,
   component: HomePage
 })

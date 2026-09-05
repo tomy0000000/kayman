@@ -12,6 +12,9 @@ import { readCurrenciesOptions } from '@/lib/client/@tanstack/react-query.gen'
 import { BROWSER_TIMEZONE, REFERENCE_STALE_TIME } from '@/lib/constants'
 
 export const Route = createFileRoute('/_auth/settings')({
+  head: () => ({
+    meta: [{ title: 'Settings · Kayman' }]
+  }),
   component: SettingsPage
 })
 
