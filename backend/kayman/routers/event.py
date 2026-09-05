@@ -11,9 +11,12 @@ from kayman.crud.event import (
     read_events,
     update_events,
 )
+from kayman.logics.event import (
+    delete_events_by_ids,
+    event_has_transactions,
+)
 from kayman.schemas.api_models import EventReadDetailed
 from kayman.schemas.event import (
-    Event,
     EventBase,
     EventClear,
     EventCreate,
@@ -81,10 +84,17 @@ def clear(
         raise HTTPException(status_code=404, detail=err.args[0]) from err
 
 
-@event_router.delete("/{id}", name="Delete Event")
+@event_router.delete(
+    "/{id}",
+    name="Delete Event",
+    responses={409: {"description": "Event has transactions"}},
+)
 def delete(*, session: Session = Depends(get_session), id: int) -> None:
-    event = session.get(Event, id)
-    if event is None:
-        raise HTTPException(status_code=404, detail="Event not found")
-    session.delete(event)
-    session.commit()
+    # Event must not have transactions attached in between, so they cannot be orphaned.
+    if event_has_transactions(session, id, for_update=True):
+        raise HTTPException(status_code=409, detail="Event has transactions")
+
+    try:
+        delete_events_by_ids(session, [id])
+    except ValueError as err:
+        raise HTTPException(status_code=404, detail=err.args[0]) from err
