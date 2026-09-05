@@ -27,6 +27,10 @@ frontend/.tanstack
 frontend/src/routeTree.gen.ts
 frontend/src/lib/client
 
+# Icon
+icon/node_modules
+icon/dist
+
 # Repo-level
 .mypy_cache
 .ruff_cache

@@ -1,0 +1,38 @@
+{
+  "name": "kayman-icon",
+  "version": "0.20.0",
+  "description": "🏝🏦 Icon and social preview image sources for kayman",
+  "homepage": "https://github.com/tomy0000000/kayman",
+  "bugs": {
+    "url": "https://github.com/tomy0000000/kayman/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Tomy Hsieh (tomy0000000)",
+    "url": "https://github.com/tomy0000000"
+  },
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "mise run build:icon-bundle"
+  },
+  "engines": {
+    "node": "26.3.1"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "onFail": "error",
+      "version": "26.3.1"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "onFail": "error",
+      "version": "11.8.0"
+    }
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  },
+  "devDependencies": {}
+}

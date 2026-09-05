@@ -11,9 +11,8 @@ set -euo pipefail
 #   ../frontend/public/icon-512.png           PNG-24, sRGB, opaque, 512x512
 #   ../frontend/public/icon-maskable-192.png  PNG-24, sRGB, opaque, content inside 80% safe circle, 192x192
 #   ../frontend/public/icon-maskable-512.png  PNG-24, sRGB, opaque, content inside 80% safe circle, 512x512
-#   dist/kayman-1024.png                     PNG-24, sRGB, opaque, 1024x1024
-#   dist/avatar-512.png                      PNG, 512x512
-# resvg and magick (ImageMagick) are provisioned by mise ([tools] in mise.toml).
+#   dist/kayman-1024.png                      PNG-24, sRGB, opaque, 1024x1024
+#   dist/avatar-512.png                       PNG, 512x512
 
 PUBLIC_DIR="../frontend/public"
 DIST_DIR="dist"
@@ -26,13 +25,13 @@ mkdir -p "${DIST_DIR}"
 
 # Render an SVG at NxN and flatten to opaque PNG-24 in sRGB
 png24() { # svg size dest
-  resvg -w "$2" -h "$2" "$1" "${TMP_DIR}/raw.png"
+  node render.mjs -w "$2" -h "$2" "$1" "${TMP_DIR}/raw.png"
   magick "${TMP_DIR}/raw.png" -colorspace sRGB -alpha off "PNG24:$3"
 }
 
 # favicon.svg: scalable, viewBox 0 0 32 32, under 5KB
 cp "${DIST_DIR}/kayman-favicon.svg" "${PUBLIC_DIR}/favicon.svg"
-favicon_bytes="$(stat -f%z "${PUBLIC_DIR}/favicon.svg")"
+favicon_bytes="$(wc -c < "${PUBLIC_DIR}/favicon.svg")"
 if [ "${favicon_bytes}" -gt 5120 ]; then
   echo "error: favicon.svg is ${favicon_bytes}B, spec says under 5KB" >&2
   exit 1
@@ -40,7 +39,7 @@ fi
 
 # favicon.ico: 16 + 32 + 48 layers
 for size in 16 32 48; do
-  resvg -w "${size}" -h "${size}" "${DIST_DIR}/kayman.svg" "${TMP_DIR}/fav-${size}.png"
+  node render.mjs -w "${size}" -h "${size}" "${DIST_DIR}/kayman.svg" "${TMP_DIR}/fav-${size}.png"
 done
 magick "${TMP_DIR}/fav-16.png" "${TMP_DIR}/fav-32.png" "${TMP_DIR}/fav-48.png" "${PUBLIC_DIR}/favicon.ico"
 
@@ -52,7 +51,7 @@ png24 "$DIST_DIR/kayman-maskable.svg" 512 "${PUBLIC_DIR}/icon-maskable-512.png"
 png24 "$DIST_DIR/kayman.svg" 1024 "${DIST_DIR}/kayman-1024.png"
 
 # avatar: plain PNG
-resvg -w 512 -h 512 "$DIST_DIR/kayman.svg" "${DIST_DIR}/avatar-512.png"
+node render.mjs -w 512 -h 512 "$DIST_DIR/kayman.svg" "${DIST_DIR}/avatar-512.png"
 
 echo "built ${PUBLIC_DIR}/favicon.svg"
 echo "built ${PUBLIC_DIR}/favicon.ico"

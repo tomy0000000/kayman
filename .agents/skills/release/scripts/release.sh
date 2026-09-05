@@ -7,8 +7,8 @@
 # Steps performed:
 #   1. Pre-flight checks; auto-stash unstaged work if needed
 #   2. Checkout main, fast-forward pull, merge develop
-#   3. Bump versions in frontend/package.json, backend/pyproject.toml,
-#      backend/kayman/main.py; refresh backend/uv.lock
+#   3. Bump versions in frontend/package.json, icon/package.json,
+#      backend/pyproject.toml, backend/kayman/main.py; refresh backend/uv.lock
 #   4. Commit `🔖 release: <version>`
 #   5. Checkout develop, fast-forward merge main
 #   6. Print follow-up commands (push + gh release create)
@@ -73,7 +73,7 @@ echo "→ refreshing backend/uv.lock"
 ( cd backend && uv lock )
 
 echo "→ committing release"
-git add frontend/package.json backend/pyproject.toml backend/kayman/main.py backend/uv.lock
+git add frontend/package.json icon/package.json backend/pyproject.toml backend/kayman/main.py backend/uv.lock
 git commit -m "🔖 release: $VERSION"
 
 echo "→ checking out develop and fast-forwarding main into it"

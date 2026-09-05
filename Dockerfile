@@ -11,6 +11,7 @@ WORKDIR /app
 RUN apt-get update \
     && apt-get -y --no-install-recommends install  \
     sudo curl ca-certificates libpq-dev build-essential \
+    fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 # Install mise
@@ -24,12 +25,14 @@ RUN curl https://mise.run | sh
 # Copy config
 COPY mise.toml ./
 COPY frontend/package.json frontend/pnpm-lock.yaml ./frontend/
+COPY icon/package.json icon/pnpm-lock.yaml ./icon/
 
 # Install tools
 RUN mise trust && mise install
 
 # Install dependencies
-RUN pnpm -C ./frontend install --frozen-lockfile --ignore-scripts
+RUN pnpm -C ./frontend install --frozen-lockfile --ignore-scripts \
+    && pnpm -C ./icon install --frozen-lockfile --ignore-scripts
 
 # Copy application
 COPY . .

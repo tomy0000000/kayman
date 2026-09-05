@@ -32,7 +32,7 @@ Apply the versioning rules above to propose a version and tell the user the choi
 
 ### Step 2: Run the release script
 
-`scripts/release.sh <version>` performs the local git work: stash, checkout main, fast-forward pull, merge develop, bump versions in `frontend/package.json`, `backend/pyproject.toml`, `backend/kayman/main.py`, refresh `backend/uv.lock`, commit `🔖 release: <version>`, fast-forward main into develop, and pop the stash.
+`scripts/release.sh <version>` performs the local git work: stash, checkout main, fast-forward pull, merge develop, bump versions in `frontend/package.json`, `icon/package.json`, `backend/pyproject.toml`, `backend/kayman/main.py`, refresh `backend/uv.lock`, commit `🔖 release: <version>`, fast-forward main into develop, and pop the stash.
 
 ```bash
 .claude/skills/release/scripts/release.sh <version>
