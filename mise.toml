@@ -1,12 +1,18 @@
 [tools]
 hadolint = "2.14.0"
+imagemagick = "7.1.2_31"
 node = "26.3.1"
 pnpm = "11.8.0"
 python = "3.12"
+"ubi:linebender/resvg" = { version = "0.48.1", exe = "resvg", matching = "resvg" }
 uv = "0.10.10"
 
 [task_config]
-includes = ["scripts", "backend/scripts", "frontend/scripts"]
+includes = ["scripts", "backend/scripts", "frontend/scripts", "icon/scripts"]
+
+[tasks."build:icon-bundle"]
+description = "Build icon + social preview images"
+depends = ["build:icon", "build:og-image"]
 
 [tasks.start]
 description = "Start all dev servers"
