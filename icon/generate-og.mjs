@@ -15,10 +15,10 @@ const SCENE_SCALE = 0.68;
 const SCENE_TX = 572;
 const SCENE_TY = 48;
 
-// Wordmark. The font stack ends in Liberation Sans because the Docker build
-// runs on debian-slim, which has neither Helvetica nor Arial: without a family
-// it can resolve, resvg drops the text and the wordmark silently disappears.
-// Liberation Sans is metric-compatible with Arial, so the footprint is the same.
+// Wordmark. One family, no fallbacks: render.mjs loads a single vendored
+// Geist-Bold.ttf and disables the system font scan, so the wordmark renders
+// identically everywhere. A fallback stack would reintroduce the host-dependent
+// resolution that made this image differ between macOS and Docker.
 const WORD = "Kayman";
 const WORD_X = 96;
 const WORD_Y = 372;
@@ -132,7 +132,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
       <rect x="${BANK_CX - 134}" y="${STEP2_Y}" width="268" height="${STEP_H}" rx="6" fill="url(#white)"/>
     </g>
   </g>
-  <text id="wordmark" x="${WORD_X}" y="${WORD_Y}" font-family="Helvetica, Arial, 'Liberation Sans', sans-serif" font-size="${WORD_SIZE}" font-weight="700" fill="#FFFFFF">${WORD}</text>
+  <text id="wordmark" x="${WORD_X}" y="${WORD_Y}" font-family="Geist" font-size="${WORD_SIZE}" font-weight="700" fill="#FFFFFF">${WORD}</text>
 </svg>
 `;
 

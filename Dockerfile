@@ -11,7 +11,6 @@ WORKDIR /app
 RUN apt-get update \
     && apt-get -y --no-install-recommends install  \
     sudo curl ca-certificates libpq-dev build-essential \
-    fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 # Install mise

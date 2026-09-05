@@ -26,7 +26,7 @@ mkdir -p "${DIST_DIR}"
 # Render an SVG at NxN and flatten to opaque PNG-24 in sRGB
 png24() { # svg size dest
   node render.mjs -w "$2" -h "$2" "$1" "${TMP_DIR}/raw.png"
-  magick "${TMP_DIR}/raw.png" -colorspace sRGB -alpha off "PNG24:$3"
+  magick "${TMP_DIR}/raw.png" -colorspace sRGB -alpha off -define png:exclude-chunks=date,time "PNG24:$3"
 }
 
 # favicon.svg: scalable, viewBox 0 0 32 32, under 5KB
@@ -41,7 +41,7 @@ fi
 for size in 16 32 48; do
   node render.mjs -w "${size}" -h "${size}" "${DIST_DIR}/kayman.svg" "${TMP_DIR}/fav-${size}.png"
 done
-magick "${TMP_DIR}/fav-16.png" "${TMP_DIR}/fav-32.png" "${TMP_DIR}/fav-48.png" "${PUBLIC_DIR}/favicon.ico"
+magick "${TMP_DIR}/fav-16.png" "${TMP_DIR}/fav-32.png" "${TMP_DIR}/fav-48.png" -define png:exclude-chunks=date,time "${PUBLIC_DIR}/favicon.ico"
 
 png24 "$DIST_DIR/kayman.svg" 180 "${PUBLIC_DIR}/apple-touch-icon.png"
 png24 "$DIST_DIR/kayman.svg" 192 "${PUBLIC_DIR}/icon-192.png"

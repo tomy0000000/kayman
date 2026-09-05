@@ -18,7 +18,10 @@ mkdir -p "${DIST_DIR}"
 node render.mjs -w 1280 -h 640 "${DIST_DIR}/kayman-og.svg" "${DIST_DIR}/github-social.png"
 
 # og-image: 1200x630 (1.905:1), cover-scale the 2:1 render and center-crop
-magick "${DIST_DIR}/github-social.png" -resize 1200x630^ -gravity center -extent 1200x630 "${PUBLIC_DIR}/og-image.png"
+# exclude-chunks=date,time: magick otherwise stamps the build time into the PNG
+# (a date: text chunk and a tIME chunk), so the committed image changes on every
+# rebuild even when the pixels do not.
+magick "${DIST_DIR}/github-social.png" -define png:exclude-chunks=date,time -resize 1200x630^ -gravity center -extent 1200x630 "${PUBLIC_DIR}/og-image.png"
 
 for f in "${DIST_DIR}/github-social.png" "${PUBLIC_DIR}/og-image.png"; do
   bytes="$(wc -c < "${f}")"
