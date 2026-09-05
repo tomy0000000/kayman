@@ -28,7 +28,7 @@ All tasks available in this repo are listed below, all managed by `mise`. Run an
 | Task         | Description                                  | Usage / Notes                                                          |
 | ------------ | -------------------------------------------- | ---------------------------------------------------------------------- |
 | `db:upgrade` | Upgrade database schema                      | Runs `alembic upgrade head`.                                           |
-| `db:backup`  | Backup PostgreSQL database to a local dump   | Writes `kayman_<timestamp>.dump` in `backend/`. Reads `instance/.env`. |
+| `db:backup`  | Backup PostgreSQL database to a local dump file | Writes `kayman_<timestamp>.dump` in `backend/`. Reads `instance/.env`. |
 | `db:restore` | Restore PostgreSQL database from a dump file | `mise run db:restore -- path/to/data.dump`. Reads `instance/.env`.     |
 
 ## Build
@@ -40,6 +40,9 @@ All tasks available in this repo are listed below, all managed by `mise`. Run an
 | `build:openapi-spec`   | Build OpenAPI specification JSON      | `mise run build:openapi-spec -- <json_path>` (output path required). |
 | `build:openapi-client` | Build OpenAPI client for the frontend | Generates the spec to a temp file, then runs `openapi-ts`.           |
 | `build:docker`         | Build Docker image                    | Builds `tomy0000000/kayman:latest`.                                  |
+| `build:icon`           | Build icon deliverables (favicon, PWA icons, touch icon, avatar) | Outputs to `frontend/public/` and `icon/dist/` per the spec table in `icon/README.md`. Needs `magick` from mise `[tools]` and `pnpm -C icon install` for the `render.mjs` SVG renderer. |
+| `build:og-image`       | Build social preview images (og-image, GitHub social) | Outputs `frontend/public/og-image.png` (1200×630) and `icon/dist/github-social.png` (1280×640). Same tool requirements as `build:icon`. |
+| `build:icon-bundle`    | Build icon + social preview images | Runs `build:icon` and `build:og-image`. |
 
 ## Format
 
@@ -67,7 +70,7 @@ All tasks available in this repo are listed below, all managed by `mise`. Run an
 | Task               | Description                                                 | Notes                                                      |
 | ------------------ | ----------------------------------------------------------- | ---------------------------------------------------------- |
 | `preview:frontend` | Preview production build locally                            | Depends on `build:frontend`, then `vite preview`.          |
-| `preview:docker`   | Preview docker run by connecting to development environment | Runs the image with `instance/development.env` on `:8000`. |
+| `preview:docker`   | Preview docker run by connecting to the development environment | Runs the image with `instance/development.env` on `:8000`. |
 
 ## Other
 
