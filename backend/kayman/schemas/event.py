@@ -20,6 +20,16 @@ class EventType(enum.Enum):
     Exchange = "Exchange"
 
 
+class EventClearErrorType(enum.Enum):
+    ALREADY_CLEARED = "already_cleared"
+    NO_ENTRIES = "no_entries"
+    NO_TRANSACTIONS = "no_transactions"
+    TRANSACTIONS_NOT_POSTED = "transactions_not_posted"
+    TOTALS_MISMATCH = "totals_mismatch"
+    EMPTY_ENTRIES_DESCRIPTION = "empty_entries_description"
+    INCONSISTENT_TIMESTAMPS = "inconsistent_timestamps"
+
+
 class EventBase(SQLModel):
     type: EventType
     timestamp: datetime
@@ -61,6 +71,17 @@ class EventRead(EventBase):
 
 class EventClear(SQLModel):
     cleared_at: datetime
+
+
+class EventClearError(SQLModel):
+    type: EventClearErrorType
+    msg: str
+
+
+class EventClearConflict(SQLModel):
+    """The 409 body. FastAPI's HTTPException always wraps its detail."""
+
+    detail: list[EventClearError]
 
 
 class EventUpdate(SQLModel):
