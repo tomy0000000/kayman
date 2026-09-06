@@ -68,8 +68,11 @@ def update_accounts(
     # Verify all accounts are valid
     db_accounts = _verify_account_ids(session, account_ids)
 
-    # Update accounts
-    for db_account, account in zip(db_accounts, accounts, strict=True):
+    # Pair by id, not by row order: read_accounts orders by id, so positional
+    # pairing would misassign rows whenever account_ids is not sorted ascending
+    id_to_db_account = {db_account.id: db_account for db_account in db_accounts}
+    for account_id, account in zip(account_ids, accounts, strict=True):
+        db_account = id_to_db_account[account_id]
         account_data = account.model_dump(exclude_unset=True)
         db_account.sqlmodel_update(account_data)
 

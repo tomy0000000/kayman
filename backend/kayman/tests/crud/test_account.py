@@ -16,7 +16,7 @@ from kayman.crud.account import (
     update_account_balances,
     update_accounts,
 )
-from kayman.schemas.account import Account, AccountCreate
+from kayman.schemas.account import Account, AccountCreate, AccountUpdate
 from kayman.schemas.currency import Currency
 from kayman.tests.factories import AccountFactory, TransactionFactory
 
@@ -302,6 +302,23 @@ def test_update_accounts(session: Session):
         assert updated_account.currency_code == account.currency_code  # Not updated
         assert updated_account.timezone == account.timezone  # Not updated
         assert updated_account.balance == account.balance  # Not updated
+
+
+def test_update_accounts_pairs_by_id_not_row_order(session: Session):
+    first = AccountFactory(name="first")
+    second = AccountFactory(name="second")
+
+    # Ids passed in descending order, while read_accounts returns them ascending
+    updated_accounts = update_accounts(
+        session,
+        [second.id, first.id],
+        [AccountUpdate(name="SECOND"), AccountUpdate(name="FIRST")],
+    )
+
+    assert len(updated_accounts) == 2
+    id_to_name = {account.id: account.name for account in updated_accounts}
+    assert id_to_name[first.id] == "FIRST"
+    assert id_to_name[second.id] == "SECOND"
 
 
 def test_update_accounts_mismatch_length(session: Session):
