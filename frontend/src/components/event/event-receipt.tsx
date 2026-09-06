@@ -1,12 +1,20 @@
+import { Download } from 'lucide-react'
 import { useMemo } from 'react'
 
 import { Amount } from '@/components/amount'
 import { EventTypeBadge } from '@/components/event/event-type-badge'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
 import { TransactionTagBadge } from '@/components/transaction/transaction-tag-badge'
+import { Button } from '@/components/ui/button'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import type { AccountRead, EventReadDetailed } from '@/lib/client'
-import { formatCurrency, formatDateTime, sumByCurrency } from '@/lib/utils'
+import { downloadCsv, eventToCsv } from '@/lib/csv'
+import {
+  formatCurrency,
+  formatDateTime,
+  sumByCurrency,
+  zonedDayKey
+} from '@/lib/utils'
 
 interface EventReceiptProps {
   event: EventReadDetailed
@@ -51,6 +59,13 @@ export function EventReceipt({
       currencyCode: transaction.currency_code
     }))
   )
+
+  const handleDownload = () => {
+    downloadCsv(
+      `event-${event.id}-${zonedDayKey(event.timestamp, timezone)}.csv`,
+      eventToCsv(event, categoryNames, accountNames)
+    )
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 text-sm">
@@ -137,6 +152,11 @@ export function EventReceipt({
           Cleared {formatDateTime(event.cleared_at, timezone)}
         </span>
       )}
+
+      <Button variant="outline" onClick={handleDownload}>
+        <Download />
+        Download CSV
+      </Button>
     </div>
   )
 }
