@@ -78,6 +78,13 @@ class EventClearError(SQLModel):
     msg: str
 
 
+class EventClearable(SQLModel):
+    """Whether an event can be cleared, and every reason it cannot."""
+
+    clearable: bool
+    errors: list[EventClearError]
+
+
 class EventClearConflict(SQLModel):
     """The 409 body. FastAPI's HTTPException always wraps its detail."""
 

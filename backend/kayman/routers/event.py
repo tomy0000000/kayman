@@ -1,8 +1,8 @@
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal, cast
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session
 
 from kayman.auth import get_client
@@ -21,6 +21,7 @@ from kayman.schemas.api_models import EventReadDetailed
 from kayman.schemas.event import (
     EventBase,
     EventClear,
+    EventClearable,
     EventClearConflict,
     EventCreate,
     EventRead,
@@ -44,6 +45,27 @@ event_router = APIRouter(
 @event_router.post("", name="Create Event", response_model=EventRead)
 def create(*, session: Session = Depends(get_session), event: EventCreate) -> EventBase:
     return create_events(session, [event])[0]
+
+
+@event_router.get(
+    "/clearable",
+    name="Read Events Clearable",
+    response_model=dict[int, EventClearable],
+)
+def clearable(
+    *,
+    session: Session = Depends(get_session),
+    ids: Annotated[list[int], Query()],
+) -> dict[int, EventClearable]:
+    events = read_events(session, event_ids=ids)
+
+    result: dict[int, EventClearable] = {}
+    for event in events:
+        errors = validate_event_clearable(event)
+        result[cast(int, event.id)] = EventClearable(
+            clearable=not errors, errors=errors
+        )
+    return result
 
 
 @event_router.get("/{event_id}", name="Read Event", response_model=EventReadDetailed)
