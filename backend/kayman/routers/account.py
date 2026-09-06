@@ -52,18 +52,6 @@ def create(
         ) from err
 
 
-@account_router.get("/{account_id}", name="Read Account", response_model=AccountRead)
-def read(*, session: Session = Depends(get_session), account_id: int) -> AccountBase:
-    account = read_account(session, account_id)
-    if account is None:
-        raise PydanticCustomError(
-            "account_not_found",
-            "Account does not exist",
-            {"loc": ("path", "account_id")},
-        )
-    return account
-
-
 @account_router.get("", name="Read Accounts", response_model=list[AccountRead])
 def reads(
     *,

@@ -68,14 +68,6 @@ def clearable(
     return result
 
 
-@event_router.get("/{event_id}", name="Read Event", response_model=EventReadDetailed)
-def read(*, session: Session = Depends(get_session), event_id: int) -> EventBase:
-    events = read_events(session, event_ids=[event_id])
-    if not events:
-        raise HTTPException(status_code=404, detail="Event not found")
-    return events[0]
-
-
 @event_router.get("", name="Read Events", response_model=list[EventReadDetailed])
 def reads(
     *,
