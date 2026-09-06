@@ -15,11 +15,13 @@ from kayman.crud.event import (
 from kayman.logics.event import (
     delete_events_by_ids,
     event_has_transactions,
+    validate_event_clearable,
 )
 from kayman.schemas.api_models import EventReadDetailed
 from kayman.schemas.event import (
     EventBase,
     EventClear,
+    EventClearConflict,
     EventCreate,
     EventRead,
     EventUpdate,
@@ -76,16 +78,32 @@ def update(
         raise HTTPException(status_code=404, detail=err.args[0]) from err
 
 
-@event_router.post("/{event_id}/cleared", name="Clear Event", response_model=EventRead)
+@event_router.post(
+    "/{event_id}/cleared",
+    name="Clear Event",
+    response_model=EventRead,
+    responses={
+        409: {"model": EventClearConflict, "description": "Event is not clearable"}
+    },
+)
 def clear(
     *, session: Session = Depends(get_session), event_id: int, data: EventClear
 ) -> EventBase:
-    # TODO: validate event details before clearing
+    # Lock the row here rather than letting update_events do it, so validation
+    # and the write see the same state.
+    events = read_events(session, event_ids=[event_id], for_update=True)
+    if not events:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    errors = validate_event_clearable(events[0])
+    if errors:
+        raise HTTPException(
+            status_code=409,
+            detail=[error.model_dump(mode="json") for error in errors],
+        )
+
     update = EventUpdate(**data.model_dump(exclude_unset=True))
-    try:
-        return update_events(session, [event_id], [update])[0]
-    except ValueError as err:
-        raise HTTPException(status_code=404, detail=err.args[0]) from err
+    return update_events(session, [event_id], [update])[0]
 
 
 @event_router.delete(
