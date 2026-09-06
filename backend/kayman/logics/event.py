@@ -6,11 +6,14 @@ from sqlmodel import Session
 from kayman.crud.event import delete_events, read_events
 from kayman.crud.transaction import read_transactions
 from kayman.schemas.api_models import EventCreateDetailed
-from kayman.schemas.event import Event, EventClearError, EventType
+from kayman.schemas.event import (
+    Event,
+    EventClearError,
+    EventClearErrorType,
+    EventType,
+)
 
 EventClearValidator = Callable[[Event], list[EventClearError]]
-
-CLEAR_VALIDATORS: tuple[EventClearValidator, ...] = ()
 
 
 # TODO: unused after legacy_create removal, remove once confirmed obsolete
@@ -43,6 +46,22 @@ def validate_total(details: EventCreateDetailed) -> None:
                 f"Entries total ({entries_total}) and "
                 f"transactions total ({transactions_total}) do not match"
             )
+
+
+def validate_entries_present(event: Event) -> list[EventClearError]:
+    """Report an entry-driven event that carries no entry."""
+    if event.type not in (EventType.Expense, EventType.Income) or event.entries:
+        return []
+
+    return [
+        EventClearError(
+            type=EventClearErrorType.NO_ENTRIES,
+            msg=f"{event.type.value} event must have at least one entry",
+        )
+    ]
+
+
+CLEAR_VALIDATORS: tuple[EventClearValidator, ...] = (validate_entries_present,)
 
 
 def validate_event_clearable(event: Event) -> list[EventClearError]:

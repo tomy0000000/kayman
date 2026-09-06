@@ -7,6 +7,7 @@ from kayman.logics.event import (
     CLEAR_VALIDATORS,
     delete_events_by_ids,
     event_has_transactions,
+    validate_entries_present,
     validate_event_clearable,
     validate_total,
 )
@@ -230,17 +231,61 @@ def test_delete_events_by_ids_cascades_to_entries(session: Session):
     assert remaining_events[0].id == survivor.id
 
 
+@pytest.mark.parametrize("entry_count", [1, 3])
+@pytest.mark.parametrize("event_type", [EventType.Expense, EventType.Income])
+def test_validate_entries_present_entry_driven_with_entries(
+    event_type: EventType, entry_count: int
+):
+    """Expense and Income carrying at least one entry pass"""
+    event = EventFactory.build(
+        type=event_type,
+        entries=EventEntryFactory.build_batch(entry_count, event_id=0),
+    )
+
+    assert len(validate_entries_present(event)) == 0
+
+
+@pytest.mark.parametrize("event_type", [EventType.Expense, EventType.Income])
+def test_validate_entries_present_entry_driven_without_entries(event_type: EventType):
+    """Expense and Income with no entry report exactly one NO_ENTRIES error"""
+    event = EventFactory.build(type=event_type)
+
+    errors = validate_entries_present(event)
+
+    # One error for the event as a whole, not one per missing row.
+    assert len(errors) == 1
+    assert errors[0].type is EventClearErrorType.NO_ENTRIES
+
+
+@pytest.mark.parametrize("entry_count", [0, 2])
+@pytest.mark.parametrize("event_type", [EventType.Transfer, EventType.Exchange])
+def test_validate_entries_present_transaction_driven(
+    event_type: EventType, entry_count: int
+):
+    """Transfer and Exchange are transaction-driven, so entries are optional"""
+    event = EventFactory.build(
+        type=event_type,
+        entries=EventEntryFactory.build_batch(entry_count, event_id=0),
+    )
+
+    assert len(validate_entries_present(event)) == 0
+
+
 def _clear_error(error_type: EventClearErrorType, msg: str) -> EventClearError:
     return EventClearError(type=error_type, msg=msg)
 
 
-def test_validate_event_clearable_real_registry_is_empty():
-    """The shipped registry holds no validator yet, so nothing can fail"""
-    event = EventFactory.build()
+def test_validate_event_clearable_real_registry():
+    """The shipped registry holds exactly the entries-present validator"""
+    event = EventFactory.build(
+        type=EventType.Expense,
+        entries=EventEntryFactory.build_batch(1, event_id=0),
+    )
 
-    # Guard the premise: if a validator lands, this test is the reminder to
-    # cover it here rather than a silent pass.
-    assert len(CLEAR_VALIDATORS) == 0
+    # Guard the premise: if another validator lands, this test is the reminder
+    # to cover it here rather than a silent pass.
+    assert len(CLEAR_VALIDATORS) == 1
+    assert CLEAR_VALIDATORS == (validate_entries_present,)
     assert len(validate_event_clearable(event)) == 0
 
 
