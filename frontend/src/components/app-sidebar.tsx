@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import {
   Calendar,
+  CheckCheck,
   ChevronUp,
   FolderTree,
   LogOut,
@@ -32,7 +33,8 @@ import { useAuth } from '@/hooks/use-auth'
 const links = [
   { label: 'Calendar', to: '/', icon: Calendar },
   { label: 'Account', to: '/account', icon: Wallet },
-  { label: 'Category', to: '/category', icon: FolderTree }
+  { label: 'Category', to: '/category', icon: FolderTree },
+  { label: 'Reconcile', to: '/reconcile', icon: CheckCheck }
 ] as const
 
 export function AppSidebar() {

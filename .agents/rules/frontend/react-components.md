@@ -64,4 +64,6 @@ Exception: a component may own a `useQuery` when the query key depends on the co
 
 - These queries use a shared `queryOptions` factory from `frontend/src/lib/` rather than an inline key, so each key is defined in one place and dedupes with any other caller.
 
+When two or more routes need the same mutations, lift them into a hook under `frontend/src/hooks/` rather than duplicating them or pushing them into `components/`. The hook returns state and prop bundles the routes spread onto presentational components; the routes still choose what to render and what surrounds it. Example: `use-event-actions.ts`, shared by the calendar and reconcile pages. `components/` stays off limits either way.
+
 Why: TanStack Query dedupes on the query key, not the call site, so ownership lives in the key. Keeping page data and mutations at the route keeps loading states and post-submit behavior in one place, while the exception avoids lifting widget-internal state into routes. Tests render shared components with a small `QueryClientProvider` wrapper when a query is involved.

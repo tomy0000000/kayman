@@ -27,12 +27,13 @@ import {
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { useIsMobile } from '@/hooks/use-mobile'
 import type { EventReadDetailed, TransactionRead } from '@/lib/client'
-import { cn, formatCurrency, formatTime } from '@/lib/utils'
+import { cn, formatCurrency, formatMonthDayTime, formatTime } from '@/lib/utils'
 
 interface EventsTableProps {
   events: EventReadDetailed[] | undefined
   categoryNames: Map<number, string>
   isPending: boolean
+  showDate?: boolean
   onEventView?: (event: EventReadDetailed) => void
   onEventEdit?: (event: EventReadDetailed) => void
   onEventDuplicate?: (event: EventReadDetailed) => void
@@ -43,15 +44,11 @@ interface EventsTableProps {
 // react-table treat `data` as changed every render and loops forever.
 const EMPTY_EVENTS: EventReadDetailed[] = []
 
-const COLUMN_WIDTHS: Record<string, string> = {
-  timestamp: 'w-24',
-  amount: 'w-32'
-}
-
 export function EventsTable({
   events,
   categoryNames,
   isPending,
+  showDate,
   onEventView,
   onEventEdit,
   onEventDuplicate,
@@ -59,6 +56,11 @@ export function EventsTable({
 }: EventsTableProps) {
   const { timezone } = useClientTimezone()
   const isMobile = useIsMobile()
+
+  const columnWidths: Record<string, string> = {
+    timestamp: showDate ? 'w-32' : 'w-24',
+    amount: 'w-32'
+  }
 
   const columns = useMemo<ColumnDef<EventReadDetailed>[]>(() => {
     // A transaction's currency is its account's currency, already denormalized
@@ -96,8 +98,11 @@ export function EventsTable({
     return [
       {
         accessorKey: 'timestamp',
-        header: 'Time',
-        cell: ({ row }) => formatTime(row.original.timestamp, timezone)
+        header: showDate ? 'Date' : 'Time',
+        cell: ({ row }) =>
+          showDate
+            ? formatMonthDayTime(row.original.timestamp, timezone)
+            : formatTime(row.original.timestamp, timezone)
       },
       {
         id: 'summary',
@@ -141,7 +146,7 @@ export function EventsTable({
         )
       }
     ]
-  }, [categoryNames, timezone])
+  }, [categoryNames, showDate, timezone])
 
   // TanStack Table manages its own memoization; the React Compiler bail-out
   // for `useReactTable` is expected and safe here.
@@ -161,7 +166,7 @@ export function EventsTable({
               {headerGroup.headers.map((header) => (
                 <TableHead
                   key={header.id}
-                  className={COLUMN_WIDTHS[header.column.id]}
+                  className={columnWidths[header.column.id]}
                 >
                   {header.isPlaceholder
                     ? null

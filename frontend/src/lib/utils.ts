@@ -55,6 +55,21 @@ export function formatDateTime(value: string | Date, timeZone: string): string {
   })
 }
 
+// `formatDateTime` without the year, e.g. "Aug 8, 3:45 PM". For lists where
+// every row carries a date and the year is noise.
+export function formatMonthDayTime(
+  value: string | Date,
+  timeZone: string
+): string {
+  return new Date(value).toLocaleString(browserLocale, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone
+  })
+}
+
 export function formatDate(value: string | Date, timeZone: string): string {
   return new Date(value).toLocaleDateString(browserLocale, { timeZone })
 }
