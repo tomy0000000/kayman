@@ -4,11 +4,18 @@ import pytest
 from sqlmodel import Session, col, select
 
 from kayman.logics.event import (
+    CLEAR_VALIDATORS,
     delete_events_by_ids,
     event_has_transactions,
+    validate_event_clearable,
     validate_total,
 )
-from kayman.schemas.event import Event, EventType
+from kayman.schemas.event import (
+    Event,
+    EventClearError,
+    EventClearErrorType,
+    EventType,
+)
 from kayman.schemas.event_entry import EventEntry
 from kayman.tests.factories import (
     EventEntryFactory,
@@ -221,3 +228,125 @@ def test_delete_events_by_ids_cascades_to_entries(session: Session):
     remaining_events = session.exec(select(Event)).all()
     assert len(remaining_events) == 1
     assert remaining_events[0].id == survivor.id
+
+
+def _clear_error(error_type: EventClearErrorType, msg: str) -> EventClearError:
+    return EventClearError(type=error_type, msg=msg)
+
+
+def test_validate_event_clearable_real_registry_is_empty():
+    """The shipped registry holds no validator yet, so nothing can fail"""
+    event = EventFactory.build()
+
+    # Guard the premise: if a validator lands, this test is the reminder to
+    # cover it here rather than a silent pass.
+    assert len(CLEAR_VALIDATORS) == 0
+    assert len(validate_event_clearable(event)) == 0
+
+
+def test_validate_event_clearable_passing_validator():
+    """A validator returning no error contributes nothing"""
+    event = EventFactory.build()
+    seen = []
+
+    def passes(candidate: Event) -> list[EventClearError]:
+        seen.append(candidate)
+        return []
+
+    with patch("kayman.logics.event.CLEAR_VALIDATORS", (passes,)):
+        errors = validate_event_clearable(event)
+
+    assert len(errors) == 0
+    # The validator is handed the very event under test, not a copy.
+    assert len(seen) == 1
+    assert seen[0] is event
+
+
+def test_validate_event_clearable_single_error():
+    """A failing validator's single error is returned as-is"""
+    event = EventFactory.build()
+    error = _clear_error(EventClearErrorType.NO_ENTRIES, "no entries")
+
+    def fails(_event: Event) -> list[EventClearError]:
+        return [error]
+
+    with patch("kayman.logics.event.CLEAR_VALIDATORS", (fails,)):
+        errors = validate_event_clearable(event)
+
+    assert len(errors) == 1
+    assert errors[0] is error
+
+
+def test_validate_event_clearable_multiple_errors_from_one_validator():
+    """One validator reports every offending row, all of them survive"""
+    event = EventFactory.build()
+    first = _clear_error(EventClearErrorType.TRANSACTIONS_NOT_POSTED, "txn 1 pending")
+    second = _clear_error(EventClearErrorType.TRANSACTIONS_NOT_POSTED, "txn 2 pending")
+    third = _clear_error(EventClearErrorType.TRANSACTIONS_NOT_POSTED, "txn 3 pending")
+
+    def fails(_event: Event) -> list[EventClearError]:
+        return [first, second, third]
+
+    with patch("kayman.logics.event.CLEAR_VALIDATORS", (fails,)):
+        errors = validate_event_clearable(event)
+
+    # Within a validator, the order it reported is preserved.
+    assert len(errors) == 3
+    assert errors == [first, second, third]
+
+
+def test_validate_event_clearable_collects_across_validators():
+    """Errors from several validators concatenate in registry order"""
+    event = EventFactory.build()
+    already_cleared = _clear_error(
+        EventClearErrorType.ALREADY_CLEARED, "already cleared"
+    )
+    mismatch = _clear_error(EventClearErrorType.TOTALS_MISMATCH, "totals mismatch")
+    empty_description = _clear_error(
+        EventClearErrorType.EMPTY_ENTRIES_DESCRIPTION, "entry 0 has no description"
+    )
+
+    def first_fails(_event: Event) -> list[EventClearError]:
+        return [already_cleared]
+
+    def passes(_event: Event) -> list[EventClearError]:
+        return []
+
+    def last_fails(_event: Event) -> list[EventClearError]:
+        return [mismatch, empty_description]
+
+    with patch(
+        "kayman.logics.event.CLEAR_VALIDATORS", (first_fails, passes, last_fails)
+    ):
+        errors = validate_event_clearable(event)
+
+    # Registry order between validators, reported order within one.
+    assert len(errors) == 3
+    assert errors == [already_cleared, mismatch, empty_description]
+
+
+def test_validate_event_clearable_runs_every_validator_after_a_failure():
+    """An early failure never short-circuits the validators behind it"""
+    event = EventFactory.build()
+    calls = []
+
+    def first_fails(candidate: Event) -> list[EventClearError]:
+        calls.append(("first", candidate))
+        return [_clear_error(EventClearErrorType.NO_TRANSACTIONS, "no transactions")]
+
+    def second_fails(candidate: Event) -> list[EventClearError]:
+        calls.append(("second", candidate))
+        return [_clear_error(EventClearErrorType.INCONSISTENT_TIMESTAMPS, "timestamps")]
+
+    with patch("kayman.logics.event.CLEAR_VALIDATORS", (first_fails, second_fails)):
+        errors = validate_event_clearable(event)
+
+    assert len(calls) == 2
+    assert [name for name, _ in calls] == ["first", "second"]
+    assert all(seen is event for _, seen in calls)
+
+    assert len(errors) == 2
+    assert [error.type for error in errors] == [
+        EventClearErrorType.NO_TRANSACTIONS,
+        EventClearErrorType.INCONSISTENT_TIMESTAMPS,
+    ]

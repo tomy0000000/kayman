@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from decimal import Decimal
 
 from sqlmodel import Session
@@ -6,7 +6,11 @@ from sqlmodel import Session
 from kayman.crud.event import delete_events, read_events
 from kayman.crud.transaction import read_transactions
 from kayman.schemas.api_models import EventCreateDetailed
-from kayman.schemas.event import EventType
+from kayman.schemas.event import Event, EventClearError, EventType
+
+EventClearValidator = Callable[[Event], list[EventClearError]]
+
+CLEAR_VALIDATORS: tuple[EventClearValidator, ...] = ()
 
 
 # TODO: unused after legacy_create removal, remove once confirmed obsolete
@@ -39,6 +43,15 @@ def validate_total(details: EventCreateDetailed) -> None:
                 f"Entries total ({entries_total}) and "
                 f"transactions total ({transactions_total}) do not match"
             )
+
+
+def validate_event_clearable(event: Event) -> list[EventClearError]:
+    """Collect every reason the event cannot be cleared, never short-circuiting.
+
+    The caller shows all of them at once, so a validator raising instead of
+    returning would hide the rest.
+    """
+    return [error for validator in CLEAR_VALIDATORS for error in validator(event)]
 
 
 def event_has_transactions(
