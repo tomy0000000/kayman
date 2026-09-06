@@ -5,6 +5,7 @@ import {
   type AccountRead,
   type CategoryRead,
   type CurrencyRead,
+  type EventClearError,
   type EventCreate,
   type EventReadDetailed,
   type TransactionTagRead
@@ -37,6 +38,10 @@ interface EventSheetProps {
     entries: EventEntryPayload[]
   ) => void
   isPending: boolean
+  clearErrors: EventClearError[]
+  isClearableLoading: boolean
+  onClear: () => void
+  isClearPending: boolean
 }
 
 const TITLES: Record<EventSheetState['mode'], string> = {
@@ -57,7 +62,11 @@ export function EventSheet({
   transactionTags,
   seedDate,
   onSubmit,
-  isPending
+  isPending,
+  clearErrors,
+  isClearableLoading,
+  onClear,
+  isClearPending
 }: EventSheetProps) {
   // Qualified by mode, so editing then duplicating the same event still remounts.
   const formKey =
@@ -75,6 +84,10 @@ export function EventSheet({
           event={state.event}
           categoryNames={categoryNames}
           accounts={accounts}
+          clearErrors={clearErrors}
+          isClearableLoading={isClearableLoading}
+          onClear={onClear}
+          isClearPending={isClearPending}
         />
       ) : (
         /* Keyed so the form re-initializes from the picked event. */

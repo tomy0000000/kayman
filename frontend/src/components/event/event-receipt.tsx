@@ -2,12 +2,17 @@ import { Download } from 'lucide-react'
 import { useMemo } from 'react'
 
 import { Amount } from '@/components/amount'
+import { EventClearBanner } from '@/components/event/event-clear-banner'
 import { EventTypeBadge } from '@/components/event/event-type-badge'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
 import { TransactionTagBadge } from '@/components/transaction/transaction-tag-badge'
 import { Button } from '@/components/ui/button'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
-import type { AccountRead, EventReadDetailed } from '@/lib/client'
+import type {
+  AccountRead,
+  EventClearError,
+  EventReadDetailed
+} from '@/lib/client'
 import { downloadCsv, eventToCsv } from '@/lib/csv'
 import {
   formatCurrency,
@@ -20,6 +25,10 @@ interface EventReceiptProps {
   event: EventReadDetailed
   categoryNames: Map<number, string>
   accounts: AccountRead[]
+  clearErrors: EventClearError[]
+  isClearableLoading: boolean
+  onClear: () => void
+  isClearPending: boolean
 }
 
 interface ReceiptLineProps {
@@ -39,7 +48,11 @@ interface ReceiptTotalProps {
 export function EventReceipt({
   event,
   categoryNames,
-  accounts
+  accounts,
+  clearErrors,
+  isClearableLoading,
+  onClear,
+  isClearPending
 }: EventReceiptProps) {
   const { timezone } = useClientTimezone()
   const accountNames = useMemo(
@@ -147,12 +160,18 @@ export function EventReceipt({
         <ReceiptTotal label="Total" totals={transactionTotals} signed />
       </div>
 
-      {event.cleared_at && (
+      {event.cleared_at ? (
         <span className="text-center text-muted-foreground text-xs">
           Cleared {formatDateTime(event.cleared_at, timezone)}
         </span>
+      ) : (
+        <EventClearBanner
+          errors={clearErrors}
+          isLoading={isClearableLoading}
+          onClear={onClear}
+          isClearPending={isClearPending}
+        />
       )}
-
       <Button variant="outline" onClick={handleDownload}>
         <Download />
         Download CSV

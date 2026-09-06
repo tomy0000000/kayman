@@ -10,10 +10,12 @@ import {
   updateEvent
 } from '@/lib/client'
 import {
+  clearEventMutation,
   deleteEventMutation,
   readAccountsOptions,
   readCategoriesOptions,
   readCurrenciesOptions,
+  readEventsClearableOptions,
   readEventsQueryKey,
   readTransactionTagsOptions,
   readTransactionsQueryKey
@@ -38,6 +40,7 @@ export function useEventActions(client: Client) {
   }>({ open: false, state: { mode: 'new' } })
 
   const editingEvent = sheet.state.mode === 'edit' ? sheet.state.event : null
+  const viewingEvent = sheet.state.mode === 'view' ? sheet.state.event : null
 
   const openSheet = (state: EventSheetState) => setSheet({ open: true, state })
 
@@ -122,6 +125,18 @@ export function useEventActions(client: Client) {
     meta: { errorMessage: 'Failed to delete event' }
   })
 
+  const { mutate: mutateClear, isPending: isClearPending } = useMutation({
+    ...clearEventMutation(),
+    onSuccess: () => {
+      toast.add({ title: 'Event cleared', type: 'success' })
+      setSheet((current) => ({ ...current, open: false }))
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
+    },
+    meta: { errorMessage: 'Failed to clear event' }
+  })
+
   const isFormOpen = sheet.open && sheet.state.mode !== 'view'
 
   const { data: accounts } = useQuery({
@@ -139,6 +154,13 @@ export function useEventActions(client: Client) {
     ...readTransactionTagsOptions(),
     enabled: isFormOpen,
     staleTime: REFERENCE_STALE_TIME
+  })
+
+  const { data: clearable, isLoading: isClearableLoading } = useQuery({
+    ...readEventsClearableOptions({
+      query: { ids: viewingEvent ? [viewingEvent.id] : [] }
+    }),
+    enabled: sheet.open && !!viewingEvent && !viewingEvent.cleared_at
   })
 
   // Categories back both the form and the table's summary column.
@@ -188,7 +210,19 @@ export function useEventActions(client: Client) {
         transactions: TransactionPayload[],
         entries: EventEntryPayload[]
       ) => mutate({ body, transactions, entries }),
-      isPending: isMutationPending
+      isPending: isMutationPending,
+      clearErrors: viewingEvent
+        ? (clearable?.[viewingEvent.id]?.errors ?? [])
+        : [],
+      isClearableLoading,
+      isClearPending,
+      onClear: () => {
+        if (!viewingEvent) return
+        mutateClear({
+          path: { event_id: viewingEvent.id },
+          body: { cleared_at: new Date().toISOString() }
+        })
+      }
     },
     // Spread onto EventDeleteDialog.
     deleteDialogProps: {
