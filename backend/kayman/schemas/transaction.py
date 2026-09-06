@@ -40,6 +40,9 @@ class Transaction(TransactionBase, table=True):
         UniqueConstraint("event_id", "index", name="transaction_event_id_index_key"),
     )
     id: int | None = Field(primary_key=True, default=None)
+    statement_id: int | None = Field(
+        foreign_key="statement.id", default=None
+    )  # TODO: accept this on creation
     account: "Account" = Relationship(back_populates="transactions")
     event: Optional["Event"] = Relationship(back_populates="transactions")
     tags: list["TransactionTag"] = Relationship(
@@ -65,6 +68,7 @@ class TransactionRead(TransactionBase):
     id: int
     created_at: datetime
     currency_code: str
+    statement_id: int | None = None
     event: EventRead | None
     tags: list[TransactionTagRead] = []
 
