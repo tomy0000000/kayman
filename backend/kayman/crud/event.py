@@ -35,6 +35,7 @@ def read_events(
     category_id: int | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
+    cleared_at: Literal["empty"] | None = None,
     order_by: EventOrderBy | None = None,
     descending: bool = False,
     for_update: bool = False,
@@ -54,6 +55,8 @@ def read_events(
         scalar = scalar.where(Event.timestamp >= start)
     if end is not None:
         scalar = scalar.where(Event.timestamp < end)
+    if cleared_at == "empty":
+        scalar = scalar.where(col(Event.cleared_at).is_(None))
     column = getattr(Event, order_by) if order_by is not None else col(Event.timestamp)
     scalar = scalar.order_by(column.desc() if descending else column.asc())
     if for_update:

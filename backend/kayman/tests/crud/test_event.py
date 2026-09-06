@@ -219,6 +219,29 @@ def test_read_events_by_category_deduplicates(session: Session):
     assert events[0].id == event.id
 
 
+def test_read_events_cleared_at_empty_returns_only_uncleared(session: Session):
+    # EventFactory fakes a cleared_at by default, so uncleared rows need it
+    # unset explicitly.
+    uncleared_1 = EventFactory(cleared_at=None)
+    uncleared_2 = EventFactory(cleared_at=None)
+    EventFactory(cleared_at=datetime(2026, 1, 1, tzinfo=UTC))
+
+    results = read_events(session, cleared_at="empty")
+
+    assert len(results) == 2
+    assert {event.id for event in results} == {uncleared_1.id, uncleared_2.id}
+
+
+def test_read_events_without_cleared_at_returns_all(session: Session):
+    uncleared = EventFactory(cleared_at=None)
+    cleared = EventFactory(cleared_at=datetime(2026, 1, 1, tzinfo=UTC))
+
+    results = read_events(session)
+
+    assert len(results) == 2
+    assert {event.id for event in results} == {uncleared.id, cleared.id}
+
+
 def test_read_events_without_order_by_defaults_to_timestamp_ascending(
     session: Session,
 ):
