@@ -1,56 +1,19 @@
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient
-} from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { z } from 'zod'
 
-import {
-  EventSheet,
-  type EventSheetState
-} from '@/components/event/event-sheet'
+import { EventDeleteDialog } from '@/components/event/event-delete-dialog'
+import { EventSheet } from '@/components/event/event-sheet'
 import { EventsTable } from '@/components/event/events-table'
 import { Fab } from '@/components/fab'
 import { ResponsiveCalendar } from '@/components/responsive-calendar'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
-import { toast } from '@/components/ui/toast'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
-import {
-  type EventCreate,
-  type EventReadDetailed,
-  createEvent,
-  updateEvent
-} from '@/lib/client'
-import {
-  deleteEventMutation,
-  readAccountsOptions,
-  readCategoriesOptions,
-  readCurrenciesOptions,
-  readEventsOptions,
-  readEventsQueryKey,
-  readTransactionTagsOptions,
-  readTransactionsQueryKey
-} from '@/lib/client/@tanstack/react-query.gen'
-import { REFERENCE_STALE_TIME } from '@/lib/constants'
-import { syncEventEntries } from '@/lib/event-entries'
-import { hasEventChanges, syncEventTransactions } from '@/lib/events'
-import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
+import { useEventActions } from '@/hooks/use-event-actions'
+import { readEventsOptions } from '@/lib/client/@tanstack/react-query.gen'
 import {
   formatCalendarDate,
   parseLocalDate,
-  pluralize,
   zonedCalendarDate,
   zonedCalendarGridRange,
   zonedDayKey,
@@ -60,16 +23,6 @@ import {
 const searchSchema = z.object({
   date: z.iso.date().optional()
 })
-
-// What the confirm dialog spells out before an irreversible delete. Only an
-// event without transactions can be deleted, so its entries are all that goes
-// with it.
-const describeDeletion = (event: EventReadDetailed) => {
-  const description = event.description?.trim()
-  const name = description ? `“${description}”` : 'this event'
-  const entries = pluralize(event.entries.length, 'entry', 'entries')
-  return `This permanently deletes ${name} and its ${entries}.`
-}
 
 export const Route = createFileRoute('/_auth/')({
   head: () => ({
@@ -81,7 +34,6 @@ export const Route = createFileRoute('/_auth/')({
 
 function HomePage() {
   const { client } = Route.useRouteContext()
-  const queryClient = useQueryClient()
   const navigate = Route.useNavigate()
   const { date: dateParam } = Route.useSearch()
   const { timezone } = useClientTimezone()
@@ -102,96 +54,13 @@ function HomePage() {
   const gridRange = zonedCalendarGridRange(month, timezone)
   const dayRange = date ? zonedDayRange(date, timezone) : undefined
 
-  // The state outlives `open` so the sheet keeps its body while closing.
-  const [sheet, setSheet] = useState<{
-    open: boolean
-    state: EventSheetState
-  }>({ open: false, state: { mode: 'new' } })
-
-  const editingEvent = sheet.state.mode === 'edit' ? sheet.state.event : null
-
-  const openSheet = (state: EventSheetState) => setSheet({ open: true, state })
-
-  const { mutate, isPending: isMutationPending } = useMutation({
-    mutationFn: async ({
-      body,
-      transactions,
-      entries
-    }: {
-      body: EventCreate
-      transactions: TransactionPayload[]
-      entries: EventEntryPayload[]
-    }) => {
-      let event: { id: number }
-      if (!editingEvent) {
-        const { data } = await createEvent({ client, body, throwOnError: true })
-        event = data
-      } else if (hasEventChanges(body, editingEvent)) {
-        const { data } = await updateEvent({
-          client,
-          path: { event_id: editingEvent.id },
-          body,
-          throwOnError: true
-        })
-        event = data
-      } else {
-        // Only the transactions or entries changed, so the event needs no patch.
-        event = editingEvent
-      }
-
-      await syncEventTransactions({
-        client,
-        eventId: event.id,
-        transactions,
-        previousTransactions: editingEvent?.transactions ?? [],
-        createdAt: body.timestamp
-      })
-
-      await syncEventEntries({
-        client,
-        eventId: event.id,
-        entries,
-        previousEntries: editingEvent?.entries ?? []
-      })
-
-      return event
-    },
-    onSuccess: () => {
-      toast.add({
-        title: `Event ${editingEvent ? 'updated' : 'created'}`,
-        type: 'success'
-      })
-      setSheet((current) => ({ ...current, open: false }))
-    },
-    // Settled, not success: the submit spans several calls, so a failure partway
-    // can still have deleted or changed rows the table is now showing stale.
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
-      queryClient.invalidateQueries({ queryKey: readTransactionsQueryKey() })
-    },
-    meta: {
-      errorMessage: `Failed to ${editingEvent ? 'update' : 'create'} event`
-    }
-  })
-
-  // The event outlives `open` so the dialog keeps its body while closing.
-  const [deletion, setDeletion] = useState<{
-    open: boolean
-    event: EventReadDetailed | null
-  }>({ open: false, event: null })
-
-  const { mutate: mutateDelete, isPending: isDeletePending } = useMutation({
-    ...deleteEventMutation(),
-    onSuccess: () => {
-      toast.add({ title: 'Event deleted', type: 'success' })
-      setDeletion((current) => ({ ...current, open: false }))
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
-      queryClient.invalidateQueries({ queryKey: readTransactionsQueryKey() })
-    },
-    meta: { errorMessage: 'Failed to delete event' }
-  })
+  const {
+    categoryNames,
+    openSheet,
+    tableHandlers,
+    sheetProps,
+    deleteDialogProps
+  } = useEventActions(client)
 
   // Two separate reads: the grid query only feeds the calendar's dots, so it
   // stays out of the table's loading path and keeps showing the previous
@@ -220,41 +89,6 @@ function HomePage() {
   const visibleEvents = dayRange ? dayEvents : gridEvents
   const isPending = dayRange ? isDayPending : isGridPending
 
-  const isFormOpen = sheet.open && sheet.state.mode !== 'view'
-
-  const { data: accounts } = useQuery({
-    ...readAccountsOptions(),
-    enabled: sheet.open
-  })
-
-  const { data: currencies } = useQuery({
-    ...readCurrenciesOptions(),
-    enabled: isFormOpen,
-    staleTime: REFERENCE_STALE_TIME
-  })
-
-  const { data: transactionTags } = useQuery({
-    ...readTransactionTagsOptions(),
-    enabled: isFormOpen,
-    staleTime: REFERENCE_STALE_TIME
-  })
-
-  // Categories back both the form and the table's summary column.
-  const { data: categories } = useQuery({
-    ...readCategoriesOptions(),
-    staleTime: REFERENCE_STALE_TIME
-  })
-
-  // An id -> name lookup so entries (which reference `category_id`) can render
-  // names.
-  const categoryNames = useMemo(
-    () =>
-      new Map(
-        (categories ?? []).map((category) => [category.id, category.name])
-      ),
-    [categories]
-  )
-
   return (
     <>
       <div className="flex flex-col gap-4">
@@ -271,12 +105,7 @@ function HomePage() {
             events={visibleEvents}
             categoryNames={categoryNames}
             isPending={isPending}
-            onEventView={(event) => openSheet({ mode: 'view', event })}
-            onEventEdit={(event) => openSheet({ mode: 'edit', event })}
-            onEventDuplicate={(event) =>
-              openSheet({ mode: 'duplicate', event })
-            }
-            onEventDelete={(event) => setDeletion({ open: true, event })}
+            {...tableHandlers}
           />
         </div>
       </div>
@@ -287,55 +116,9 @@ function HomePage() {
         onOpen={() => openSheet({ mode: 'new' })}
       />
 
-      <EventSheet
-        open={sheet.open}
-        state={sheet.state}
-        onOpenChange={(open) => setSheet((current) => ({ ...current, open }))}
-        accounts={accounts ?? []}
-        categories={categories ?? []}
-        categoryNames={categoryNames}
-        currencies={currencies ?? []}
-        transactionTags={transactionTags ?? []}
-        seedDate={date}
-        onSubmit={(body, transactions, entries) =>
-          mutate({ body, transactions, entries })
-        }
-        isPending={isMutationPending}
-      />
+      <EventSheet {...sheetProps} seedDate={date} />
 
-      <Dialog
-        open={deletion.open}
-        onOpenChange={(open) =>
-          setDeletion((current) => ({ ...current, open }))
-        }
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete event?</DialogTitle>
-            <DialogDescription>
-              {deletion.event && describeDeletion(deletion.event)}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={isDeletePending}
-              onClick={() =>
-                deletion.event &&
-                mutateDelete({ path: { id: deletion.event.id } })
-              }
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EventDeleteDialog {...deleteDialogProps} />
     </>
   )
 }
