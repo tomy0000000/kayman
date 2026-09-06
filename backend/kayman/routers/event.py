@@ -87,11 +87,7 @@ def update(
     },
 )
 def clear(
-    *,
-    session: Session = Depends(get_session),
-    event_id: int,
-    data: EventClear,
-    dry_run: bool = False,
+    *, session: Session = Depends(get_session), event_id: int, data: EventClear
 ) -> EventBase:
     # Lock the row here rather than letting update_events do it, so validation
     # and the write see the same state.
@@ -104,12 +100,6 @@ def clear(
         raise HTTPException(
             status_code=409,
             detail=[error.model_dump(mode="json") for error in errors],
-        )
-
-    # Report what the write would produce, without touching the session.
-    if dry_run:
-        return EventRead.model_validate(
-            events[0], update={"cleared_at": data.cleared_at}
         )
 
     update = EventUpdate(**data.model_dump(exclude_unset=True))
