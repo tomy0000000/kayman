@@ -6,7 +6,6 @@ import {
 } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
 import { z } from 'zod'
 
 import {
@@ -16,6 +15,7 @@ import {
 import { EventsTable } from '@/components/event/events-table'
 import { Fab } from '@/components/fab'
 import { ResponsiveCalendar } from '@/components/responsive-calendar'
+import { toast } from '@/components/ui/toast'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { type EventCreate, createEvent, updateEvent } from '@/lib/client'
 import {
@@ -130,7 +130,10 @@ function HomePage() {
       return event
     },
     onSuccess: () => {
-      toast.success(`Event ${editingEvent ? 'updated' : 'created'}`)
+      toast.add({
+        title: `Event ${editingEvent ? 'updated' : 'created'}`,
+        type: 'success'
+      })
       setSheet((current) => ({ ...current, open: false }))
     },
     // Settled, not success: the submit spans several calls, so a failure partway

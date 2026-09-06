@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { type DateRange } from 'react-day-picker'
-import { toast } from 'sonner'
 
 import { DatePickerWithRange } from '@/components/date-range-picker'
 import { CreateEventSheet } from '@/components/event/create-event-sheet'
@@ -10,6 +9,7 @@ import { TransactionFab } from '@/components/transaction/transaction-fab'
 import { TransactionPostSheet } from '@/components/transaction/transaction-post-sheet'
 import { TransactionsTable } from '@/components/transaction/transactions-table'
 import { Separator } from '@/components/ui/separator'
+import { toast } from '@/components/ui/toast'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
   type EventCreate,
@@ -96,7 +96,10 @@ function AccountTransactionPage() {
       return data
     },
     onSuccess: () => {
-      toast.success(`Transaction ${editingTransaction ? 'updated' : 'created'}`)
+      toast.add({
+        title: `Transaction ${editingTransaction ? 'updated' : 'created'}`,
+        type: 'success'
+      })
       invalidateTransactions()
       setFabOpen(false)
     },
@@ -108,7 +111,7 @@ function AccountTransactionPage() {
   const { mutate: postTransaction, isPending: isPosting } = useMutation({
     ...postTransactionMutation(),
     onSuccess: () => {
-      toast.success('Transaction posted')
+      toast.add({ title: 'Transaction posted', type: 'success' })
       invalidateTransactions()
       setPostingTransaction(null)
     },
@@ -150,7 +153,7 @@ function AccountTransactionPage() {
         return event
       },
       onSuccess: () => {
-        toast.success('Event created')
+        toast.add({ title: 'Event created', type: 'success' })
         setCreatingEventTransaction(null)
       },
       // Settled, not success: the submit spans several calls, so a failure

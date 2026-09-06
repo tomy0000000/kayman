@@ -8,7 +8,7 @@ import {
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Suspense, lazy, useEffect, useState } from 'react'
 
-import { Toaster } from '@/components/ui/sonner'
+import { Toaster } from '@/components/ui/toast'
 import type { useAuth } from '@/hooks/use-auth'
 
 declare global {

@@ -128,3 +128,11 @@
     @apply font-sans;
   }
 }
+
+/* Toasts sit above the z-50 overlay layer (dialog, sheet, drawer, menus).
+   Those portals mount after the toast viewport, so at an equal z-index the
+   toast loses on DOM order and hides under the dialog's blurred backdrop.
+   Kept here rather than in the shadcn primitive, which stays upstream-clean. */
+[data-slot='toast-viewport'] {
+  z-index: 100;
+}

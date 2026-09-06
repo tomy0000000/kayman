@@ -2,11 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { Wallet } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
 
 import { CreateAccountFab } from '@/components/create-account-fab'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { toast } from '@/components/ui/toast'
 import {
   createAccountMutation,
   readAccountsOptions,
@@ -42,7 +42,7 @@ function AccountListPage() {
   const { mutate, isPending } = useMutation({
     ...createAccountMutation(),
     onSuccess: () => {
-      toast.success('Account created')
+      toast.add({ title: 'Account created', type: 'success' })
       queryClient.invalidateQueries({ queryKey: readAccountsQueryKey() })
       setFabOpen(false)
     },
