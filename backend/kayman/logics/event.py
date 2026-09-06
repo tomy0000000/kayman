@@ -5,7 +5,6 @@ from sqlmodel import Session
 
 from kayman.crud.event import delete_events, read_events
 from kayman.crud.transaction import read_transactions
-from kayman.schemas.api_models import EventCreateDetailed
 from kayman.schemas.event import (
     Event,
     EventClearError,
@@ -16,36 +15,41 @@ from kayman.schemas.event import (
 EventClearValidator = Callable[[Event], list[EventClearError]]
 
 
-# TODO: unused after legacy_create removal, remove once confirmed obsolete
-def validate_total(details: EventCreateDetailed) -> None:
-    # Skip check if this is a multi-curreny event
-    if len({entry.currency_code for entry in details.entries}) > 1:
-        return
+def validate_totals_match(event: Event) -> list[EventClearError]:
+    """Report an entry-driven event whose entries and transactions disagree."""
+    # Transfer and Exchange carry no entries to total against
+    if event.type not in (EventType.Expense, EventType.Income):
+        return []
 
-    # Event type of transfer or exchange is not checked
-    if details.event.type in (EventType.Transfer, EventType.Exchange):
-        return
+    # A multi-currency event has no single total to compare
+    currency_codes = {entry.currency_code for entry in event.entries} | {
+        transaction.currency_code for transaction in event.transactions
+    }
+    if len(currency_codes) > 1:
+        return []
 
     entries_total = Decimal(
-        sum([entry.amount * entry.quantity for entry in details.entries])
+        sum([entry.amount * entry.quantity for entry in event.entries])
     )
     transactions_total = Decimal(
-        sum([transaction.amount for transaction in details.transactions])
+        sum([transaction.amount for transaction in event.transactions])
     )
+    # Expense drains the accounts, so its transactions mirror the entries
+    if event.type is EventType.Expense:
+        transactions_total = -transactions_total
 
-    if details.event.type is EventType.Expense:
-        if entries_total != -transactions_total:
-            raise ValueError(
-                f"Entries total ({entries_total}) and "
-                f"transactions total ({-transactions_total}) do not match"
-            )
+    if entries_total == transactions_total:
+        return []
 
-    if details.event.type is EventType.Income:
-        if entries_total != transactions_total:
-            raise ValueError(
+    return [
+        EventClearError(
+            type=EventClearErrorType.TOTALS_MISMATCH,
+            msg=(
                 f"Entries total ({entries_total}) and "
                 f"transactions total ({transactions_total}) do not match"
-            )
+            ),
+        )
+    ]
 
 
 def validate_entries_present(event: Event) -> list[EventClearError]:
@@ -93,6 +97,7 @@ def validate_transaction_timestamps(event: Event) -> list[EventClearError]:
 CLEAR_VALIDATORS: tuple[EventClearValidator, ...] = (
     validate_entries_present,
     validate_transactions_present,
+    validate_totals_match,
     validate_transaction_timestamps,
 )
 

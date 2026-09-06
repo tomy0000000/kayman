@@ -1,4 +1,6 @@
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
@@ -10,7 +12,7 @@ from kayman.logics.event import (
     event_has_transactions,
     validate_entries_present,
     validate_event_clearable,
-    validate_total,
+    validate_totals_match,
     validate_transaction_timestamps,
     validate_transactions_present,
 )
@@ -22,80 +24,12 @@ from kayman.schemas.event import (
 )
 from kayman.schemas.event_entry import EventEntry
 from kayman.tests.factories import (
+    AccountFactory,
+    CurrencyFactory,
     EventEntryFactory,
     EventFactory,
     TransactionFactory,
 )
-
-
-def test_validate_total_expense():
-    """Expense: Entries total is matched with transactions total"""
-    details = EventFactory.build_details(
-        type=EventType.Expense, entry_num=3, transaction_num=5
-    )
-    validate_total(details)
-
-
-def test_validate_total_expense_multi_currencies():
-    """Expense: Multiple currencies are used, validation should be skipped"""
-    details = EventFactory.build_details(
-        type=EventType.Expense, entry_num=3, transaction_num=5
-    )
-    details.entries[-1].currency_code += "_INVALID"  # explicitly change currency
-    validate_total(details)
-
-
-def test_validate_total_expense_mismatch():
-    """Expense: Entries and transactions totals do not match"""
-    details = EventFactory.build_details(
-        type=EventType.Expense, entry_num=3, transaction_num=5
-    )
-    details.transactions[-1].amount += 1
-    with pytest.raises(ValueError, match="transactions (.*) not match"):
-        validate_total(details)
-
-
-def test_validate_total_income():
-    """Income: Entries total is matched with transactions total"""
-    details = EventFactory.build_details(
-        type=EventType.Income, entry_num=3, transaction_num=5
-    )
-    validate_total(details)
-
-
-def test_validate_total_income_multi_currencies():
-    """Income: Multiple currencies are used, validation should be skipped"""
-    details = EventFactory.build_details(
-        type=EventType.Income, entry_num=3, transaction_num=5
-    )
-    details.entries[-1].currency_code += "_INVALID"  # explicitly change currency
-    validate_total(details)
-
-
-def test_validate_total_income_mismatch():
-    """Income: Entries and transactions totals do not match"""
-    details = EventFactory.build_details(
-        type=EventType.Income, entry_num=3, transaction_num=5
-    )
-    details.transactions[-1].amount += 1
-    with pytest.raises(ValueError, match="transactions (.*) not match"):
-        validate_total(details)
-
-
-def test_validate_total_transfer():
-    """Transfer: Validation should be skipped"""
-    details = EventFactory.build_details(
-        type=EventType.Transfer, entry_num=3, transaction_num=5
-    )
-    validate_total(details)
-
-
-def test_validate_total_exchange():
-    """Exchange: Validation should be skipped"""
-    details = EventFactory.build_details(
-        type=EventType.Exchange, entry_num=3, transaction_num=5
-    )
-    validate_total(details)
 
 
 def test_event_has_transactions_true(session: Session):
@@ -316,6 +250,171 @@ def test_validate_transactions_present_entry_driven(
     assert len(validate_transactions_present(event)) == 0
 
 
+def _totals_event(
+    event_type: EventType = EventType.Expense,
+    entry_amounts: Sequence[Decimal] = (),
+    transaction_amounts: Sequence[Decimal] = (),
+    entry_currency_code: str = "TWD",
+    transaction_currency_code: str = "TWD",
+) -> Event:
+    """Build an unpersisted event whose two sides share a currency by default."""
+    account = AccountFactory.build(
+        currency=CurrencyFactory.build(code=transaction_currency_code)
+    )
+    entry_currency = CurrencyFactory.build(code=entry_currency_code)
+
+    return EventFactory.build(
+        type=event_type,
+        entries=[
+            EventEntryFactory.build(
+                amount=amount, quantity=1, currency=entry_currency, event_id=0
+            )
+            for amount in entry_amounts
+        ],
+        transactions=[
+            TransactionFactory.build(amount=amount, account=account)
+            for amount in transaction_amounts
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    ("event_type", "transaction_amounts"),
+    [
+        (EventType.Expense, [Decimal("-100.00")]),
+        (EventType.Expense, [Decimal("-40.00"), Decimal("-60.00")]),
+        (EventType.Income, [Decimal("100.00")]),
+        (EventType.Income, [Decimal("40.00"), Decimal("60.00")]),
+    ],
+)
+def test_validate_totals_match_matching(
+    event_type: EventType, transaction_amounts: list[Decimal]
+):
+    """Expense mirrors its transactions, Income matches them sign for sign"""
+    event = _totals_event(
+        event_type=event_type,
+        entry_amounts=[Decimal("30.00"), Decimal("70.00")],
+        transaction_amounts=transaction_amounts,
+    )
+
+    assert len(validate_totals_match(event)) == 0
+
+
+@pytest.mark.parametrize(
+    ("event_type", "transaction_amounts"),
+    [
+        (EventType.Expense, [Decimal("-99.00")]),
+        # Right magnitude, wrong sign: an Expense paid by an inbound transaction
+        (EventType.Expense, [Decimal("100.00")]),
+        (EventType.Income, [Decimal("99.00")]),
+        (EventType.Income, [Decimal("-100.00")]),
+    ],
+)
+def test_validate_totals_match_mismatch(
+    event_type: EventType, transaction_amounts: list[Decimal]
+):
+    """Totals that disagree report exactly one TOTALS_MISMATCH error"""
+    event = _totals_event(
+        event_type=event_type,
+        entry_amounts=[Decimal("100.00")],
+        transaction_amounts=transaction_amounts,
+    )
+
+    errors = validate_totals_match(event)
+
+    # One error for the event as a whole, not one per row.
+    assert len(errors) == 1
+    assert errors[0].type is EventClearErrorType.TOTALS_MISMATCH
+
+
+def test_validate_totals_match_counts_quantity():
+    """An entry totals amount times quantity, not amount alone"""
+    event = _totals_event(
+        entry_amounts=[Decimal("25.00")],
+        transaction_amounts=[Decimal("-100.00")],
+    )
+    event.entries[0].quantity = 4
+
+    assert len(validate_totals_match(event)) == 0
+
+
+@pytest.mark.parametrize("event_type", [EventType.Expense, EventType.Income])
+def test_validate_totals_match_without_transactions(event_type: EventType):
+    """No transaction means a zero total, which entries have to match"""
+    event = _totals_event(event_type=event_type, entry_amounts=[Decimal("100.00")])
+
+    errors = validate_totals_match(event)
+
+    assert len(errors) == 1
+    assert errors[0].type is EventClearErrorType.TOTALS_MISMATCH
+
+
+@pytest.mark.parametrize("event_type", [EventType.Expense, EventType.Income])
+def test_validate_totals_match_without_entries_or_transactions(event_type: EventType):
+    """Two empty sides both total zero, so there is nothing to report"""
+    event = _totals_event(event_type=event_type)
+
+    assert len(validate_totals_match(event)) == 0
+
+
+def test_validate_totals_match_multi_currency_entries():
+    """Entries spanning currencies have no single total, so the check is skipped"""
+    event = _totals_event(
+        entry_amounts=[Decimal("100.00")],
+        transaction_amounts=[Decimal("-1.00")],
+    )
+    event.entries.append(
+        EventEntryFactory.build(
+            amount=Decimal("50.00"),
+            quantity=1,
+            currency=CurrencyFactory.build(code="USD"),
+            event_id=0,
+        )
+    )
+
+    assert len(validate_totals_match(event)) == 0
+
+
+def test_validate_totals_match_multi_currency_transactions():
+    """Transactions spanning currencies skip the check just as entries do"""
+    event = _totals_event(
+        entry_amounts=[Decimal("100.00")],
+        transaction_amounts=[Decimal("-1.00")],
+    )
+    event.transactions.append(
+        TransactionFactory.build(
+            amount=Decimal("-50.00"),
+            account=AccountFactory.build(currency=CurrencyFactory.build(code="USD")),
+        )
+    )
+
+    assert len(validate_totals_match(event)) == 0
+
+
+def test_validate_totals_match_currency_differs_across_sides():
+    """Each side is single-currency, but they disagree, so the check is skipped"""
+    event = _totals_event(
+        entry_amounts=[Decimal("100.00")],
+        transaction_amounts=[Decimal("-1.00")],
+        entry_currency_code="TWD",
+        transaction_currency_code="USD",
+    )
+
+    assert len(validate_totals_match(event)) == 0
+
+
+@pytest.mark.parametrize("event_type", [EventType.Transfer, EventType.Exchange])
+def test_validate_totals_match_transaction_driven(event_type: EventType):
+    """Transfer and Exchange move money between accounts, totals never apply"""
+    event = _totals_event(
+        event_type=event_type,
+        entry_amounts=[Decimal("100.00")],
+        transaction_amounts=[Decimal("-1.00")],
+    )
+
+    assert len(validate_totals_match(event)) == 0
+
+
 def _clear_error(error_type: EventClearErrorType, msg: str) -> EventClearError:
     return EventClearError(type=error_type, msg=msg)
 
@@ -383,21 +482,22 @@ def test_validate_transaction_timestamps_without_transactions():
 
 
 def test_validate_event_clearable_real_registry():
-    """The shipped registry holds exactly the presence and timestamp validators"""
-    # Expense with an entry and an on-time transaction satisfies all three.
-    event = EventFactory.build(
-        type=EventType.Expense,
-        timestamp=EVENT_TIME,
-        entries=EventEntryFactory.build_batch(1, event_id=0),
-        transactions=[TransactionFactory.build(created_at=EVENT_TIME)],
+    """The shipped registry holds the presence, totals, and timestamp validators"""
+    # Expense with a matching entry and an on-time transaction satisfies all four.
+    event = _totals_event(
+        entry_amounts=[Decimal("100.00")],
+        transaction_amounts=[Decimal("-100.00")],
     )
+    event.timestamp = EVENT_TIME
+    event.transactions[0].created_at = EVENT_TIME
 
     # Guard the premise: if another validator lands, this test is the reminder
     # to cover it here rather than a silent pass.
-    assert len(CLEAR_VALIDATORS) == 3
+    assert len(CLEAR_VALIDATORS) == 4
     assert CLEAR_VALIDATORS == (
         validate_entries_present,
         validate_transactions_present,
+        validate_totals_match,
         validate_transaction_timestamps,
     )
     assert len(validate_event_clearable(event)) == 0
