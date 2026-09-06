@@ -15,10 +15,26 @@ import {
 import { EventsTable } from '@/components/event/events-table'
 import { Fab } from '@/components/fab'
 import { ResponsiveCalendar } from '@/components/responsive-calendar'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 import { toast } from '@/components/ui/toast'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
-import { type EventCreate, createEvent, updateEvent } from '@/lib/client'
 import {
+  type EventCreate,
+  type EventReadDetailed,
+  createEvent,
+  updateEvent
+} from '@/lib/client'
+import {
+  deleteEventMutation,
   readAccountsOptions,
   readCategoriesOptions,
   readCurrenciesOptions,
@@ -34,6 +50,7 @@ import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 import {
   formatCalendarDate,
   parseLocalDate,
+  pluralize,
   zonedCalendarDate,
   zonedCalendarGridRange,
   zonedDayKey,
@@ -43,6 +60,16 @@ import {
 const searchSchema = z.object({
   date: z.iso.date().optional()
 })
+
+// What the confirm dialog spells out before an irreversible delete. Only an
+// event without transactions can be deleted, so its entries are all that goes
+// with it.
+const describeDeletion = (event: EventReadDetailed) => {
+  const description = event.description?.trim()
+  const name = description ? `“${description}”` : 'this event'
+  const entries = pluralize(event.entries.length, 'entry', 'entries')
+  return `This permanently deletes ${name} and its ${entries}.`
+}
 
 export const Route = createFileRoute('/_auth/')({
   head: () => ({
@@ -147,6 +174,25 @@ function HomePage() {
     }
   })
 
+  // The event outlives `open` so the dialog keeps its body while closing.
+  const [deletion, setDeletion] = useState<{
+    open: boolean
+    event: EventReadDetailed | null
+  }>({ open: false, event: null })
+
+  const { mutate: mutateDelete, isPending: isDeletePending } = useMutation({
+    ...deleteEventMutation(),
+    onSuccess: () => {
+      toast.add({ title: 'Event deleted', type: 'success' })
+      setDeletion((current) => ({ ...current, open: false }))
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
+      queryClient.invalidateQueries({ queryKey: readTransactionsQueryKey() })
+    },
+    meta: { errorMessage: 'Failed to delete event' }
+  })
+
   // Two separate reads: the grid query only feeds the calendar's dots, so it
   // stays out of the table's loading path and keeps showing the previous
   // month's marks while it refetches. The table reads just the selected day.
@@ -230,6 +276,7 @@ function HomePage() {
             onEventDuplicate={(event) =>
               openSheet({ mode: 'duplicate', event })
             }
+            onEventDelete={(event) => setDeletion({ open: true, event })}
           />
         </div>
       </div>
@@ -255,6 +302,40 @@ function HomePage() {
         }
         isPending={isMutationPending}
       />
+
+      <Dialog
+        open={deletion.open}
+        onOpenChange={(open) =>
+          setDeletion((current) => ({ ...current, open }))
+        }
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete event?</DialogTitle>
+            <DialogDescription>
+              {deletion.event && describeDeletion(deletion.event)}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeletePending}
+              onClick={() =>
+                deletion.event &&
+                mutateDelete({ path: { id: deletion.event.id } })
+              }
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

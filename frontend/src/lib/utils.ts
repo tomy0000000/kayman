@@ -16,6 +16,15 @@ export function isAmount(value: string): boolean {
   return value !== '' && !Number.isNaN(Number(value))
 }
 
+// "1 entry" / "2 entries", for prose that counts things.
+export function pluralize(
+  count: number,
+  singular: string,
+  plural: string
+): string {
+  return `${count} ${count === 1 ? singular : plural}`
+}
+
 export function formatCurrency(amount: number, currencyCode: string): string {
   return new Intl.NumberFormat(browserLocale, {
     style: 'currency',

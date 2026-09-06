@@ -12,6 +12,7 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuSeparator,
   ContextMenuTrigger
 } from '@/components/ui/context-menu'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -35,6 +36,7 @@ interface EventsTableProps {
   onEventView?: (event: EventReadDetailed) => void
   onEventEdit?: (event: EventReadDetailed) => void
   onEventDuplicate?: (event: EventReadDetailed) => void
+  onEventDelete?: (event: EventReadDetailed) => void
 }
 
 // Stable reference for the empty state. A fresh `[]` per render makes
@@ -52,7 +54,8 @@ export function EventsTable({
   isPending,
   onEventView,
   onEventEdit,
-  onEventDuplicate
+  onEventDuplicate,
+  onEventDelete
 }: EventsTableProps) {
   const { timezone } = useClientTimezone()
   const isMobile = useIsMobile()
@@ -216,6 +219,13 @@ export function EventsTable({
                     onSelect={() => onEventDuplicate?.(row.original)}
                   >
                     Duplicate
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    variant="destructive"
+                    onSelect={() => onEventDelete?.(row.original)}
+                  >
+                    Delete
                   </ContextMenuItem>
                 </ContextMenuContent>
               </ContextMenu>
