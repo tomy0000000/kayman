@@ -81,13 +81,3 @@ def updates(
         raise HTTPException(status_code=400, detail=err.args[0]) from err
     except ValueError as err:
         raise HTTPException(status_code=404, detail=err.args[0]) from err
-
-
-# TODO: Think about how this should work
-# @category_router.delete("/{id}")
-# def delete_category(*, session: Session = Depends(get_session), id: int):
-#     category = session.query(Category).get(id)
-#     if category is None:
-#         raise HTTPException(status_code=404, detail="Category not found")
-#     session.delete(category)
-#     session.commit()
