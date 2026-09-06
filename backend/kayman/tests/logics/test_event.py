@@ -10,6 +10,7 @@ from kayman.logics.event import (
     validate_entries_present,
     validate_event_clearable,
     validate_total,
+    validate_transactions_present,
 )
 from kayman.schemas.event import (
     Event,
@@ -271,12 +272,55 @@ def test_validate_entries_present_transaction_driven(
     assert len(validate_entries_present(event)) == 0
 
 
+@pytest.mark.parametrize("transaction_count", [1, 3])
+@pytest.mark.parametrize("event_type", [EventType.Transfer, EventType.Exchange])
+def test_validate_transactions_present_transaction_driven_with_transactions(
+    event_type: EventType, transaction_count: int
+):
+    """Transfer and Exchange carrying at least one transaction pass"""
+    event = EventFactory.build(
+        type=event_type,
+        transactions=TransactionFactory.build_batch(transaction_count),
+    )
+
+    assert len(validate_transactions_present(event)) == 0
+
+
+@pytest.mark.parametrize("event_type", [EventType.Transfer, EventType.Exchange])
+def test_validate_transactions_present_transaction_driven_without_transactions(
+    event_type: EventType,
+):
+    """Transfer and Exchange with no transaction report one NO_TRANSACTIONS error"""
+    event = EventFactory.build(type=event_type)
+
+    errors = validate_transactions_present(event)
+
+    # One error for the event as a whole, not one per missing row.
+    assert len(errors) == 1
+    assert errors[0].type is EventClearErrorType.NO_TRANSACTIONS
+
+
+@pytest.mark.parametrize("transaction_count", [0, 2])
+@pytest.mark.parametrize("event_type", [EventType.Expense, EventType.Income])
+def test_validate_transactions_present_entry_driven(
+    event_type: EventType, transaction_count: int
+):
+    """Expense and Income are entry-driven, so transactions are optional"""
+    event = EventFactory.build(
+        type=event_type,
+        transactions=TransactionFactory.build_batch(transaction_count),
+    )
+
+    assert len(validate_transactions_present(event)) == 0
+
+
 def _clear_error(error_type: EventClearErrorType, msg: str) -> EventClearError:
     return EventClearError(type=error_type, msg=msg)
 
 
 def test_validate_event_clearable_real_registry():
-    """The shipped registry holds exactly the entries-present validator"""
+    """The shipped registry holds exactly the presence validators"""
+    # Expense with an entry: entry-driven, so it satisfies both validators.
     event = EventFactory.build(
         type=EventType.Expense,
         entries=EventEntryFactory.build_batch(1, event_id=0),
@@ -284,8 +328,8 @@ def test_validate_event_clearable_real_registry():
 
     # Guard the premise: if another validator lands, this test is the reminder
     # to cover it here rather than a silent pass.
-    assert len(CLEAR_VALIDATORS) == 1
-    assert CLEAR_VALIDATORS == (validate_entries_present,)
+    assert len(CLEAR_VALIDATORS) == 2
+    assert CLEAR_VALIDATORS == (validate_entries_present, validate_transactions_present)
     assert len(validate_event_clearable(event)) == 0
 
 

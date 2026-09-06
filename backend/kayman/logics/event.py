@@ -61,7 +61,23 @@ def validate_entries_present(event: Event) -> list[EventClearError]:
     ]
 
 
-CLEAR_VALIDATORS: tuple[EventClearValidator, ...] = (validate_entries_present,)
+def validate_transactions_present(event: Event) -> list[EventClearError]:
+    """Report a transaction-driven event that carries no transaction."""
+    if event.type not in (EventType.Transfer, EventType.Exchange) or event.transactions:
+        return []
+
+    return [
+        EventClearError(
+            type=EventClearErrorType.NO_TRANSACTIONS,
+            msg=f"{event.type.value} event must have at least one transaction",
+        )
+    ]
+
+
+CLEAR_VALIDATORS: tuple[EventClearValidator, ...] = (
+    validate_entries_present,
+    validate_transactions_present,
+)
 
 
 def validate_event_clearable(event: Event) -> list[EventClearError]:
