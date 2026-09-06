@@ -94,11 +94,24 @@ def validate_transaction_timestamps(event: Event) -> list[EventClearError]:
     ]
 
 
+def validate_transactions_cleared(event: Event) -> list[EventClearError]:
+    """Report every transaction the user has not reconciled yet."""
+    return [
+        EventClearError(
+            type=EventClearErrorType.TRANSACTIONS_NOT_CLEARED,
+            msg=f"Transaction {transaction.id} is not cleared",
+        )
+        for transaction in event.transactions
+        if transaction.cleared_at is None
+    ]
+
+
 CLEAR_VALIDATORS: tuple[EventClearValidator, ...] = (
     validate_entries_present,
     validate_transactions_present,
     validate_totals_match,
     validate_transaction_timestamps,
+    validate_transactions_cleared,
 )
 
 

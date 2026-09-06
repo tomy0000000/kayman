@@ -14,6 +14,7 @@ from kayman.logics.event import (
     validate_event_clearable,
     validate_totals_match,
     validate_transaction_timestamps,
+    validate_transactions_cleared,
     validate_transactions_present,
 )
 from kayman.schemas.event import (
@@ -481,24 +482,79 @@ def test_validate_transaction_timestamps_without_transactions():
     assert len(validate_transaction_timestamps(event)) == 0
 
 
+def test_validate_transactions_cleared_all_cleared():
+    """Every transaction carrying a cleared_at passes"""
+    event = EventFactory.build(
+        transactions=[
+            TransactionFactory.build(cleared_at=EVENT_TIME),
+            TransactionFactory.build(cleared_at=EVENT_TIME + timedelta(days=1)),
+        ]
+    )
+
+    assert len(validate_transactions_cleared(event)) == 0
+
+
+def test_validate_transactions_cleared_uncleared():
+    """A transaction without cleared_at reports one TRANSACTIONS_NOT_CLEARED"""
+    event = EventFactory.build(
+        transactions=[TransactionFactory.build(cleared_at=None, id=1)]
+    )
+
+    errors = validate_transactions_cleared(event)
+
+    assert len(errors) == 1
+    assert errors[0].type is EventClearErrorType.TRANSACTIONS_NOT_CLEARED
+    assert "Transaction 1 " in errors[0].msg
+
+
+def test_validate_transactions_cleared_reports_every_offender():
+    """Each uncleared transaction gets its own error, cleared ones none"""
+    event = EventFactory.build(
+        transactions=[
+            TransactionFactory.build(cleared_at=None, id=1),
+            TransactionFactory.build(cleared_at=EVENT_TIME, id=2),
+            TransactionFactory.build(cleared_at=None, id=3),
+        ]
+    )
+
+    errors = validate_transactions_cleared(event)
+
+    # One per offending row, in the event's transaction order.
+    assert len(errors) == 2
+    assert all(
+        error.type is EventClearErrorType.TRANSACTIONS_NOT_CLEARED for error in errors
+    )
+    assert "Transaction 1 " in errors[0].msg
+    assert "Transaction 3 " in errors[1].msg
+
+
+def test_validate_transactions_cleared_without_transactions():
+    """An event carrying no transaction has nothing to reconcile"""
+    event = EventFactory.build()
+
+    assert len(validate_transactions_cleared(event)) == 0
+
+
 def test_validate_event_clearable_real_registry():
-    """The shipped registry holds the presence, totals, and timestamp validators"""
-    # Expense with a matching entry and an on-time transaction satisfies all four.
+    """The shipped registry holds presence, totals, timestamp, and clear checks"""
+    # Expense with a matching entry and an on-time, cleared transaction passes.
     event = _totals_event(
         entry_amounts=[Decimal("100.00")],
         transaction_amounts=[Decimal("-100.00")],
     )
     event.timestamp = EVENT_TIME
     event.transactions[0].created_at = EVENT_TIME
+    event.transactions[0].cleared_at = EVENT_TIME
 
     # Guard the premise: if another validator lands, this test is the reminder
     # to cover it here rather than a silent pass.
-    assert len(CLEAR_VALIDATORS) == 4
+    assert len(CLEAR_VALIDATORS) == 5
     assert CLEAR_VALIDATORS == (
         validate_entries_present,
         validate_transactions_present,
         validate_totals_match,
         validate_transaction_timestamps,
+        validate_transactions_cleared,
     )
     assert len(validate_event_clearable(event)) == 0
 
@@ -539,9 +595,15 @@ def test_validate_event_clearable_single_error():
 def test_validate_event_clearable_multiple_errors_from_one_validator():
     """One validator reports every offending row, all of them survive"""
     event = EventFactory.build()
-    first = _clear_error(EventClearErrorType.TRANSACTIONS_NOT_POSTED, "txn 1 pending")
-    second = _clear_error(EventClearErrorType.TRANSACTIONS_NOT_POSTED, "txn 2 pending")
-    third = _clear_error(EventClearErrorType.TRANSACTIONS_NOT_POSTED, "txn 3 pending")
+    first = _clear_error(
+        EventClearErrorType.TRANSACTIONS_NOT_CLEARED, "txn 1 not cleared"
+    )
+    second = _clear_error(
+        EventClearErrorType.TRANSACTIONS_NOT_CLEARED, "txn 2 not cleared"
+    )
+    third = _clear_error(
+        EventClearErrorType.TRANSACTIONS_NOT_CLEARED, "txn 3 not cleared"
+    )
 
     def fails(_event: Event) -> list[EventClearError]:
         return [first, second, third]
