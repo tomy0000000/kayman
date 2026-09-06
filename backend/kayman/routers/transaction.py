@@ -70,7 +70,7 @@ def reads(
     )
 
 
-@txn_router.post(
+@txn_router.patch(
     "/{transaction_id}/posted",
     name="Post Transaction",
     response_model=TransactionRead,
@@ -89,7 +89,7 @@ def post(
     return updated[0]
 
 
-@txn_router.post(
+@txn_router.patch(
     "/{transaction_id}/cleared",
     name="Clear Transaction",
     response_model=TransactionRead,

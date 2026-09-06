@@ -100,7 +100,7 @@ def update(
         raise HTTPException(status_code=404, detail=err.args[0]) from err
 
 
-@event_router.post(
+@event_router.patch(
     "/{event_id}/cleared",
     name="Clear Event",
     response_model=EventRead,
