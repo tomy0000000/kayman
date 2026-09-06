@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from datetime import datetime
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
@@ -58,8 +59,11 @@ def reads(
     category_id: int | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
+    cleared_at: Literal["empty"] | None = None,
 ) -> Sequence[EventBase]:
-    return read_events(session, category_id=category_id, start=start, end=end)
+    return read_events(
+        session, category_id=category_id, start=start, end=end, cleared_at=cleared_at
+    )
 
 
 @event_router.patch("/{event_id}", name="Update Event", response_model=EventRead)
