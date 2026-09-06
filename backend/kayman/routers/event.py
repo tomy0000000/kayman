@@ -124,8 +124,7 @@ def clear(
             detail=[error.model_dump(mode="json") for error in errors],
         )
 
-    update = EventUpdate(**data.model_dump(exclude_unset=True))
-    return update_events(session, [event_id], [update])[0]
+    return update_events(session, [event_id], [data])[0]
 
 
 @event_router.delete(

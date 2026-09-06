@@ -11,7 +11,7 @@ from kayman.crud.event import (
     read_events,
     update_events,
 )
-from kayman.schemas.event import Event, EventType, EventUpdate
+from kayman.schemas.event import Event, EventClear, EventType, EventUpdate
 from kayman.schemas.event_entry import EventEntry
 from kayman.tests.factories import (
     CategoryFactory,
@@ -309,14 +309,12 @@ def test_read_events_for_update(session: Session):
         # Datetime fields use commit=False: SQLite drops tzinfo on the
         # post-commit refresh, so keep the in-memory tz-aware value to compare.
         ("timestamp", lambda: datetime(2026, 6, 1, tzinfo=UTC), False),
-        ("cleared_at", lambda: datetime(2026, 6, 1, tzinfo=UTC), False),
     ],
     ids=[
         "type",
         "timezone",
         "description",
         "timestamp",
-        "cleared_at",
     ],
 )
 def test_update_event_field(session: Session, field, make_value, commit):
@@ -350,6 +348,20 @@ def test_update_event_field(session: Session, field, make_value, commit):
         if other_field == field:
             continue
         assert getattr(updated[0], other_field) == original_value
+
+
+def test_update_events_clear_sets_cleared_at(session: Session):
+    event = EventFactory(cleared_at=None)
+    cleared_at = datetime(2026, 6, 1, tzinfo=UTC)
+
+    # `cleared_at` is not on EventUpdate, so clearing comes through EventClear.
+    # commit=False keeps the tz-aware value SQLite would drop on refresh.
+    updated = update_events(
+        session, [event.id], [EventClear(cleared_at=cleared_at)], commit=False
+    )
+
+    assert len(updated) == 1
+    assert updated[0].cleared_at == cleared_at
 
 
 def test_update_events_explicit_none_clears_description(session: Session):

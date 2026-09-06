@@ -96,4 +96,3 @@ class EventUpdate(SQLModel):
     timestamp: datetime | None = None
     timezone: TimeZoneName | None = None
     description: str | None = None
-    cleared_at: datetime | None = None

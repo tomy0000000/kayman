@@ -7,6 +7,7 @@ from sqlmodel import Session, col, select
 from kayman.schemas.event import (
     Event,
     EventBase,
+    EventClear,
     EventCreate,
     EventUpdate,
 )
@@ -68,7 +69,7 @@ def read_events(
 def update_events(
     session: Session,
     event_ids: Sequence[int],
-    events: Sequence[EventUpdate],
+    events: Sequence[EventUpdate | EventClear],
     commit: bool = True,
 ) -> Sequence[Event]:
     # Verify event_ids and events have the same length
