@@ -5,7 +5,7 @@ from loguru import logger
 
 from kayman.core.config import settings
 from kayman.openapi import override_openapi
-from kayman.routers import routers, tags
+from kayman.routers import root_router, routers, tags
 from kayman.util import (
     KustomJSONResponse,
     SPAStaticFiles,
@@ -47,6 +47,9 @@ logger.info(f"Application created in {settings.ENVIRONMENT} environment")
 # Add all routers under /api
 for router in routers:
     app.include_router(router, prefix="/api")
+
+# Add root-level routes before the static mount swallows them
+app.include_router(root_router)
 
 # Serve the built frontend at root
 app.mount(
