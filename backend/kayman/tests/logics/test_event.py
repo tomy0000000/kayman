@@ -1,3 +1,4 @@
+from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 import pytest
@@ -10,6 +11,7 @@ from kayman.logics.event import (
     validate_entries_present,
     validate_event_clearable,
     validate_total,
+    validate_transaction_timestamps,
     validate_transactions_present,
 )
 from kayman.schemas.event import (
@@ -318,18 +320,86 @@ def _clear_error(error_type: EventClearErrorType, msg: str) -> EventClearError:
     return EventClearError(type=error_type, msg=msg)
 
 
+EVENT_TIME = datetime(2026, 8, 9, 12, 0, tzinfo=UTC)
+
+
+@pytest.mark.parametrize("event_type", list(EventType))
+def test_validate_transaction_timestamps_at_or_after_event(event_type: EventType):
+    """Transactions on or after the event timestamp pass"""
+    event = EventFactory.build(
+        type=event_type,
+        timestamp=EVENT_TIME,
+        transactions=[
+            TransactionFactory.build(created_at=EVENT_TIME),
+            TransactionFactory.build(created_at=EVENT_TIME + timedelta(seconds=1)),
+        ],
+    )
+
+    assert len(validate_transaction_timestamps(event)) == 0
+
+
+def test_validate_transaction_timestamps_before_event():
+    """A transaction predating the event reports one INCONSISTENT_TIMESTAMPS"""
+    event = EventFactory.build(
+        timestamp=EVENT_TIME,
+        transactions=[
+            TransactionFactory.build(created_at=EVENT_TIME - timedelta(seconds=1))
+        ],
+    )
+
+    errors = validate_transaction_timestamps(event)
+
+    assert len(errors) == 1
+    assert errors[0].type is EventClearErrorType.INCONSISTENT_TIMESTAMPS
+
+
+def test_validate_transaction_timestamps_reports_every_offender():
+    """Each offending transaction gets its own error, compliant ones none"""
+    event = EventFactory.build(
+        timestamp=EVENT_TIME,
+        transactions=[
+            TransactionFactory.build(created_at=EVENT_TIME - timedelta(days=1), id=1),
+            TransactionFactory.build(created_at=EVENT_TIME, id=2),
+            TransactionFactory.build(created_at=EVENT_TIME - timedelta(hours=1), id=3),
+        ],
+    )
+
+    errors = validate_transaction_timestamps(event)
+
+    # One per offending row, in the event's transaction order.
+    assert len(errors) == 2
+    assert all(
+        error.type is EventClearErrorType.INCONSISTENT_TIMESTAMPS for error in errors
+    )
+    assert "Transaction 1 " in errors[0].msg
+    assert "Transaction 3 " in errors[1].msg
+
+
+def test_validate_transaction_timestamps_without_transactions():
+    """An event carrying no transaction has nothing to compare"""
+    event = EventFactory.build(timestamp=EVENT_TIME)
+
+    assert len(validate_transaction_timestamps(event)) == 0
+
+
 def test_validate_event_clearable_real_registry():
-    """The shipped registry holds exactly the presence validators"""
-    # Expense with an entry: entry-driven, so it satisfies both validators.
+    """The shipped registry holds exactly the presence and timestamp validators"""
+    # Expense with an entry and an on-time transaction satisfies all three.
     event = EventFactory.build(
         type=EventType.Expense,
+        timestamp=EVENT_TIME,
         entries=EventEntryFactory.build_batch(1, event_id=0),
+        transactions=[TransactionFactory.build(created_at=EVENT_TIME)],
     )
 
     # Guard the premise: if another validator lands, this test is the reminder
     # to cover it here rather than a silent pass.
-    assert len(CLEAR_VALIDATORS) == 2
-    assert CLEAR_VALIDATORS == (validate_entries_present, validate_transactions_present)
+    assert len(CLEAR_VALIDATORS) == 3
+    assert CLEAR_VALIDATORS == (
+        validate_entries_present,
+        validate_transactions_present,
+        validate_transaction_timestamps,
+    )
     assert len(validate_event_clearable(event)) == 0
 
 

@@ -74,9 +74,26 @@ def validate_transactions_present(event: Event) -> list[EventClearError]:
     ]
 
 
+def validate_transaction_timestamps(event: Event) -> list[EventClearError]:
+    """Report every transaction that happened before its own event."""
+    return [
+        EventClearError(
+            type=EventClearErrorType.INCONSISTENT_TIMESTAMPS,
+            msg=(
+                f"Transaction {transaction.id} timestamp "
+                f"({transaction.created_at.isoformat()}) is before the event "
+                f"timestamp ({event.timestamp.isoformat()})"
+            ),
+        )
+        for transaction in event.transactions
+        if transaction.created_at < event.timestamp
+    ]
+
+
 CLEAR_VALIDATORS: tuple[EventClearValidator, ...] = (
     validate_entries_present,
     validate_transactions_present,
+    validate_transaction_timestamps,
 )
 
 
