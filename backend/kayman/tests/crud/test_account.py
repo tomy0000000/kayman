@@ -31,6 +31,7 @@ def assert_account_matches(
     assert actual.name == expected.name
     assert actual.currency_code == expected.currency_code
     assert actual.timezone == expected.timezone
+    assert actual.index == expected.index
 
     # id should be
     # - the expected id for existing accounts

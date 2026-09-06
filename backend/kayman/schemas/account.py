@@ -17,6 +17,7 @@ class AccountBase(SQLModel):
     name: str
     currency_code: str = Field(foreign_key="currency.code")
     timezone: TimeZoneName
+    index: int = Field(default=0, ge=0)
 
 
 class Account(AccountBase, table=True):
