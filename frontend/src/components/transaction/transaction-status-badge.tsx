@@ -13,6 +13,7 @@ const statusClass: Record<TransactionStatus, string> = {
     'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
   POSTED:
     'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  BILLED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
   CLEARED:
     'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
 }

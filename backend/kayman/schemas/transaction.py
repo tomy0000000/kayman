@@ -61,6 +61,7 @@ class TransactionCreate(TransactionBase):
 class TransactionStatus(enum.Enum):
     PENDING = "PENDING"
     POSTED = "POSTED"
+    BILLED = "BILLED"
     CLEARED = "CLEARED"
 
 
@@ -76,6 +77,8 @@ class TransactionRead(TransactionBase):
     def status(self) -> TransactionStatus:
         if self.cleared_at is not None:
             return TransactionStatus.CLEARED
+        if self.statement_id is not None:
+            return TransactionStatus.BILLED
         if self.posted_at is not None:
             return TransactionStatus.POSTED
         return TransactionStatus.PENDING

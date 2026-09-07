@@ -52,6 +52,7 @@ const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
   { value: 'ALL', label: 'All' },
   { value: 'PENDING', label: 'Pending' },
   { value: 'POSTED', label: 'Posted' },
+  { value: 'BILLED', label: 'Billed' },
   { value: 'CLEARED', label: 'Cleared' }
 ]
 
