@@ -313,26 +313,25 @@ def test_read_accounts_for_update(session: Session):
 
 def test_update_accounts(session: Session):
     accounts = AccountFactory.create_batch(10)
-    account_updates = [
-        AccountFactory.build(currency_code=account.currency_code)
+    originals = [
+        (account.currency_code, account.timezone, account.balance)
         for account in accounts
     ]
+    account_updates = [
+        AccountUpdate(id=account.id, name=f"Renamed {index}")
+        for index, account in enumerate(accounts)
+    ]
 
-    account_ids = []
-    for account, account_update in zip(accounts, account_updates, strict=True):
-        account_update.id = account.id
-        account_ids.append(account.id)
+    updated_accounts = update_accounts(session, accounts, account_updates)
 
-    updated_accounts = update_accounts(session, account_ids, account_updates)
-
-    for account, account_update, updated_account in zip(
-        accounts, account_updates, updated_accounts, strict=True
+    for original, account_update, updated_account in zip(
+        originals, account_updates, updated_accounts, strict=True
     ):
-        assert updated_account.id == account.id
+        currency_code, timezone, balance = original
         assert updated_account.name == account_update.name  # Updated
-        assert updated_account.currency_code == account.currency_code  # Not updated
-        assert updated_account.timezone == account.timezone  # Not updated
-        assert updated_account.balance == account.balance  # Not updated
+        assert updated_account.currency_code == currency_code  # Not updated
+        assert updated_account.timezone == timezone  # Not updated
+        assert updated_account.balance == balance  # Not updated
 
 
 def test_update_accounts_index(session: Session):
@@ -341,8 +340,8 @@ def test_update_accounts_index(session: Session):
 
     updated_accounts = update_accounts(
         session,
-        [first.id, second.id],
-        [AccountUpdate(index=1), AccountUpdate(index=0)],
+        [first, second],
+        [AccountUpdate(id=first.id, index=1), AccountUpdate(id=second.id, index=0)],
     )
 
     assert len(updated_accounts) == 2
@@ -354,14 +353,20 @@ def test_update_accounts_index(session: Session):
 
 
 def test_update_accounts_pairs_by_id_not_row_order(session: Session):
-    first = AccountFactory(name="first")
-    second = AccountFactory(name="second")
+    # read_accounts returns (index, id) order, so rows come back reversed
+    # relative to the updates below. Positional pairing would swap them.
+    first = AccountFactory(name="first", index=1)
+    second = AccountFactory(name="second", index=0)
+    rows = read_accounts(session)
+    assert [account.id for account in rows] == [second.id, first.id]
 
-    # Ids passed in descending order, while read_accounts returns them ascending
     updated_accounts = update_accounts(
         session,
-        [second.id, first.id],
-        [AccountUpdate(name="SECOND"), AccountUpdate(name="FIRST")],
+        rows,
+        [
+            AccountUpdate(id=first.id, name="FIRST"),
+            AccountUpdate(id=second.id, name="SECOND"),
+        ],
     )
 
     assert len(updated_accounts) == 2
@@ -370,13 +375,24 @@ def test_update_accounts_pairs_by_id_not_row_order(session: Session):
     assert id_to_name[second.id] == "SECOND"
 
 
-def test_update_accounts_mismatch_length(session: Session):
-    accounts = AccountFactory.create_batch(10)
-    account_updates = AccountFactory.build_batch(9)
-    account_ids = [account.id for account in accounts]
+def test_update_accounts_empty(session: Session):
+    assert update_accounts(session, [], []) == []
 
-    with pytest.raises(ValueError, match="must have the same length"):
-        update_accounts(session, account_ids, account_updates)
+
+def test_update_accounts_no_commit(session: Session, session_2: Session):
+    account = AccountFactory(name="Original", index=0)
+
+    updated_accounts = update_accounts(
+        session, [account], [AccountUpdate(id=account.id, index=5)], commit=False
+    )
+
+    assert len(updated_accounts) == 1
+    assert updated_accounts[0].index == 5
+
+    # Not yet visible to other sessions until commit.
+    other = session_2.get(Account, account.id)
+    assert other is not None
+    assert other.index == 0
 
 
 def test_update_account_balances(session: Session):

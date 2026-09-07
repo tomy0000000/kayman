@@ -13,8 +13,8 @@ from kayman.crud.account import (
     create_accounts,
     read_account,
     read_accounts,
-    update_accounts,
 )
+from kayman.logics.account import update_accounts_by_ids
 from kayman.logics.transaction import get_transactions_with_running_balance
 from kayman.schemas.account import (
     AccountBase,
@@ -83,13 +83,13 @@ def read_transactions_with_balance(
     return get_transactions_with_running_balance(session, account_id, start, end)
 
 
-@account_router.patch(
-    "/{account_id}", name="Update Account", response_model=AccountRead
-)
-def update(
-    *, session: Session = Depends(get_session), account_id: int, account: AccountUpdate
-) -> AccountBase:
+@account_router.patch("", name="Update Accounts", response_model=list[AccountRead])
+def updates(
+    *,
+    session: Session = Depends(get_session),
+    accounts: list[AccountUpdate],
+) -> Sequence[AccountBase]:
     try:
-        return update_accounts(session, [account_id], [account])[0]
+        return update_accounts_by_ids(session, accounts)
     except ValueError as err:
         raise HTTPException(status_code=404, detail=err.args[0]) from err

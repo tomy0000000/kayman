@@ -47,5 +47,6 @@ class AccountRead(AccountBase):
 
 
 class AccountUpdate(SQLModel):
+    id: int
     name: str | None = None
     index: int | None = Field(default=None, ge=0)
