@@ -2,7 +2,7 @@
 hadolint = "2.14.0"
 imagemagick = "7.1.2_31"
 node = "26.3.1"
-pnpm = "11.8.0"
+pnpm = "12.3.4"
 python = "3.12"
 uv = "0.10.10"
 
