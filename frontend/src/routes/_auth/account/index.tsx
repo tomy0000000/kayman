@@ -8,7 +8,7 @@ import { CreateAccountFab } from '@/components/create-account-fab'
 import { DragHandle } from '@/components/drag-handle'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
-import { type AccountRead } from '@/lib/client'
+import { type AccountCreate, type AccountRead } from '@/lib/client'
 import {
   createAccountMutation,
   readAccountsOptions,
@@ -67,6 +67,11 @@ function AccountListPage() {
       queryClient.invalidateQueries({ queryKey: readAccountsQueryKey() }),
     meta: { errorMessage: 'Failed to reorder accounts' }
   })
+
+  // Appended, not left at the default 0, which would sort a new account above
+  // every row a reorder has already given an index.
+  const createAccount = (body: AccountCreate) =>
+    mutate({ body: { ...body, index: accounts?.length ?? 0 } })
 
   // The drag reorders the cached list so the rows follow the pointer. Each row
   // still carries the index the server has, which is what the drop diffs
@@ -141,7 +146,7 @@ function AccountListPage() {
         currencies={currencies ?? []}
         open={fabOpen}
         onOpenChange={setFabOpen}
-        onSubmit={(body) => mutate({ body })}
+        onSubmit={createAccount}
         isPending={isPending}
       />
     </div>
