@@ -335,6 +335,24 @@ def test_update_accounts(session: Session):
         assert updated_account.balance == account.balance  # Not updated
 
 
+def test_update_accounts_index(session: Session):
+    first = AccountFactory(name="first", index=0)
+    second = AccountFactory(name="second", index=1)
+
+    updated_accounts = update_accounts(
+        session,
+        [first.id, second.id],
+        [AccountUpdate(index=1), AccountUpdate(index=0)],
+    )
+
+    assert len(updated_accounts) == 2
+    id_to_account = {account.id: account for account in updated_accounts}
+    assert id_to_account[first.id].index == 1
+    assert id_to_account[first.id].name == "first"  # Not updated
+    assert id_to_account[second.id].index == 0
+    assert id_to_account[second.id].name == "second"  # Not updated
+
+
 def test_update_accounts_pairs_by_id_not_row_order(session: Session):
     first = AccountFactory(name="first")
     second = AccountFactory(name="second")
