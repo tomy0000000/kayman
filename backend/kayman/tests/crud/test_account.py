@@ -253,8 +253,30 @@ def test_read_accounts_order_by_created_at(session: Session):
     assert [account.id for account in results] == [first.id, middle.id, last.id]
 
 
-def test_read_accounts_without_order_by_defaults_to_id_ascending(session: Session):
-    first, second, third = AccountFactory.create_batch(3)
+def test_read_accounts_order_by_index(session: Session):
+    last = AccountFactory(index=2)
+    first = AccountFactory(index=0)
+    middle = AccountFactory(index=1)
+
+    results = read_accounts(session, order_by="index")
+
+    assert len(results) == 3
+    assert [account.id for account in results] == [first.id, middle.id, last.id]
+
+
+def test_read_accounts_without_order_by_defaults_to_index_ascending(session: Session):
+    last = AccountFactory(index=2)
+    first = AccountFactory(index=0)
+    middle = AccountFactory(index=1)
+
+    results = read_accounts(session)
+
+    assert len(results) == 3
+    assert [account.id for account in results] == [first.id, middle.id, last.id]
+
+
+def test_read_accounts_breaks_index_ties_by_id(session: Session):
+    first, second, third = AccountFactory.create_batch(3, index=0)
 
     results = read_accounts(session)
 
@@ -262,13 +284,21 @@ def test_read_accounts_without_order_by_defaults_to_id_ascending(session: Sessio
     assert [account.id for account in results] == [first.id, second.id, third.id]
 
 
-def test_read_accounts_descending_without_order_by_is_id_descending(session: Session):
-    first, second, third = AccountFactory.create_batch(3)
+def test_read_accounts_descending_without_order_by_is_index_descending(
+    session: Session,
+):
+    low_first = AccountFactory(index=0)
+    high = AccountFactory(index=1)
+    low_second = AccountFactory(index=0)
 
     results = read_accounts(session, descending=True)
 
     assert len(results) == 3
-    assert [account.id for account in results] == [third.id, second.id, first.id]
+    assert [account.id for account in results] == [
+        high.id,
+        low_second.id,
+        low_first.id,
+    ]
 
 
 def test_read_accounts_for_update(session: Session):

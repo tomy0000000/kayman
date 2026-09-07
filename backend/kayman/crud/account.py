@@ -9,7 +9,7 @@ from sqlmodel import Integer, Session, cast, col, select
 from kayman.schemas.account import Account, AccountBase, AccountCreate, AccountUpdate
 from kayman.schemas.transaction import Transaction
 
-AccountOrderBy = Literal["name", "balance", "created_at", "id"]
+AccountOrderBy = Literal["name", "balance", "created_at", "id", "index"]
 
 
 def create_accounts(
@@ -51,8 +51,13 @@ def read_accounts(
     statement = select(Account)
     if account_ids:
         statement = statement.where(cast(Account.id, Integer).in_(account_ids))
-    column = getattr(Account, order_by) if order_by is not None else col(Account.id)
-    statement = statement.order_by(column.desc() if descending else column.asc())
+    if order_by is None or order_by == "index":
+        columns = [col(Account.index), col(Account.id)]
+    else:
+        columns = [getattr(Account, order_by)]
+    statement = statement.order_by(
+        *(column.desc() if descending else column.asc() for column in columns)
+    )
     if for_update:
         statement = statement.with_for_update()
     return session.exec(statement).all()
