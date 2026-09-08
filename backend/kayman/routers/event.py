@@ -72,13 +72,19 @@ def clearable(
 def reads(
     *,
     session: Session = Depends(get_session),
+    event_ids: Annotated[list[int] | None, Query()] = None,
     category_id: int | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
     cleared_at: Literal["empty"] | None = None,
 ) -> Sequence[EventBase]:
     return read_events(
-        session, category_id=category_id, start=start, end=end, cleared_at=cleared_at
+        session,
+        event_ids=event_ids,
+        category_id=category_id,
+        start=start,
+        end=end,
+        cleared_at=cleared_at,
     )
 
 
