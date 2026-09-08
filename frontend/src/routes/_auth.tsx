@@ -25,10 +25,10 @@ function AuthenticatedLayout() {
     <SidebarProvider className="h-svh">
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-[calc(3rem_+_env(safe-area-inset-top))] shrink-0 items-center gap-2 border-b px-4 pt-[env(safe-area-inset-top)]">
+        <header className="flex h-[calc(3rem+var(--spacing-safe-t))] shrink-0 items-center gap-2 border-b px-4 pt-safe-t">
           <SidebarTrigger />
         </header>
-        <div className="flex min-h-0 flex-1 flex-col gap-4 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 p-4 pb-[max(var(--spacing-safe-b),1rem)]">
           <Outlet />
         </div>
       </SidebarInset>

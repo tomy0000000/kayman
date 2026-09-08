@@ -93,7 +93,10 @@ function LoginPage() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-sm space-y-4 p-8">
+    <form
+      onSubmit={onSubmit}
+      className="mx-auto max-w-sm space-y-4 p-8 pt-[calc(2rem+var(--spacing-safe-t))] pb-[max(var(--spacing-safe-b),2rem)]"
+    >
       <h1 className="text-xl font-semibold">Sign in</h1>
       {sessionExpired && (
         <Alert className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">

@@ -48,6 +48,11 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+@theme {
+  --spacing-safe-t: env(safe-area-inset-top, 0px);
+  --spacing-safe-b: env(safe-area-inset-bottom, 0px);
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

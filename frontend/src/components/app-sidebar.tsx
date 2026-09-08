@@ -44,7 +44,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="pt-[calc(env(safe-area-inset-top)_+_--spacing(2))]">
+      <SidebarHeader className="pt-[calc(var(--spacing-safe-t)+(--spacing(2)))]">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
@@ -78,7 +78,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="pb-[calc(var(--spacing-safe-b)+(--spacing(2)))]">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
