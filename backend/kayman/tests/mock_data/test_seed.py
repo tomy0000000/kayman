@@ -5,6 +5,7 @@ from kayman.mock_data.seed import seed
 from kayman.schemas.account import Account
 from kayman.schemas.category import Category
 from kayman.schemas.currency import Currency
+from kayman.schemas.statement import Statement
 from kayman.schemas.transaction import Transaction
 from kayman.schemas.transaction_tag import TransactionTag, TransactionTagLink
 
@@ -47,3 +48,26 @@ def test_seeded_transaction_tag_links_reference_real_rows(session: Session) -> N
     for link in links:
         assert link.transaction_id in transaction_ids
         assert link.transaction_tag_id in tag_ids
+
+
+def test_seeded_transactions_reference_real_statements(session: Session) -> None:
+    seed(session, logger)
+
+    account_ids = {a.id for a in session.exec(select(Account)).all()}
+    statements = {s.id: s for s in session.exec(select(Statement)).all()}
+    assert len(statements) > 0
+    for statement in statements.values():
+        assert statement.account_id in account_ids
+
+    billed = [
+        t for t in session.exec(select(Transaction)).all() if t.statement_id is not None
+    ]
+    assert len(billed) > 0
+    for transaction in billed:
+        statement = statements[transaction.statement_id]
+        assert transaction.account_id == statement.account_id
+        assert (
+            statement.period_start_on
+            <= transaction.created_at.date()
+            <= statement.period_end_on
+        )

@@ -18,6 +18,7 @@ from kayman.schemas.category import Category
 from kayman.schemas.currency import Currency
 from kayman.schemas.event import Event
 from kayman.schemas.event_entry import EventEntry
+from kayman.schemas.statement import Statement
 from kayman.schemas.transaction import Transaction
 from kayman.schemas.transaction_tag import TransactionTag, TransactionTagLink
 
@@ -66,6 +67,17 @@ def seed(session: Session, logger: Logger) -> None:
     session.commit()
     _resync_id_sequence(session, "account")
     logger.success(f"Accounts seeded: {len(accounts)}")
+
+    statements = load_records(
+        "statements",
+        Statement,
+        datetime_fields=["created_on", "period_start_on", "period_end_on", "due_on"],
+    )
+    for statement in sorted(statements, key=lambda s: s.id or 0):
+        session.add(statement)
+    session.commit()
+    _resync_id_sequence(session, "statement")
+    logger.success(f"Statements seeded: {len(statements)}")
 
     events = load_records("events", Event, datetime_fields=["timestamp"])
     for event in sorted(events, key=lambda e: e.id or 0):
