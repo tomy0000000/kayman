@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 
 import { Amount } from '@/components/amount'
 import { EventClearBanner } from '@/components/event/event-clear-banner'
+import { EventTimeline } from '@/components/event/event-timeline'
 import { EventTypeBadge } from '@/components/event/event-type-badge'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
 import { TransactionTagBadge } from '@/components/transaction/transaction-tag-badge'
@@ -159,6 +160,10 @@ export function EventReceipt({
         )}
         <ReceiptTotal label="Total" totals={transactionTotals} signed />
       </div>
+
+      <div className="border-t" />
+
+      <EventTimeline event={event} accountNames={accountNames} />
 
       {event.cleared_at ? (
         <span className="text-center text-muted-foreground text-xs">
