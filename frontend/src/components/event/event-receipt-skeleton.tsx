@@ -1,8 +1,8 @@
 import { Skeleton } from '@/components/ui/skeleton'
 
 // Shaped like EventReceipt: a centered header, a couple of entry lines with a
-// total, then the transaction lines. Shown while a receipt opened by id is
-// still fetching its event.
+// total, the transaction lines, then the history. Shown while a receipt opened
+// by id is still fetching its event.
 export function EventReceiptSkeleton() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 text-sm">
@@ -31,6 +31,17 @@ export function EventReceiptSkeleton() {
           <Skeleton className="h-4 w-20" />
         </div>
       </div>
+
+      <div className="border-t" />
+
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-4 w-16" />
+        <div className="flex flex-col gap-6">
+          {Array.from({ length: 3 }, (_, index) => (
+            <SkeletonMilestone key={index} />
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -43,6 +54,18 @@ function SkeletonLine() {
         <Skeleton className="h-3 w-20" />
       </div>
       <Skeleton className="h-4 w-16" />
+    </div>
+  )
+}
+
+function SkeletonMilestone() {
+  return (
+    <div className="flex gap-4">
+      <Skeleton className="size-4 shrink-0 rounded-full" />
+      <div className="flex flex-col gap-1">
+        <Skeleton className="h-3 w-32" />
+        <Skeleton className="h-4 w-24" />
+      </div>
     </div>
   )
 }
