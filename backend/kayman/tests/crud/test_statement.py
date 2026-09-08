@@ -1,12 +1,14 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 import pytest
 from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
-from kayman.crud.statement import create_statements
+from kayman.crud.statement import create_statements, read_statements
+from kayman.schemas.account import Account
 from kayman.schemas.statement import Statement, StatementCreate
 from kayman.tests.factories import AccountFactory, StatementFactory
 
@@ -188,3 +190,232 @@ def test_create_statements_account_not_found(session: Session):
 
     with pytest.raises(IntegrityError):
         create_statements(session, [statement])
+
+
+def closing_on(account: Account, period_end_on: date, **kwargs) -> Statement:
+    """Persist a statement on ``account`` whose cycle closes on ``period_end_on``."""
+    return StatementFactory(
+        account=account,
+        period_start_on=period_end_on - timedelta(days=30),
+        period_end_on=period_end_on,
+        **kwargs,
+    )
+
+
+def test_read_statements_empty(session: Session):
+    assert read_statements(session) == []
+
+
+def test_read_statements_all(session: Session):
+    account = AccountFactory()
+    for month in range(1, 11):
+        closing_on(account, date(2026, month, 28))
+
+    assert len(read_statements(session)) == 10
+
+
+def test_read_statements_by_ids(session: Session):
+    account = AccountFactory()
+    first = closing_on(account, date(2026, 1, 31))
+    closing_on(account, date(2026, 2, 28))
+    third = closing_on(account, date(2026, 3, 31))
+
+    results = read_statements(session, statement_ids=[first.id, third.id])
+
+    assert len(results) == 2
+    assert {statement.id for statement in results} == {first.id, third.id}
+
+
+def test_read_statements_empty_ids_returns_all(session: Session):
+    # An empty collection is falsy, so the filter is skipped rather than
+    # narrowing to nothing
+    account = AccountFactory()
+    closing_on(account, date(2026, 1, 31))
+    closing_on(account, date(2026, 2, 28))
+
+    assert len(read_statements(session, statement_ids=[])) == 2
+
+
+def test_read_statements_by_account_id(session: Session):
+    account = AccountFactory()
+    other = AccountFactory()
+    mine = closing_on(account, date(2026, 1, 31))
+    closing_on(other, date(2026, 2, 28))
+
+    results = read_statements(session, account_id=account.id)
+
+    assert len(results) == 1
+    assert results[0].id == mine.id
+
+
+def issued_on(account: Account, created_on: date, **kwargs) -> Statement:
+    """Persist a statement on ``account`` recorded on ``created_on``."""
+    return StatementFactory(account=account, created_on=created_on, **kwargs)
+
+
+def test_read_statements_start_is_inclusive(session: Session):
+    account = AccountFactory()
+    start = date(2026, 2, 1)
+    issued_on(account, date(2026, 1, 15))
+    on_start = issued_on(account, start)
+    after = issued_on(account, date(2026, 3, 1))
+
+    results = read_statements(session, start=start)
+
+    assert len(results) == 2
+    assert {statement.id for statement in results} == {on_start.id, after.id}
+
+
+def test_read_statements_end_is_exclusive(session: Session):
+    account = AccountFactory()
+    end = date(2026, 3, 1)
+    before = issued_on(account, date(2026, 1, 15))
+    issued_on(account, end)
+    issued_on(account, date(2026, 4, 1))
+
+    results = read_statements(session, end=end)
+
+    assert len(results) == 1
+    assert results[0].id == before.id
+
+
+def test_read_statements_start_and_end_window(session: Session):
+    account = AccountFactory()
+    start = date(2026, 2, 1)
+    end = date(2026, 4, 1)
+    issued_on(account, date(2026, 1, 15))
+    in_window = issued_on(account, date(2026, 2, 20))
+    issued_on(account, end)
+
+    results = read_statements(session, start=start, end=end)
+
+    assert len(results) == 1
+    assert results[0].id == in_window.id
+
+
+def test_read_statements_range_follows_created_on_not_the_cycle(session: Session):
+    # A backfilled statement: its cycle closed and fell due months before the
+    # row was recorded. The window tracks when the row was recorded, so the
+    # cycle's own window misses it and the record's window finds it
+    account = AccountFactory()
+    statement = StatementFactory(
+        account=account,
+        period_start_on=date(2025, 11, 1),
+        period_end_on=date(2025, 11, 30),
+        due_on=date(2025, 12, 20),
+        created_on=date(2026, 3, 5),
+    )
+
+    assert read_statements(session, start=date(2025, 11, 1), end=date(2026, 1, 1)) == []
+
+    results = read_statements(session, start=date(2026, 3, 1), end=date(2026, 4, 1))
+
+    assert len(results) == 1
+    assert results[0].id == statement.id
+
+
+def test_read_statements_without_order_by_defaults_to_period_end_on_ascending(
+    session: Session,
+):
+    account = AccountFactory()
+    middle = closing_on(account, date(2026, 2, 28))
+    first = closing_on(account, date(2026, 1, 31))
+    last = closing_on(account, date(2026, 3, 31))
+
+    results = read_statements(session)
+
+    assert len(results) == 3
+    assert [statement.id for statement in results] == [first.id, middle.id, last.id]
+
+
+def test_read_statements_descending_without_order_by_is_period_end_on_descending(
+    session: Session,
+):
+    account = AccountFactory()
+    middle = closing_on(account, date(2026, 2, 28))
+    first = closing_on(account, date(2026, 1, 31))
+    last = closing_on(account, date(2026, 3, 31))
+
+    results = read_statements(session, descending=True)
+
+    assert len(results) == 3
+    assert [statement.id for statement in results] == [last.id, middle.id, first.id]
+
+
+def make_orderable_statements(account: Account) -> list[Statement]:
+    """Three statements whose columns disagree on ordering.
+
+    Cycle dates and id ascend together, while created_on and balance ascend in
+    a different order, so each ``order_by`` produces a distinguishable result.
+    """
+    return [
+        StatementFactory(
+            account=account,
+            period_start_on=date(2026, 1, 1),
+            period_end_on=date(2026, 1, 31),
+            due_on=date(2026, 2, 20),
+            created_on=date(2026, 3, 1),
+            balance=Decimal("300.00"),
+        ),
+        StatementFactory(
+            account=account,
+            period_start_on=date(2026, 2, 1),
+            period_end_on=date(2026, 2, 28),
+            due_on=date(2026, 3, 20),
+            created_on=date(2026, 1, 1),
+            balance=Decimal("100.00"),
+        ),
+        StatementFactory(
+            account=account,
+            period_start_on=date(2026, 3, 1),
+            period_end_on=date(2026, 3, 31),
+            due_on=date(2026, 4, 20),
+            created_on=date(2026, 2, 1),
+            balance=Decimal("200.00"),
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("order_by", "expected"),
+    [
+        ("period_start_on", [0, 1, 2]),
+        ("period_end_on", [0, 1, 2]),
+        ("due_on", [0, 1, 2]),
+        ("created_on", [1, 2, 0]),
+        ("balance", [1, 2, 0]),
+        ("id", [0, 1, 2]),
+    ],
+)
+def test_read_statements_order_by(session: Session, order_by: str, expected: list[int]):
+    statements = make_orderable_statements(AccountFactory())
+
+    results = read_statements(session, order_by=order_by)  # type: ignore[arg-type]
+
+    assert len(results) == 3
+    assert [statement.id for statement in results] == [
+        statements[index].id for index in expected
+    ]
+
+
+def test_read_statements_order_by_balance_descending(session: Session):
+    statements = make_orderable_statements(AccountFactory())
+
+    results = read_statements(session, order_by="balance", descending=True)
+
+    assert len(results) == 3
+    assert [statement.id for statement in results] == [
+        statements[0].id,
+        statements[2].id,
+        statements[1].id,
+    ]
+
+
+def test_read_statements_for_update(session: Session):
+    closing_on(AccountFactory(), date(2026, 1, 31))
+
+    with patch.object(session, "exec", wraps=session.exec) as mock_exec:
+        read_statements(session, for_update=True)
+        args = mock_exec.call_args[0]
+        statement = str(args[0])
+        assert "FOR UPDATE" in statement
