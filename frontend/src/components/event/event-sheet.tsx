@@ -1,5 +1,6 @@
 import { EventForm } from '@/components/event/event-form'
 import { EventReceipt } from '@/components/event/event-receipt'
+import { EventReceiptSkeleton } from '@/components/event/event-receipt-skeleton'
 import { ResponsiveSheet } from '@/components/responsive-sheet'
 import {
   type AccountRead,
@@ -13,12 +14,13 @@ import {
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 
 // What the sheet is showing. One slot rather than a flag per mode, so the
-// modes cannot disagree.
+// modes cannot disagree. A viewed event is null while it is still being
+// fetched, which is what opening a receipt by id looks like before it lands.
 export type EventSheetState =
   | { mode: 'new' }
   | { mode: 'edit'; event: EventReadDetailed }
   | { mode: 'duplicate'; event: EventReadDetailed }
-  | { mode: 'view'; event: EventReadDetailed }
+  | { mode: 'view'; event: EventReadDetailed | null }
 
 interface EventSheetProps {
   open: boolean
@@ -70,7 +72,9 @@ export function EventSheet({
 }: EventSheetProps) {
   // Qualified by mode, so editing then duplicating the same event still remounts.
   const formKey =
-    state.mode === 'new' ? 'new' : `${state.mode}-${state.event.id}`
+    state.mode === 'edit' || state.mode === 'duplicate'
+      ? `${state.mode}-${state.event.id}`
+      : state.mode
 
   return (
     <ResponsiveSheet
@@ -80,15 +84,19 @@ export function EventSheet({
       className="data-[side=right]:sm:max-w-2xl"
     >
       {state.mode === 'view' ? (
-        <EventReceipt
-          event={state.event}
-          categoryNames={categoryNames}
-          accounts={accounts}
-          clearErrors={clearErrors}
-          isClearableLoading={isClearableLoading}
-          onClear={onClear}
-          isClearPending={isClearPending}
-        />
+        state.event === null ? (
+          <EventReceiptSkeleton />
+        ) : (
+          <EventReceipt
+            event={state.event}
+            categoryNames={categoryNames}
+            accounts={accounts}
+            clearErrors={clearErrors}
+            isClearableLoading={isClearableLoading}
+            onClear={onClear}
+            isClearPending={isClearPending}
+          />
+        )
       ) : (
         /* Keyed so the form re-initializes from the picked event. */
         <EventForm

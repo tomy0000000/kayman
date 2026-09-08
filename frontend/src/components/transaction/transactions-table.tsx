@@ -35,6 +35,7 @@ interface TransactionsTableProps {
   onTransactionDuplicate?: (transaction: TransactionReadWithBalance) => void
   onTransactionPost?: (transaction: TransactionReadWithBalance) => void
   onTransactionCreateEvent?: (transaction: TransactionReadWithBalance) => void
+  onTransactionViewEvent?: (transaction: TransactionReadWithBalance) => void
   onTransactionGoToEvent?: (transaction: TransactionReadWithBalance) => void
 }
 
@@ -50,6 +51,7 @@ export function TransactionsTable({
   onTransactionDuplicate,
   onTransactionPost,
   onTransactionCreateEvent,
+  onTransactionViewEvent,
   onTransactionGoToEvent
 }: TransactionsTableProps) {
   const { timezone } = useClientTimezone()
@@ -190,6 +192,12 @@ export function TransactionsTable({
                     onSelect={() => onTransactionCreateEvent?.(row.original)}
                   >
                     Create Event
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    disabled={row.original.event == null}
+                    onSelect={() => onTransactionViewEvent?.(row.original)}
+                  >
+                    View Event
                   </ContextMenuItem>
                   <ContextMenuItem
                     disabled={row.original.event == null}

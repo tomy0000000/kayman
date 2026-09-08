@@ -5,12 +5,14 @@ import { type DateRange } from 'react-day-picker'
 
 import { DatePickerWithRange } from '@/components/date-range-picker'
 import { CreateEventSheet } from '@/components/event/create-event-sheet'
+import { EventSheet } from '@/components/event/event-sheet'
 import { TransactionFab } from '@/components/transaction/transaction-fab'
 import { TransactionPostSheet } from '@/components/transaction/transaction-post-sheet'
 import { TransactionsTable } from '@/components/transaction/transactions-table'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/toast'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
+import { useEventActions } from '@/hooks/use-event-actions'
 import {
   type EventCreate,
   type TransactionCreate,
@@ -64,6 +66,9 @@ function AccountTransactionPage() {
     useState<TransactionReadWithBalance | null>(null)
   const [creatingEventTransaction, setCreatingEventTransaction] =
     useState<TransactionReadWithBalance | null>(null)
+
+  // The rows only carry their event's id, so the receipt is fetched by the hook.
+  const { openEventView, sheetProps } = useEventActions(client)
 
   const editingTransaction =
     sheetTransaction?.mode === 'edit' ? sheetTransaction.transaction : null
@@ -240,6 +245,10 @@ function AccountTransactionPage() {
           }}
           onTransactionPost={setPostingTransaction}
           onTransactionCreateEvent={setCreatingEventTransaction}
+          onTransactionViewEvent={(transaction) => {
+            if (!transaction.event) return
+            openEventView(transaction.event.id)
+          }}
           onTransactionGoToEvent={(transaction) => {
             if (!transaction.event) return
             // The day view buckets events by the client timezone, so name the
@@ -306,6 +315,8 @@ function AccountTransactionPage() {
         }
         isPending={isCreatingEvent}
       />
+
+      <EventSheet {...sheetProps} />
     </>
   )
 }

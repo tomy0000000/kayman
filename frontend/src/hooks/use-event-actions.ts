@@ -16,6 +16,7 @@ import {
   readCategoriesOptions,
   readCurrenciesOptions,
   readEventsClearableOptions,
+  readEventsOptions,
   readEventsQueryKey,
   readTransactionTagsOptions,
   readTransactionsQueryKey
@@ -40,9 +41,32 @@ export function useEventActions(client: Client) {
   }>({ open: false, state: { mode: 'new' } })
 
   const editingEvent = sheet.state.mode === 'edit' ? sheet.state.event : null
-  const viewingEvent = sheet.state.mode === 'view' ? sheet.state.event : null
+
+  const [viewEventId, setViewEventId] = useState<number | null>(null)
 
   const openSheet = (state: EventSheetState) => setSheet({ open: true, state })
+
+  const openEventView = (eventId: number) => {
+    setViewEventId(eventId)
+    setSheet({ open: true, state: { mode: 'view', event: null } })
+  }
+
+  const { data: viewEvents } = useQuery({
+    ...readEventsOptions({
+      query: { event_ids: viewEventId != null ? [viewEventId] : [] }
+    }),
+    enabled: viewEventId != null,
+    meta: { errorMessage: 'Failed to fetch event' }
+  })
+
+  // Resolved during render rather than pushed into state by an effect, so the
+  // receipt swaps in the moment the fetch lands.
+  const sheetState: EventSheetState =
+    sheet.state.mode === 'view' && sheet.state.event === null
+      ? { mode: 'view', event: viewEvents?.[0] ?? null }
+      : sheet.state
+
+  const viewingEvent = sheetState.mode === 'view' ? sheetState.event : null
 
   const { mutate, isPending: isMutationPending } = useMutation({
     mutationFn: async ({
@@ -182,6 +206,7 @@ export function useEventActions(client: Client) {
   return {
     categoryNames,
     openSheet,
+    openEventView,
     // Spread onto EventsTable.
     tableHandlers: {
       onEventView: (event: EventReadDetailed) =>
@@ -197,7 +222,7 @@ export function useEventActions(client: Client) {
     // one that knows which day a new event should default to.
     sheetProps: {
       open: sheet.open,
-      state: sheet.state,
+      state: sheetState,
       onOpenChange: (open: boolean) =>
         setSheet((current) => ({ ...current, open })),
       accounts: accounts ?? [],
