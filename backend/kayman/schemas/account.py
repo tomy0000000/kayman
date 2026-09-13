@@ -34,12 +34,12 @@ class Account(AccountBase, table=True):
     # The balance field is defined here rather than base because
     # we don't accept initial value on create, and will always use 0 as default
     balance: Decimal = Field(default=0)
-    # Defined here rather than base until the column is NOT NULL: the create
-    # API doesn't accept a type yet, so every new row takes the default
+    # Defined here rather than base because the create API doesn't accept a
+    # type yet, so every new row takes the default
     type: AccountType = Field(
         default=AccountType.CASH,
         sa_column=Column(
-            sqlmodel.Enum(AccountType, name="account_type"), nullable=True
+            sqlmodel.Enum(AccountType, name="account_type"), nullable=False
         ),
     )
     timezone: TimeZoneName = Field(sa_column=Column(SATimezone(), nullable=False))
