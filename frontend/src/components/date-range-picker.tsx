@@ -21,7 +21,7 @@ import { type DateRange } from 'react-day-picker'
 
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
-import { Field, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import {
   Popover,
   PopoverContent,
@@ -34,6 +34,11 @@ import { cn, isSameRange, zonedCalendarDate } from '@/lib/utils'
 interface DatePickerWithRangeProps {
   dateRange: DateRange | undefined
   setDateRange: (date: DateRange | undefined) => void
+  id?: string
+  label?: string
+  description?: React.ReactNode
+  className?: string
+  showPresets?: boolean
 }
 
 interface Preset {
@@ -139,7 +144,12 @@ const PRESETS: Preset[] = [
 
 export function DatePickerWithRange({
   dateRange,
-  setDateRange
+  setDateRange,
+  id = 'date-picker-range',
+  label = 'Date Range',
+  description,
+  className,
+  showPresets = true
 }: DatePickerWithRangeProps) {
   const { timezone } = useClientTimezone()
   const [open, setOpen] = useState(false)
@@ -147,13 +157,13 @@ export function DatePickerWithRange({
   const today = zonedCalendarDate(new Date(), timezone)
 
   return (
-    <Field className="w-60 shrink-0">
-      <FieldLabel htmlFor="date-picker-range">Date Range</FieldLabel>
+    <Field className={cn('w-60 shrink-0', className)}>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            id="date-picker-range"
+            id={id}
             className="justify-start px-2.5 font-normal"
           >
             <CalendarIcon />
@@ -172,7 +182,7 @@ export function DatePickerWithRange({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="relative block w-auto p-0 pr-36"
+          className={cn('w-auto p-0', showPresets && 'relative block pr-36')}
           align="center"
         >
           <Calendar
@@ -182,33 +192,36 @@ export function DatePickerWithRange({
             onSelect={setDateRange}
             numberOfMonths={2}
           />
-          <ScrollArea className="absolute! inset-y-0 right-0 w-36 border-l">
-            <div className="flex flex-col gap-0.5 p-2">
-              {PRESETS.map((preset) => {
-                const range = preset.getRange(today)
-                const active = isSameRange(dateRange, range)
-                return (
-                  <Button
-                    key={preset.label}
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      'justify-start font-normal',
-                      active && 'bg-accent text-accent-foreground'
-                    )}
-                    onClick={() => {
-                      setDateRange(range)
-                      setOpen(false)
-                    }}
-                  >
-                    {preset.label}
-                  </Button>
-                )
-              })}
-            </div>
-          </ScrollArea>
+          {showPresets && (
+            <ScrollArea className="absolute! inset-y-0 right-0 w-36 border-l">
+              <div className="flex flex-col gap-0.5 p-2">
+                {PRESETS.map((preset) => {
+                  const range = preset.getRange(today)
+                  const active = isSameRange(dateRange, range)
+                  return (
+                    <Button
+                      key={preset.label}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        'justify-start font-normal',
+                        active && 'bg-accent text-accent-foreground'
+                      )}
+                      onClick={() => {
+                        setDateRange(range)
+                        setOpen(false)
+                      }}
+                    >
+                      {preset.label}
+                    </Button>
+                  )
+                })}
+              </div>
+            </ScrollArea>
+          )}
         </PopoverContent>
       </Popover>
+      {description && <FieldDescription>{description}</FieldDescription>}
     </Field>
   )
 }
