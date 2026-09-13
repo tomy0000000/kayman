@@ -1,7 +1,7 @@
 # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
 version: 2
 updates:
-  - package-ecosystem: "docker-compose"
+  - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "daily"
@@ -20,6 +20,11 @@ updates:
     commit-message:
       prefix: "⬆️ [bump][ci] "
     target-branch: "develop"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
 
   - package-ecosystem: "npm"
     directory: "frontend"
@@ -31,7 +36,7 @@ updates:
       prefix: "⬆️ [bump][frontend] "
     target-branch: "develop"
 
-  - package-ecosystem: "pip"
+  - package-ecosystem: "uv"
     directory: "backend"
     schedule:
       interval: "daily"
@@ -39,4 +44,14 @@ updates:
       - "tomy0000000"
     commit-message:
       prefix: "⬆️ [bump][backend] "
+    target-branch: "develop"
+
+  - package-ecosystem: "npm"
+    directory: "icon"
+    schedule:
+      interval: "daily"
+    assignees:
+      - "tomy0000000"
+    commit-message:
+      prefix: "⬆️ [bump][icon] "
     target-branch: "develop"
