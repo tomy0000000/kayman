@@ -13,7 +13,8 @@ const TABS = [
     value: 'transaction',
     label: 'Transactions',
     to: '/account/$id/transaction'
-  }
+  },
+  { value: 'statement', label: 'Statements', to: '/account/$id/statement' }
 ] as const
 
 export const Route = createFileRoute('/_auth/account/$id')({

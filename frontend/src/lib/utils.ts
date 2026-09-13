@@ -74,6 +74,15 @@ export function formatDate(value: string | Date, timeZone: string): string {
   return new Date(value).toLocaleDateString(browserLocale, { timeZone })
 }
 
+// A bare `YYYY-MM-DD` names a calendar day, not an instant, so it goes through
+// `parseLocalDate` rather than `formatDate`, which would land on the day before
+// in any zone behind UTC.
+export function formatPlainDate(value: string): string {
+  return parseLocalDate(value).toLocaleDateString(browserLocale, {
+    dateStyle: 'medium'
+  })
+}
+
 export function formatTime(value: string | Date, timeZone: string): string {
   return new Date(value).toLocaleTimeString(browserLocale, {
     timeStyle: 'short',
