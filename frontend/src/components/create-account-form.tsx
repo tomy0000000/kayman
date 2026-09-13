@@ -12,8 +12,14 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
-import { type AccountCreate, type CurrencyRead } from '@/lib/client'
+import { ACCOUNT_TYPES } from '@/lib/account-types'
+import {
+  type AccountCreate,
+  type AccountType,
+  type CurrencyRead
+} from '@/lib/client'
 
 interface CreateAccountFormProps {
   currencies: CurrencyRead[]
@@ -28,6 +34,7 @@ export function CreateAccountForm({
 }: CreateAccountFormProps) {
   const { timezone: clientTimezone } = useClientTimezone()
   const [name, setName] = useState('')
+  const [type, setType] = useState<AccountType>('CASH')
   const [currencyCode, setCurrencyCode] = useState<string | null>(null)
   const [timezone, setTimezone] = useState(clientTimezone)
 
@@ -37,6 +44,7 @@ export function CreateAccountForm({
     if (currencyCode == null) return
     onSubmit({
       name,
+      type,
       currency_code: currencyCode,
       timezone: timezone as AccountCreate['timezone']
     })
@@ -57,6 +65,27 @@ export function CreateAccountForm({
           placeholder="Account name"
           required
         />
+      </Field>
+
+      <Field>
+        <FieldLabel>Type</FieldLabel>
+        <Tabs
+          value={type}
+          onValueChange={(value) => setType(value as AccountType)}
+        >
+          <TabsList className="w-full">
+            {ACCOUNT_TYPES.map(({ value, label, icon: Icon }) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="gap-1 px-1 text-xs"
+              >
+                <Icon />
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </Field>
 
       <Field>

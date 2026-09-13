@@ -24,6 +24,7 @@ class AccountType(enum.Enum):
 
 class AccountBase(SQLModel):
     name: str
+    type: AccountType
     currency_code: str = Field(foreign_key="currency.code")
     timezone: TimeZoneName
     index: int = Field(default=0, ge=0)
@@ -34,13 +35,10 @@ class Account(AccountBase, table=True):
     # The balance field is defined here rather than base because
     # we don't accept initial value on create, and will always use 0 as default
     balance: Decimal = Field(default=0)
-    # Defined here rather than base because the create API doesn't accept a
-    # type yet, so every new row takes the default
     type: AccountType = Field(
-        default=AccountType.CASH,
         sa_column=Column(
             sqlmodel.Enum(AccountType, name="account_type"), nullable=False
-        ),
+        )
     )
     timezone: TimeZoneName = Field(sa_column=Column(SATimezone(), nullable=False))
     created_at: datetime = Field(
@@ -66,4 +64,5 @@ class AccountRead(AccountBase):
 class AccountUpdate(SQLModel):
     id: int
     name: str | None = None
+    type: AccountType | None = None
     index: int | None = Field(default=None, ge=0)

@@ -5,6 +5,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
+from pydantic import ValidationError
 from sqlmodel import Session
 
 from kayman.crud.account import (
@@ -34,6 +35,7 @@ def assert_account_matches(
 ) -> None:
     """Assert a persisted account matches ``expected``."""
     assert actual.name == expected.name
+    assert actual.type == expected.type
     assert actual.currency_code == expected.currency_code
     assert actual.timezone == expected.timezone
     assert actual.index == expected.index
@@ -55,13 +57,6 @@ def assert_account_matches(
     if balance is None:
         balance = expected.balance if isinstance(expected, Account) else 0
     assert actual.balance == balance
-
-    # type should be
-    # - the expected type for existing accounts
-    # - the CASH default for new accounts, since AccountCreate has no type yet
-    assert actual.type == (
-        expected.type if isinstance(expected, Account) else AccountType.CASH
-    )
 
 
 def test_create_accounts_1_account(
@@ -86,6 +81,17 @@ def test_create_accounts_n_accounts(session: Session, currency: Currency):
     assert len(db_accounts) == 10
     for db_account, account in zip(db_accounts, accounts, strict=True):
         assert_account_matches(db_account, account)
+
+
+def test_create_accounts_requires_type(currency: Currency):
+    with pytest.raises(ValidationError):
+        AccountCreate.model_validate(
+            {
+                "name": "Typeless",
+                "currency_code": currency.code,
+                "timezone": "UTC",
+            }
+        )
 
 
 def test_create_accounts_empty(session: Session):
@@ -362,6 +368,17 @@ def test_update_accounts_index(session: Session):
     assert id_to_account[first.id].name == "first"  # Not updated
     assert id_to_account[second.id].index == 0
     assert id_to_account[second.id].name == "second"  # Not updated
+
+
+def test_update_accounts_type(session: Session):
+    account = AccountFactory(name="reclassified", type=AccountType.CASH)
+
+    updated_accounts = update_accounts(
+        session, [account], [AccountUpdate(id=account.id, type=AccountType.CREDIT_CARD)]
+    )
+
+    assert updated_accounts[0].type == AccountType.CREDIT_CARD
+    assert updated_accounts[0].name == "reclassified"  # Not updated
 
 
 def test_update_accounts_pairs_by_id_not_row_order(session: Session):
