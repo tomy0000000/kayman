@@ -16,7 +16,12 @@ from kayman.crud.account import (
     update_account_balances,
     update_accounts,
 )
-from kayman.schemas.account import Account, AccountCreate, AccountUpdate
+from kayman.schemas.account import (
+    Account,
+    AccountCreate,
+    AccountType,
+    AccountUpdate,
+)
 from kayman.schemas.currency import Currency
 from kayman.tests.factories import AccountFactory, TransactionFactory
 
@@ -50,6 +55,13 @@ def assert_account_matches(
     if balance is None:
         balance = expected.balance if isinstance(expected, Account) else 0
     assert actual.balance == balance
+
+    # type should be
+    # - the expected type for existing accounts
+    # - the CASH default for new accounts, since AccountCreate has no type yet
+    assert actual.type == (
+        expected.type if isinstance(expected, Account) else AccountType.CASH
+    )
 
 
 def test_create_accounts_1_account(

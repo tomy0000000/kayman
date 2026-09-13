@@ -4,6 +4,7 @@ import factory
 from factory.alchemy import SQLAlchemyModelFactory
 
 from kayman.schemas import Account
+from kayman.schemas.account import AccountType
 
 
 class AccountFactory(SQLAlchemyModelFactory):
@@ -17,5 +18,6 @@ class AccountFactory(SQLAlchemyModelFactory):
     currency_code = factory.SelfAttribute("currency.code")
     balance = factory.Faker("pydecimal", left_digits=5, right_digits=2)
     timezone = "UTC"
+    type = factory.Faker("random_element", elements=list(AccountType))
     index = 0
     created_at = factory.LazyFunction(lambda: datetime.now(UTC))

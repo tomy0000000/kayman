@@ -4,48 +4,55 @@
     "currency_code": "TWD",
     "id": 1,
     "name": "Wallet",
-    "timezone": "Asia/Taipei"
+    "timezone": "Asia/Taipei",
+    "type": "CASH"
   },
   {
     "balance": "970000",
     "currency_code": "TWD",
     "id": 2,
     "name": "中國信託台幣活存",
-    "timezone": "Asia/Taipei"
+    "timezone": "Asia/Taipei",
+    "type": "CASH"
   },
   {
     "balance": "-26000",
     "currency_code": "TWD",
     "id": 3,
     "name": "國泰世華銀行 CUBE 信用卡",
-    "timezone": "Asia/Taipei"
+    "timezone": "Asia/Taipei",
+    "type": "CREDIT_CARD"
   },
   {
     "balance": "100",
     "currency_code": "USD",
     "id": 4,
     "name": "Wallet",
-    "timezone": "America/Los_Angeles"
+    "timezone": "America/Los_Angeles",
+    "type": "CASH"
   },
   {
     "balance": "104750",
     "currency_code": "USD",
     "id": 5,
     "name": "Chase Checking",
-    "timezone": "America/New_York"
+    "timezone": "America/New_York",
+    "type": "CASH"
   },
   {
     "balance": "-8",
     "currency_code": "USD",
     "id": 6,
     "name": "American Express Gold Card",
-    "timezone": "America/New_York"
+    "timezone": "America/New_York",
+    "type": "CREDIT_CARD"
   },
   {
     "balance": "5",
     "currency_code": "USD",
     "id": 7,
     "name": "Clipper Card",
-    "timezone": "America/Los_Angeles"
+    "timezone": "America/Los_Angeles",
+    "type": "CASH"
   }
 ]

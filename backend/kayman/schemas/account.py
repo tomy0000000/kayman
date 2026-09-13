@@ -1,7 +1,9 @@
+import enum
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+import sqlmodel
 from pydantic_extra_types.timezone_name import TimeZoneName
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 
@@ -11,6 +13,13 @@ if TYPE_CHECKING:
     from kayman.schemas.currency import Currency
     from kayman.schemas.statement import Statement
     from kayman.schemas.transaction import Transaction
+
+
+class AccountType(enum.Enum):
+    CASH = "CASH"
+    CREDIT_CARD = "CREDIT_CARD"
+    INVESTMENT = "INVESTMENT"
+    REWARD = "REWARD"
 
 
 class AccountBase(SQLModel):
@@ -25,6 +34,14 @@ class Account(AccountBase, table=True):
     # The balance field is defined here rather than base because
     # we don't accept initial value on create, and will always use 0 as default
     balance: Decimal = Field(default=0)
+    # Defined here rather than base until the column is NOT NULL: the create
+    # API doesn't accept a type yet, so every new row takes the default
+    type: AccountType = Field(
+        default=AccountType.CASH,
+        sa_column=Column(
+            sqlmodel.Enum(AccountType, name="account_type"), nullable=True
+        ),
+    )
     timezone: TimeZoneName = Field(sa_column=Column(SATimezone(), nullable=False))
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
