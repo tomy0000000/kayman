@@ -49,7 +49,7 @@ RUN mise run build:frontend
 # Runtime Image                                                               #
 ###############################################################################
 
-FROM python:3.12
+FROM python:3.14
 WORKDIR /usr/src/kayman
 EXPOSE 8000
 
