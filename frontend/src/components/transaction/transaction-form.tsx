@@ -16,7 +16,7 @@ import {
   type TransactionRead,
   type TransactionTagRead
 } from '@/lib/client'
-import { isAmount, toZonedISOString } from '@/lib/utils'
+import { isAmount, nextTransactionIndex, toZonedISOString } from '@/lib/utils'
 
 interface TransactionFormProps {
   accounts: AccountRead[]
@@ -64,6 +64,19 @@ export function TransactionForm({
     (c) => c.code === selectedAccount?.currency_code
   )
 
+  // (event_id, index) is unique in the DB, so linking to an event must claim a
+  // free slot and unlinking must clear it. Staying on the same event keeps the
+  // row's current index, so `index` is left unset.
+  const indexPatch = (): Pick<TransactionCreate, 'index'> => {
+    if (eventId == null) return { index: null }
+    if (editingTransaction?.event_id === eventId) return {}
+    const event = events?.find((e) => e.id === eventId)
+    if (event == null) return {}
+    return {
+      index: nextTransactionIndex(event.transactions, editingTransaction?.id)
+    }
+  }
+
   const handleSubmit = () => {
     if (selectedAccount == null) return
     onSubmit({
@@ -71,7 +84,8 @@ export function TransactionForm({
       amount,
       created_at: createdAt,
       event_id: eventId,
-      tag_ids: tagIds
+      tag_ids: tagIds,
+      ...indexPatch()
     })
   }
 
