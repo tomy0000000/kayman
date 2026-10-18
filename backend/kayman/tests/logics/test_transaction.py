@@ -9,10 +9,15 @@ from kayman.logics.transaction import (
     _calculate_account_deltas,
     get_transactions_with_running_balance,
     update_transactions_with_balances,
+    validate_transaction_billable,
     validate_transaction_has_event,
 )
 from kayman.schemas.transaction import Transaction, TransactionUpdate
-from kayman.tests.factories import AccountFactory, TransactionFactory
+from kayman.tests.factories import (
+    AccountFactory,
+    StatementFactory,
+    TransactionFactory,
+)
 
 
 def test_get_transactions_with_running_balance_empty(session: Session):
@@ -246,6 +251,60 @@ def test_validate_transaction_has_event_no_event(session: Session):
 def test_validate_transaction_has_event_missing_id(session: Session):
     with pytest.raises(ValueError, match="not found"):
         validate_transaction_has_event(session, 999)
+
+
+def test_validate_transaction_billable_passes(session: Session):
+    txn = TransactionFactory(cleared_at=None)
+    statement = StatementFactory(account=txn.account)
+
+    assert validate_transaction_billable(session, txn.id, statement.id) is None
+
+
+@pytest.mark.parametrize("stage", ["PENDING", "BILLED", "CLEARED"])
+def test_validate_transaction_billable_not_posted(session: Session, stage: str):
+    statement = StatementFactory()
+    overrides = {
+        "PENDING": {"posted_at": None, "cleared_at": None},
+        "BILLED": {"statement_id": statement.id, "cleared_at": None},
+        "CLEARED": {},
+    }[stage]
+    txn = TransactionFactory(account=statement.account, **overrides)
+
+    with pytest.raises(ValueError, match="not posted"):
+        validate_transaction_billable(session, txn.id, statement.id)
+
+
+def test_validate_transaction_billable_other_account(session: Session):
+    txn = TransactionFactory(cleared_at=None)
+    statement = StatementFactory()
+
+    with pytest.raises(ValueError, match="does not belong"):
+        validate_transaction_billable(session, txn.id, statement.id)
+
+
+def test_validate_transaction_billable_missing_statement(session: Session):
+    txn = TransactionFactory(cleared_at=None)
+
+    with pytest.raises(ValueError, match="Statement id\\(s\\) not found"):
+        validate_transaction_billable(session, txn.id, 999)
+
+
+def test_validate_transaction_billable_missing_transaction(session: Session):
+    statement = StatementFactory()
+
+    with pytest.raises(ValueError, match="Transaction id\\(s\\) not found"):
+        validate_transaction_billable(session, 999, statement.id)
+
+
+def test_update_transactions_with_balances_sets_statement(session: Session):
+    txn = TransactionFactory(cleared_at=None)
+    statement = StatementFactory(account=txn.account)
+
+    updated = update_transactions_with_balances(
+        session, [TransactionUpdate(id=txn.id, statement_id=statement.id)]
+    )
+
+    assert updated[0].statement_id == statement.id
 
 
 def test_update_transactions_with_balances_missing_id(session: Session):

@@ -93,6 +93,11 @@ class TransactionPost(SQLModel):
     amount: Decimal | None = None
 
 
+class TransactionBill(SQLModel):
+    statement_id: int
+    amount: Decimal | None = None
+
+
 class TransactionClear(SQLModel):
     cleared_at: datetime
 
@@ -104,6 +109,7 @@ class TransactionUpdate(SQLModel):
     amount: Decimal | None = None
     created_at: datetime | None = None
     posted_at: datetime | None = None
+    statement_id: int | None = None
     description: str | None = None
     cleared_at: datetime | None = None
     index: int | None = Field(default=None, ge=0)

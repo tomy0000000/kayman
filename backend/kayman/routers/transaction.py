@@ -11,10 +11,12 @@ from kayman.crud.transaction import create_transactions, read_transactions
 from kayman.logics.account import update_balances_with_transactions
 from kayman.logics.transaction import (
     update_transactions_with_balances,
+    validate_transaction_billable,
     validate_transaction_has_event,
 )
 from kayman.schemas.transaction import (
     TransactionBase,
+    TransactionBill,
     TransactionClear,
     TransactionCreate,
     TransactionPost,
@@ -81,6 +83,29 @@ def post(
     transaction_id: int,
     data: TransactionPost,
 ) -> TransactionBase:
+    update = TransactionUpdate(id=transaction_id, **data.model_dump(exclude_unset=True))
+    try:
+        updated = update_transactions_with_balances(session, [update])
+    except ValueError as err:
+        raise HTTPException(status_code=404, detail=err.args[0]) from err
+    return updated[0]
+
+
+@txn_router.patch(
+    "/{transaction_id}/billed",
+    name="Bill Transaction",
+    response_model=TransactionRead,
+)
+def bill(
+    *,
+    session: Session = Depends(get_session),
+    transaction_id: int,
+    data: TransactionBill,
+) -> TransactionBase:
+    try:
+        validate_transaction_billable(session, transaction_id, data.statement_id)
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=err.args[0]) from err
     update = TransactionUpdate(id=transaction_id, **data.model_dump(exclude_unset=True))
     try:
         updated = update_transactions_with_balances(session, [update])

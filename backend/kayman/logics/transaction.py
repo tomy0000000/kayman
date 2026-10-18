@@ -6,6 +6,7 @@ from decimal import Decimal
 from sqlmodel import Session
 
 from kayman.crud.account import read_account_balance, update_account_balances
+from kayman.crud.statement import read_statements
 from kayman.crud.transaction import read_transactions, update_transactions
 from kayman.schemas.transaction import (
     Transaction,
@@ -46,6 +47,28 @@ def validate_transaction_has_event(session: Session, transaction_id: int) -> Non
         raise ValueError(f"Transaction id(s) not found: {{{transaction_id}}}")
     if txns[0].event_id is None:
         raise ValueError(f"Transaction {transaction_id} has no associated event")
+
+
+def validate_transaction_billable(
+    session: Session, transaction_id: int, statement_id: int
+) -> None:
+    txns = read_transactions(session, transaction_ids=[transaction_id])
+    if len(txns) != 1:
+        raise ValueError(f"Transaction id(s) not found: {{{transaction_id}}}")
+    txn = txns[0]
+    if (
+        txn.posted_at is None
+        or txn.statement_id is not None
+        or txn.cleared_at is not None
+    ):
+        raise ValueError(f"Transaction {transaction_id} is not posted")
+    statements = read_statements(session, statement_ids=[statement_id])
+    if len(statements) != 1:
+        raise ValueError(f"Statement id(s) not found: {{{statement_id}}}")
+    if statements[0].account_id != txn.account_id:
+        raise ValueError(
+            f"Statement {statement_id} does not belong to the transaction's account"
+        )
 
 
 def update_transactions_with_balances(
