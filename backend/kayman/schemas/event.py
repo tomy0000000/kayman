@@ -14,20 +14,20 @@ if TYPE_CHECKING:
 
 
 class EventType(enum.Enum):
-    Expense = "Expense"
-    Income = "Income"
-    Transfer = "Transfer"
-    Exchange = "Exchange"
+    EXPENSE = "EXPENSE"
+    INCOME = "INCOME"
+    TRANSFER = "TRANSFER"
+    EXCHANGE = "EXCHANGE"
 
 
 class EventClearErrorType(enum.Enum):
-    ALREADY_CLEARED = "already_cleared"
-    NO_ENTRIES = "no_entries"
-    NO_TRANSACTIONS = "no_transactions"
-    TRANSACTIONS_NOT_CLEARED = "transactions_not_cleared"
-    TOTALS_MISMATCH = "totals_mismatch"
-    EMPTY_ENTRIES_DESCRIPTION = "empty_entries_description"
-    INCONSISTENT_TIMESTAMPS = "inconsistent_timestamps"
+    ALREADY_CLEARED = "ALREADY_CLEARED"
+    NO_ENTRIES = "NO_ENTRIES"
+    NO_TRANSACTIONS = "NO_TRANSACTIONS"
+    TRANSACTIONS_NOT_CLEARED = "TRANSACTIONS_NOT_CLEARED"
+    TOTALS_MISMATCH = "TOTALS_MISMATCH"
+    EMPTY_ENTRIES_DESCRIPTION = "EMPTY_ENTRIES_DESCRIPTION"
+    INCONSISTENT_TIMESTAMPS = "INCONSISTENT_TIMESTAMPS"
 
 
 class EventBase(SQLModel):

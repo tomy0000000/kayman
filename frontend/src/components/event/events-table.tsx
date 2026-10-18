@@ -72,12 +72,12 @@ export function EventsTable({
       )
 
     const renderAmount = (event: EventReadDetailed) => {
-      if (event.type === 'Expense' || event.type === 'Income') {
+      if (event.type === 'EXPENSE' || event.type === 'INCOME') {
         const total = event.entries.reduce(
           (sum, entry) => sum + Number(entry.amount) * entry.quantity,
           0
         )
-        const signed = event.type === 'Expense' ? -total : total
+        const signed = event.type === 'EXPENSE' ? -total : total
         return (
           <Amount
             amount={signed}
@@ -85,7 +85,7 @@ export function EventsTable({
           />
         )
       }
-      if (event.type === 'Transfer') {
+      if (event.type === 'TRANSFER') {
         const [transaction] = event.transactions
         return transaction ? formatTransaction(transaction) : '—'
       }

@@ -303,7 +303,7 @@ def test_read_events_for_update(session: Session):
 @pytest.mark.parametrize(
     ("field", "make_value", "commit"),
     [
-        ("type", lambda: EventType.Income, True),
+        ("type", lambda: EventType.INCOME, True),
         ("timezone", lambda: "America/New_York", True),
         ("description", lambda: "new description", True),
         # Datetime fields use commit=False: SQLite drops tzinfo on the
@@ -319,7 +319,7 @@ def test_read_events_for_update(session: Session):
 )
 def test_update_event_field(session: Session, field, make_value, commit):
     event = EventFactory(
-        type=EventType.Expense,
+        type=EventType.EXPENSE,
         timestamp=datetime(2025, 1, 1, 12, 0),
         timezone="UTC",
         description="original description",
@@ -380,13 +380,13 @@ def test_update_events_explicit_none_clears_description(session: Session):
 
 
 def test_update_events_omitted_description_is_untouched(session: Session):
-    event = EventFactory(type=EventType.Expense, description="original description")
+    event = EventFactory(type=EventType.EXPENSE, description="original description")
 
     # description is omitted, so exclude_unset drops it and the column survives.
-    updated = update_events(session, [event.id], [EventUpdate(type=EventType.Income)])
+    updated = update_events(session, [event.id], [EventUpdate(type=EventType.INCOME)])
 
     assert len(updated) == 1
-    assert updated[0].type == EventType.Income
+    assert updated[0].type == EventType.INCOME
     assert updated[0].description == "original description"
 
     db_events = read_events(session, event_ids=[event.id])

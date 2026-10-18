@@ -52,10 +52,10 @@ import {
 } from '@/lib/utils'
 
 const EVENT_TYPES: { value: EventType; icon: LucideIcon }[] = [
-  { value: 'Expense', icon: TrendingDown },
-  { value: 'Income', icon: TrendingUp },
-  { value: 'Transfer', icon: ArrowLeftRight },
-  { value: 'Exchange', icon: Repeat }
+  { value: 'EXPENSE', icon: TrendingDown },
+  { value: 'INCOME', icon: TrendingUp },
+  { value: 'TRANSFER', icon: ArrowLeftRight },
+  { value: 'EXCHANGE', icon: Repeat }
 ]
 
 interface EventFormProps {
@@ -97,7 +97,7 @@ export function EventForm({
   const { timezone: clientTimezone } = useClientTimezone()
   const isEditing = editingEvent != null
   const [type, setType] = useState<EventType>(
-    editingEvent?.type ?? seedEvent?.type ?? 'Expense'
+    editingEvent?.type ?? seedEvent?.type ?? 'EXPENSE'
   )
   const [description, setDescription] = useState(
     editingEvent?.description ?? seedEvent?.description ?? ''

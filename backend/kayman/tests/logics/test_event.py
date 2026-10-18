@@ -170,7 +170,7 @@ def test_delete_events_by_ids_cascades_to_entries(session: Session):
 
 
 @pytest.mark.parametrize("entry_count", [1, 3])
-@pytest.mark.parametrize("event_type", [EventType.Expense, EventType.Income])
+@pytest.mark.parametrize("event_type", [EventType.EXPENSE, EventType.INCOME])
 def test_validate_entries_present_entry_driven_with_entries(
     event_type: EventType, entry_count: int
 ):
@@ -183,7 +183,7 @@ def test_validate_entries_present_entry_driven_with_entries(
     assert len(validate_entries_present(event)) == 0
 
 
-@pytest.mark.parametrize("event_type", [EventType.Expense, EventType.Income])
+@pytest.mark.parametrize("event_type", [EventType.EXPENSE, EventType.INCOME])
 def test_validate_entries_present_entry_driven_without_entries(event_type: EventType):
     """Expense and Income with no entry report exactly one NO_ENTRIES error"""
     event = EventFactory.build(type=event_type)
@@ -196,7 +196,7 @@ def test_validate_entries_present_entry_driven_without_entries(event_type: Event
 
 
 @pytest.mark.parametrize("entry_count", [0, 2])
-@pytest.mark.parametrize("event_type", [EventType.Transfer, EventType.Exchange])
+@pytest.mark.parametrize("event_type", [EventType.TRANSFER, EventType.EXCHANGE])
 def test_validate_entries_present_transaction_driven(
     event_type: EventType, entry_count: int
 ):
@@ -210,7 +210,7 @@ def test_validate_entries_present_transaction_driven(
 
 
 @pytest.mark.parametrize("transaction_count", [1, 3])
-@pytest.mark.parametrize("event_type", [EventType.Transfer, EventType.Exchange])
+@pytest.mark.parametrize("event_type", [EventType.TRANSFER, EventType.EXCHANGE])
 def test_validate_transactions_present_transaction_driven_with_transactions(
     event_type: EventType, transaction_count: int
 ):
@@ -223,7 +223,7 @@ def test_validate_transactions_present_transaction_driven_with_transactions(
     assert len(validate_transactions_present(event)) == 0
 
 
-@pytest.mark.parametrize("event_type", [EventType.Transfer, EventType.Exchange])
+@pytest.mark.parametrize("event_type", [EventType.TRANSFER, EventType.EXCHANGE])
 def test_validate_transactions_present_transaction_driven_without_transactions(
     event_type: EventType,
 ):
@@ -238,7 +238,7 @@ def test_validate_transactions_present_transaction_driven_without_transactions(
 
 
 @pytest.mark.parametrize("transaction_count", [0, 2])
-@pytest.mark.parametrize("event_type", [EventType.Expense, EventType.Income])
+@pytest.mark.parametrize("event_type", [EventType.EXPENSE, EventType.INCOME])
 def test_validate_transactions_present_entry_driven(
     event_type: EventType, transaction_count: int
 ):
@@ -252,7 +252,7 @@ def test_validate_transactions_present_entry_driven(
 
 
 def _totals_event(
-    event_type: EventType = EventType.Expense,
+    event_type: EventType = EventType.EXPENSE,
     entry_amounts: Sequence[Decimal] = (),
     transaction_amounts: Sequence[Decimal] = (),
     entry_currency_code: str = "TWD",
@@ -282,10 +282,10 @@ def _totals_event(
 @pytest.mark.parametrize(
     ("event_type", "transaction_amounts"),
     [
-        (EventType.Expense, [Decimal("-100.00")]),
-        (EventType.Expense, [Decimal("-40.00"), Decimal("-60.00")]),
-        (EventType.Income, [Decimal("100.00")]),
-        (EventType.Income, [Decimal("40.00"), Decimal("60.00")]),
+        (EventType.EXPENSE, [Decimal("-100.00")]),
+        (EventType.EXPENSE, [Decimal("-40.00"), Decimal("-60.00")]),
+        (EventType.INCOME, [Decimal("100.00")]),
+        (EventType.INCOME, [Decimal("40.00"), Decimal("60.00")]),
     ],
 )
 def test_validate_totals_match_matching(
@@ -304,11 +304,11 @@ def test_validate_totals_match_matching(
 @pytest.mark.parametrize(
     ("event_type", "transaction_amounts"),
     [
-        (EventType.Expense, [Decimal("-99.00")]),
+        (EventType.EXPENSE, [Decimal("-99.00")]),
         # Right magnitude, wrong sign: an Expense paid by an inbound transaction
-        (EventType.Expense, [Decimal("100.00")]),
-        (EventType.Income, [Decimal("99.00")]),
-        (EventType.Income, [Decimal("-100.00")]),
+        (EventType.EXPENSE, [Decimal("100.00")]),
+        (EventType.INCOME, [Decimal("99.00")]),
+        (EventType.INCOME, [Decimal("-100.00")]),
     ],
 )
 def test_validate_totals_match_mismatch(
@@ -339,7 +339,7 @@ def test_validate_totals_match_counts_quantity():
     assert len(validate_totals_match(event)) == 0
 
 
-@pytest.mark.parametrize("event_type", [EventType.Expense, EventType.Income])
+@pytest.mark.parametrize("event_type", [EventType.EXPENSE, EventType.INCOME])
 def test_validate_totals_match_without_transactions(event_type: EventType):
     """No transaction means a zero total, which entries have to match"""
     event = _totals_event(event_type=event_type, entry_amounts=[Decimal("100.00")])
@@ -350,7 +350,7 @@ def test_validate_totals_match_without_transactions(event_type: EventType):
     assert errors[0].type is EventClearErrorType.TOTALS_MISMATCH
 
 
-@pytest.mark.parametrize("event_type", [EventType.Expense, EventType.Income])
+@pytest.mark.parametrize("event_type", [EventType.EXPENSE, EventType.INCOME])
 def test_validate_totals_match_without_entries_or_transactions(event_type: EventType):
     """Two empty sides both total zero, so there is nothing to report"""
     event = _totals_event(event_type=event_type)
@@ -404,7 +404,7 @@ def test_validate_totals_match_currency_differs_across_sides():
     assert len(validate_totals_match(event)) == 0
 
 
-@pytest.mark.parametrize("event_type", [EventType.Transfer, EventType.Exchange])
+@pytest.mark.parametrize("event_type", [EventType.TRANSFER, EventType.EXCHANGE])
 def test_validate_totals_match_transaction_driven(event_type: EventType):
     """Transfer and Exchange move money between accounts, totals never apply"""
     event = _totals_event(
@@ -619,16 +619,14 @@ def test_validate_event_clearable_multiple_errors_from_one_validator():
 def test_validate_event_clearable_collects_across_validators():
     """Errors from several validators concatenate in registry order"""
     event = EventFactory.build()
-    already_cleared = _clear_error(
-        EventClearErrorType.ALREADY_CLEARED, "already cleared"
-    )
+    cleared = _clear_error(EventClearErrorType.ALREADY_CLEARED, "already cleared")
     mismatch = _clear_error(EventClearErrorType.TOTALS_MISMATCH, "totals mismatch")
     empty_description = _clear_error(
         EventClearErrorType.EMPTY_ENTRIES_DESCRIPTION, "entry 0 has no description"
     )
 
     def first_fails(_event: Event) -> list[EventClearError]:
-        return [already_cleared]
+        return [cleared]
 
     def passes(_event: Event) -> list[EventClearError]:
         return []
@@ -643,7 +641,7 @@ def test_validate_event_clearable_collects_across_validators():
 
     # Registry order between validators, reported order within one.
     assert len(errors) == 3
-    assert errors == [already_cleared, mismatch, empty_description]
+    assert errors == [cleared, mismatch, empty_description]
 
 
 def test_validate_event_clearable_runs_every_validator_after_a_failure():

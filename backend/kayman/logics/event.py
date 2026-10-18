@@ -18,7 +18,7 @@ EventClearValidator = Callable[[Event], list[EventClearError]]
 def validate_totals_match(event: Event) -> list[EventClearError]:
     """Report an entry-driven event whose entries and transactions disagree."""
     # Transfer and Exchange carry no entries to total against
-    if event.type not in (EventType.Expense, EventType.Income):
+    if event.type not in (EventType.EXPENSE, EventType.INCOME):
         return []
 
     # A multi-currency event has no single total to compare
@@ -35,7 +35,7 @@ def validate_totals_match(event: Event) -> list[EventClearError]:
         sum([transaction.amount for transaction in event.transactions])
     )
     # Expense drains the accounts, so its transactions mirror the entries
-    if event.type is EventType.Expense:
+    if event.type is EventType.EXPENSE:
         transactions_total = -transactions_total
 
     if entries_total == transactions_total:
@@ -54,7 +54,7 @@ def validate_totals_match(event: Event) -> list[EventClearError]:
 
 def validate_entries_present(event: Event) -> list[EventClearError]:
     """Report an entry-driven event that carries no entry."""
-    if event.type not in (EventType.Expense, EventType.Income) or event.entries:
+    if event.type not in (EventType.EXPENSE, EventType.INCOME) or event.entries:
         return []
 
     return [
@@ -67,7 +67,7 @@ def validate_entries_present(event: Event) -> list[EventClearError]:
 
 def validate_transactions_present(event: Event) -> list[EventClearError]:
     """Report a transaction-driven event that carries no transaction."""
-    if event.type not in (EventType.Transfer, EventType.Exchange) or event.transactions:
+    if event.type not in (EventType.TRANSFER, EventType.EXCHANGE) or event.transactions:
         return []
 
     return [

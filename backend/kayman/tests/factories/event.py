@@ -18,7 +18,7 @@ class EventFactory(SQLAlchemyModelFactory):
     cleared_at = factory.Faker("date_time")
 
     @classmethod
-    def build_details(cls, type=EventType.Expense, entry_num=1, transaction_num=1):
+    def build_details(cls, type=EventType.EXPENSE, entry_num=1, transaction_num=1):
         from kayman.tests.factories.currency import CurrencyFactory
         from kayman.tests.factories.event_entry import EventEntryFactory
         from kayman.tests.factories.transaction import TransactionFactory
@@ -36,12 +36,12 @@ class EventFactory(SQLAlchemyModelFactory):
         entries_total = sum([entry.amount * entry.quantity for entry in entries])
         transactions_total = sum([transaction.amount for transaction in transactions])
 
-        if type is EventType.Expense:
+        if type is EventType.EXPENSE:
             # Update last transaction amount to match the total
             # entries_total == -transactions_total
             transactions[-1].amount -= entries_total + transactions_total
 
-        if type is EventType.Income:
+        if type is EventType.INCOME:
             # Update last transaction amount to match the total
             # entries_total == transactions_total
             transactions[-1].amount -= transactions_total - entries_total
