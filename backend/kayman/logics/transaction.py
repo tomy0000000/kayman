@@ -41,11 +41,16 @@ def get_transactions_with_running_balance(
     return results
 
 
-def validate_transaction_has_event(session: Session, transaction_id: int) -> None:
+def validate_transaction_clearable(session: Session, transaction_id: int) -> None:
     txns = read_transactions(session, transaction_ids=[transaction_id])
     if len(txns) != 1:
         raise ValueError(f"Transaction id(s) not found: {{{transaction_id}}}")
-    if txns[0].event_id is None:
+    txn = txns[0]
+    if txn.posted_at is None:
+        raise ValueError(f"Transaction {transaction_id} is not posted")
+    if txn.statement_id is None:
+        raise ValueError(f"Transaction {transaction_id} is not on a statement")
+    if txn.event_id is None:
         raise ValueError(f"Transaction {transaction_id} has no associated event")
 
 

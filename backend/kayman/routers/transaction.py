@@ -12,7 +12,7 @@ from kayman.logics.account import update_balances_with_transactions
 from kayman.logics.transaction import (
     update_transactions_with_balances,
     validate_transaction_billable,
-    validate_transaction_has_event,
+    validate_transaction_clearable,
 )
 from kayman.schemas.transaction import (
     TransactionBase,
@@ -131,7 +131,7 @@ def clear(
     data: TransactionClear,
 ) -> TransactionBase:
     try:
-        validate_transaction_has_event(session, transaction_id)
+        validate_transaction_clearable(session, transaction_id)
     except ValueError as err:
         raise HTTPException(status_code=400, detail=err.args[0]) from err
     update = TransactionStatusUpdate(

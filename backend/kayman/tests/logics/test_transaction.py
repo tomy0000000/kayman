@@ -10,7 +10,7 @@ from kayman.logics.transaction import (
     get_transactions_with_running_balance,
     update_transactions_with_balances,
     validate_transaction_billable,
-    validate_transaction_has_event,
+    validate_transaction_clearable,
 )
 from kayman.schemas.transaction import (
     Transaction,
@@ -239,22 +239,46 @@ def test_update_transactions_with_balances_does_not_mutate_input(session: Sessio
     assert [update.id for update in updates] == [txn_2.id, txn_1.id]
 
 
-def test_validate_transaction_has_event_passes(session: Session):
+def test_validate_transaction_clearable_passes(session: Session):
+    statement = StatementFactory()
+    txn = TransactionFactory(account=statement.account, statement_id=statement.id)
+
+    assert validate_transaction_clearable(session, txn.id) is None
+
+
+def test_validate_transaction_clearable_not_posted(session: Session):
+    statement = StatementFactory()
+    txn = TransactionFactory(
+        account=statement.account, statement_id=statement.id, posted_at=None
+    )
+
+    with pytest.raises(ValueError, match="is not posted"):
+        validate_transaction_clearable(session, txn.id)
+
+
+def test_validate_transaction_clearable_no_statement(session: Session):
     txn = TransactionFactory()
 
-    assert validate_transaction_has_event(session, txn.id) is None
+    with pytest.raises(ValueError, match="not on a statement"):
+        validate_transaction_clearable(session, txn.id)
 
 
-def test_validate_transaction_has_event_no_event(session: Session):
-    txn = TransactionFactory(event=None, event_id=None)
+def test_validate_transaction_clearable_no_event(session: Session):
+    statement = StatementFactory()
+    txn = TransactionFactory(
+        account=statement.account,
+        statement_id=statement.id,
+        event=None,
+        event_id=None,
+    )
 
     with pytest.raises(ValueError, match="no associated event"):
-        validate_transaction_has_event(session, txn.id)
+        validate_transaction_clearable(session, txn.id)
 
 
-def test_validate_transaction_has_event_missing_id(session: Session):
+def test_validate_transaction_clearable_missing_id(session: Session):
     with pytest.raises(ValueError, match="not found"):
-        validate_transaction_has_event(session, 999)
+        validate_transaction_clearable(session, 999)
 
 
 def test_validate_transaction_billable_passes(session: Session):
