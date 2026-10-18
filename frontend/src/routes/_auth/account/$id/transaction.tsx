@@ -6,6 +6,7 @@ import { type DateRange } from 'react-day-picker'
 import { DatePickerWithRange } from '@/components/date-range-picker'
 import { CreateEventSheet } from '@/components/event/create-event-sheet'
 import { EventSheet } from '@/components/event/event-sheet'
+import { TransactionBillSheet } from '@/components/transaction/transaction-bill-sheet'
 import { TransactionFab } from '@/components/transaction/transaction-fab'
 import { TransactionPostSheet } from '@/components/transaction/transaction-post-sheet'
 import { TransactionsTable } from '@/components/transaction/transactions-table'
@@ -22,6 +23,7 @@ import {
   updateTransactions
 } from '@/lib/client'
 import {
+  billTransactionMutation,
   postTransactionMutation,
   readAccountTransactionsWithRunningBalanceOptions,
   readAccountTransactionsWithRunningBalanceQueryKey,
@@ -30,6 +32,7 @@ import {
   readCurrenciesOptions,
   readEventsOptions,
   readEventsQueryKey,
+  readStatementsOptions,
   readTransactionTagsOptions
 } from '@/lib/client/@tanstack/react-query.gen'
 import { REFERENCE_STALE_TIME } from '@/lib/constants'
@@ -63,6 +66,8 @@ function AccountTransactionPage() {
     transaction: TransactionReadWithBalance
   } | null>(null)
   const [postingTransaction, setPostingTransaction] =
+    useState<TransactionReadWithBalance | null>(null)
+  const [billingTransaction, setBillingTransaction] =
     useState<TransactionReadWithBalance | null>(null)
   const [creatingEventTransaction, setCreatingEventTransaction] =
     useState<TransactionReadWithBalance | null>(null)
@@ -121,6 +126,16 @@ function AccountTransactionPage() {
       setPostingTransaction(null)
     },
     meta: { errorMessage: 'Failed to post transaction' }
+  })
+
+  const { mutate: billTransaction, isPending: isBilling } = useMutation({
+    ...billTransactionMutation(),
+    onSuccess: () => {
+      toast.add({ title: 'Transaction billed', type: 'success' })
+      invalidateTransactions()
+      setBillingTransaction(null)
+    },
+    meta: { errorMessage: 'Failed to bill transaction' }
   })
 
   const { mutate: createEventFromTransaction, isPending: isCreatingEvent } =
@@ -194,6 +209,13 @@ function AccountTransactionPage() {
     staleTime: REFERENCE_STALE_TIME
   })
 
+  // Backs the bill sheet's statement picker, fetched once it opens.
+  const { data: statements } = useQuery({
+    ...readStatementsOptions({ query: { account_id: accountId } }),
+    enabled: billingTransaction != null,
+    meta: { errorMessage: 'Failed to fetch statements' }
+  })
+
   const { data: currencies } = useQuery({
     ...readCurrenciesOptions(),
     staleTime: REFERENCE_STALE_TIME
@@ -244,6 +266,7 @@ function AccountTransactionPage() {
             setFabOpen(true)
           }}
           onTransactionPost={setPostingTransaction}
+          onTransactionBill={setBillingTransaction}
           onTransactionCreateEvent={setCreatingEventTransaction}
           onTransactionViewEvent={(transaction) => {
             if (!transaction.event) return
@@ -297,6 +320,27 @@ function AccountTransactionPage() {
           })
         }}
         isPending={isPosting}
+      />
+
+      <TransactionBillSheet
+        transaction={billingTransaction}
+        account={account}
+        currency={currencies?.find(
+          (c) => c.code === billingTransaction?.currency_code
+        )}
+        statements={statements ?? []}
+        open={billingTransaction != null}
+        onOpenChange={(open) => {
+          if (!open) setBillingTransaction(null)
+        }}
+        onSubmit={(body) => {
+          if (billingTransaction == null) return
+          billTransaction({
+            path: { transaction_id: billingTransaction.id },
+            body
+          })
+        }}
+        isPending={isBilling}
       />
 
       <CreateEventSheet

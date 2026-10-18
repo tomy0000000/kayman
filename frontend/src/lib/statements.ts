@@ -23,6 +23,17 @@ export function latestStatement(
   )
 }
 
+// The statement whose period covers `day`, a "YYYY-MM-DD" calendar day.
+export function statementForDay(
+  statements: StatementRead[],
+  day: string
+): StatementRead | undefined {
+  return statements.find(
+    (statement) =>
+      statement.period_start_on <= day && day <= statement.period_end_on
+  )
+}
+
 // The cycle following the account's latest statement, or the current month when
 // it has none yet. `today` is a `zonedCalendarDate` stand-in, so the fallback
 // month is the client's, not the browser's.
