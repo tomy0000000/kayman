@@ -24,6 +24,7 @@ import {
 } from '@/lib/client'
 import {
   billTransactionMutation,
+  clearTransactionMutation,
   postTransactionMutation,
   readAccountTransactionsWithRunningBalanceOptions,
   readAccountTransactionsWithRunningBalanceQueryKey,
@@ -136,6 +137,17 @@ function AccountTransactionPage() {
       setBillingTransaction(null)
     },
     meta: { errorMessage: 'Failed to bill transaction' }
+  })
+
+  // Clearing takes no input beyond the moment it happened, so it fires
+  // straight from the context menu like clearing an event does.
+  const { mutate: clearTransaction } = useMutation({
+    ...clearTransactionMutation(),
+    onSuccess: () => {
+      toast.add({ title: 'Transaction cleared', type: 'success' })
+      invalidateTransactions()
+    },
+    meta: { errorMessage: 'Failed to clear transaction' }
   })
 
   const { mutate: createEventFromTransaction, isPending: isCreatingEvent } =
@@ -267,6 +279,12 @@ function AccountTransactionPage() {
           }}
           onTransactionPost={setPostingTransaction}
           onTransactionBill={setBillingTransaction}
+          onTransactionClear={(transaction) =>
+            clearTransaction({
+              path: { transaction_id: transaction.id },
+              body: { cleared_at: new Date().toISOString() }
+            })
+          }
           onTransactionCreateEvent={setCreatingEventTransaction}
           onTransactionViewEvent={(transaction) => {
             if (!transaction.event) return
