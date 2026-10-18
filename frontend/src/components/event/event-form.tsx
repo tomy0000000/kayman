@@ -72,7 +72,7 @@ interface EventFormProps {
   seedEvent?: EventReadDetailed | null
   // Calendar day (a `zonedCalendarDate` stand-in) to default a new event's
   // timestamp to, at midnight. Today defaults to now instead. Ignored when
-  // editing or seeding from a transaction.
+  // editing, seeding from a transaction, or seeding from an event.
   seedDate?: Date
   onSubmit: (
     body: EventCreate,
@@ -111,6 +111,8 @@ export function EventForm({
     if (isEditing) return editingEvent.timestamp
     if (seedTransaction) return seedTransaction.transaction.created_at
     const now = new Date()
+    // Duplicating always stamps the copy with now, never the picked day.
+    if (seedEvent) return toZonedISOString(now, clientTimezone)
     const isToday =
       seedDate &&
       formatCalendarDate(seedDate) ===
