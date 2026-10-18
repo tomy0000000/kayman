@@ -12,7 +12,11 @@ from kayman.logics.transaction import (
     validate_transaction_billable,
     validate_transaction_has_event,
 )
-from kayman.schemas.transaction import Transaction, TransactionUpdate
+from kayman.schemas.transaction import (
+    Transaction,
+    TransactionStatusUpdate,
+    TransactionUpdate,
+)
 from kayman.tests.factories import (
     AccountFactory,
     StatementFactory,
@@ -301,7 +305,7 @@ def test_update_transactions_with_balances_sets_statement(session: Session):
     statement = StatementFactory(account=txn.account)
 
     updated = update_transactions_with_balances(
-        session, [TransactionUpdate(id=txn.id, statement_id=statement.id)]
+        session, [TransactionStatusUpdate(id=txn.id, statement_id=statement.id)]
     )
 
     assert updated[0].statement_id == statement.id

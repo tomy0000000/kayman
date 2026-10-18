@@ -108,9 +108,13 @@ class TransactionUpdate(SQLModel):
     event_id: int | None = None
     amount: Decimal | None = None
     created_at: datetime | None = None
-    posted_at: datetime | None = None
-    statement_id: int | None = None
     description: str | None = None
-    cleared_at: datetime | None = None
     index: int | None = Field(default=None, ge=0)
     tag_ids: list[int] | None = None
+
+
+# Internal only: status fields change through the post/bill/clear endpoints.
+class TransactionStatusUpdate(TransactionUpdate):
+    posted_at: datetime | None = None
+    statement_id: int | None = None
+    cleared_at: datetime | None = None

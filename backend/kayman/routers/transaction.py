@@ -21,6 +21,7 @@ from kayman.schemas.transaction import (
     TransactionCreate,
     TransactionPost,
     TransactionRead,
+    TransactionStatusUpdate,
     TransactionUpdate,
 )
 
@@ -83,7 +84,9 @@ def post(
     transaction_id: int,
     data: TransactionPost,
 ) -> TransactionBase:
-    update = TransactionUpdate(id=transaction_id, **data.model_dump(exclude_unset=True))
+    update = TransactionStatusUpdate(
+        id=transaction_id, **data.model_dump(exclude_unset=True)
+    )
     try:
         updated = update_transactions_with_balances(session, [update])
     except ValueError as err:
@@ -106,7 +109,9 @@ def bill(
         validate_transaction_billable(session, transaction_id, data.statement_id)
     except ValueError as err:
         raise HTTPException(status_code=400, detail=err.args[0]) from err
-    update = TransactionUpdate(id=transaction_id, **data.model_dump(exclude_unset=True))
+    update = TransactionStatusUpdate(
+        id=transaction_id, **data.model_dump(exclude_unset=True)
+    )
     try:
         updated = update_transactions_with_balances(session, [update])
     except ValueError as err:
@@ -129,7 +134,9 @@ def clear(
         validate_transaction_has_event(session, transaction_id)
     except ValueError as err:
         raise HTTPException(status_code=400, detail=err.args[0]) from err
-    update = TransactionUpdate(id=transaction_id, **data.model_dump(exclude_unset=True))
+    update = TransactionStatusUpdate(
+        id=transaction_id, **data.model_dump(exclude_unset=True)
+    )
     try:
         updated = update_transactions_with_balances(session, [update])
     except ValueError as err:

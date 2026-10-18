@@ -16,6 +16,7 @@ from kayman.schemas.transaction import (
     TransactionBase,
     TransactionCreate,
     TransactionRead,
+    TransactionStatusUpdate,
     TransactionUpdate,
 )
 from kayman.schemas.transaction_tag import TransactionTag, TransactionTagLink
@@ -389,7 +390,7 @@ def test_update_transaction_field(session: Session, field, make_value, commit):
     updated = update_transactions(
         session,
         [txn],
-        [TransactionUpdate(id=txn.id, **{field: new_value})],
+        [TransactionStatusUpdate(id=txn.id, **{field: new_value})],
         commit=commit,
     )
 
@@ -408,7 +409,7 @@ def test_update_transaction_explicit_none_clears_field(session: Session):
     updated = update_transactions(
         session,
         [txn],
-        [TransactionUpdate(id=txn.id, posted_at=None)],
+        [TransactionStatusUpdate(id=txn.id, posted_at=None)],
     )
 
     assert len(updated) == 1
@@ -639,6 +640,14 @@ def test_transaction_create_rejects_negative_index():
 def test_transaction_update_rejects_negative_index():
     with pytest.raises(ValidationError):
         TransactionUpdate(id=1, index=-1)
+
+
+def test_transaction_update_ignores_status_fields():
+    update = TransactionUpdate.model_validate(
+        {"id": 1, "posted_at": datetime.now(UTC), "statement_id": 1, "cleared_at": None}
+    )
+
+    assert update.model_dump(exclude_unset=True) == {"id": 1}
 
 
 def test_delete_transaction_removes_links_but_keeps_tags(session: Session):
