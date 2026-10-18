@@ -263,8 +263,7 @@ function AccountTransactionPage() {
         <Separator className="my-4 bg-foreground/30" />
       </div>
 
-      {/* Transactions */}
-      <div className="min-h-0 w-full flex-1 overflow-y-auto">
+      <div className="min-h-0 w-full flex-1 overflow-y-auto pb-24">
         <TransactionsTable
           transactions={transactions}
           currencyCode={account?.currency_code}
