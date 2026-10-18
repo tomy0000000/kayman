@@ -200,9 +200,6 @@ export function TransactionsTable({
                     Bill
                   </ContextMenuItem>
                   <ContextMenuItem
-                    // Clearing is the user reconciling against the statement,
-                    // and the backend refuses it for transactions without an
-                    // event.
                     disabled={
                       row.original.status !== 'BILLED' ||
                       row.original.event_id == null
