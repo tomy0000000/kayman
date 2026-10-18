@@ -252,7 +252,7 @@
     "event_id": 13,
     "id": 24,
     "index": 1,
-    "posted_at": "2026-02-28T10:00:00-05:00"
+    "posted_at": null
   },
   {
     "account_id": 2,
@@ -275,5 +275,41 @@
     "id": 26,
     "index": 1,
     "posted_at": "2026-02-25T14:00:00+08:00"
+  },
+  {
+    "account_id": 5,
+    "amount": "-64.37",
+    "cleared_at": null,
+    "created_at": "2026-03-01T11:00:00-05:00",
+    "description": "Whole Foods (debit card)",
+    "id": 27,
+    "posted_at": null
+  },
+  {
+    "account_id": 6,
+    "amount": "-86.40",
+    "cleared_at": null,
+    "created_at": "2026-03-01T20:30:00-05:00",
+    "description": "Dinner at the ramen bar (before tip)",
+    "id": 28,
+    "posted_at": null
+  },
+  {
+    "account_id": 3,
+    "amount": "-1290",
+    "cleared_at": null,
+    "created_at": "2026-03-02T15:00:00+08:00",
+    "description": "Uniqlo",
+    "id": 29,
+    "posted_at": null
+  },
+  {
+    "account_id": 6,
+    "amount": "-15.99",
+    "cleared_at": null,
+    "created_at": "2026-03-02T08:00:00-05:00",
+    "description": "Netflix subscription",
+    "id": 30,
+    "posted_at": null
   }
 ]
