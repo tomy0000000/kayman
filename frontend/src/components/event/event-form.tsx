@@ -1,11 +1,4 @@
-import {
-  ArrowLeftRight,
-  ChevronDown,
-  type LucideIcon,
-  Repeat,
-  TrendingDown,
-  TrendingUp
-} from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 
 import { EventEntriesField } from '@/components/event/event-entries-field'
@@ -32,7 +25,7 @@ import {
   type EventType,
   type TransactionTagRead
 } from '@/lib/client'
-import { eventTypeTabActiveClass } from '@/lib/event-types'
+import { EVENT_TYPES, eventTypeTabActiveClass } from '@/lib/event-types'
 import {
   type EventEntryDraft,
   type EventEntryPayload,
@@ -50,13 +43,6 @@ import {
   withTime,
   zonedCalendarDate
 } from '@/lib/utils'
-
-const EVENT_TYPES: { value: EventType; icon: LucideIcon }[] = [
-  { value: 'EXPENSE', icon: TrendingDown },
-  { value: 'INCOME', icon: TrendingUp },
-  { value: 'TRANSFER', icon: ArrowLeftRight },
-  { value: 'EXCHANGE', icon: Repeat }
-]
 
 interface EventFormProps {
   accounts: AccountRead[]
@@ -198,7 +184,7 @@ export function EventForm({
           onValueChange={(value) => setType(value as EventType)}
         >
           <TabsList className="w-full">
-            {EVENT_TYPES.map(({ value, icon: Icon }) => (
+            {EVENT_TYPES.map(({ value, label, icon: Icon }) => (
               <TabsTrigger
                 key={value}
                 value={value}
@@ -208,7 +194,7 @@ export function EventForm({
                 )}
               >
                 <Icon />
-                {value}
+                {label}
               </TabsTrigger>
             ))}
           </TabsList>
