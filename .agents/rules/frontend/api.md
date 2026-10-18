@@ -22,3 +22,7 @@ Why: the compiled methods carry the correct path, HTTP verb, request/response ty
 - Don't add per-query error `useEffect`s or mutation `onError` toasts. Error toasting is centralized in `main.tsx` (`QueryCache`/`MutationCache` `onError`). Set `meta: { errorMessage: '...' }` on the query or mutation to customize the toast title; otherwise a generic message shows.
 
 Why: the generated helpers erase the repeated queryFn/key/unwrap boilerplate and keep query keys structured, so caching and invalidation are correct by construction. One configured client and one error handler keep call sites carrying data logic only.
+
+## Enum values
+
+- Backend enums arrive as `SCREAMING_SNAKE_CASE` string unions (`'EXPENSE'`, `'CREDIT_CARD'`). Compare and store the raw value; never render it directly. Map it to a display label through a `{ value, label }` table in `lib/` (see `lib/account-types.ts`, `lib/event-types.ts`).

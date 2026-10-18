@@ -62,6 +62,18 @@ Endpoints apply with `model_dump(exclude_unset=True)` + `db_obj.sqlmodel_update(
 
 Only add `Update` when the resource supports PATCH.
 
+## Enums
+
+Every `enum.Enum` uses `SCREAMING_SNAKE_CASE` for both the member name and its string value, and the two are identical:
+
+```python
+class AccountType(enum.Enum):
+    CASH = "CASH"
+    CREDIT_CARD = "CREDIT_CARD"
+```
+
+Never use title-case or lower snake_case members or values (`Expense = "Expense"`, `ALREADY_CLEARED = "already_cleared"`). The value is the wire format (OpenAPI, generated frontend client, mock-data JSON) and, for `sa_column=Column(Enum(...))` fields, the PostgreSQL enum label, so renaming a member of a persisted enum needs an Alembic migration (`ALTER TYPE <type> RENAME VALUE 'Old' TO 'NEW'`) plus a frontend client regen. Human-readable labels belong in the frontend (a `{ value, label }` map such as `lib/account-types.ts`), never in the enum.
+
 ## Changing schema fields
 
 The staged dances below apply to a field that has **already shipped**. Creating a
