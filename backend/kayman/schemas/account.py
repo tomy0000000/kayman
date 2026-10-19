@@ -24,6 +24,7 @@ class AccountType(enum.Enum):
 
 class AccountBase(SQLModel):
     name: str
+    short_name: str | None = None
     type: AccountType
     currency_code: str = Field(foreign_key="currency.code")
     timezone: TimeZoneName
@@ -64,5 +65,6 @@ class AccountRead(AccountBase):
 class AccountUpdate(SQLModel):
     id: int
     name: str | None = None
+    short_name: str | None = None
     type: AccountType | None = None
     index: int | None = Field(default=None, ge=0)
