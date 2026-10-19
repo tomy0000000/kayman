@@ -1,11 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 
+import { OptimisticItem } from '@/components/optimistic-item'
 import { CreateStatementFab } from '@/components/statement/create-statement-fab'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
-import { type StatementRead } from '@/lib/client'
+import {
+  type CreateStatementData,
+  type Options,
+  type StatementCreate,
+  type StatementRead
+} from '@/lib/client'
 import {
   createStatementMutation,
   readAccountsOptions,
@@ -14,12 +20,27 @@ import {
   readStatementsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
 import { REFERENCE_STALE_TIME } from '@/lib/constants'
+import {
+  type OptimisticStatus,
+  useOptimisticMutation,
+  withOptimisticRow
+} from '@/lib/optimistic'
 import { formatCurrency, formatPlainDate } from '@/lib/utils'
 
+type StatementLike = Pick<
+  StatementRead,
+  'period_start_on' | 'period_end_on' | 'due_on' | 'balance'
+>
+
 interface StatementRowProps {
-  statement: StatementRead
+  statement: StatementLike
   currencyCode: string
+  status?: OptimisticStatus
+  onRetry?: () => void
 }
+
+const byPeriodEndDesc = (a: StatementLike, b: StatementLike) =>
+  b.period_end_on.localeCompare(a.period_end_on)
 
 export const Route = createFileRoute('/_auth/account/$id/statement')({
   head: () => ({
@@ -31,7 +52,6 @@ export const Route = createFileRoute('/_auth/account/$id/statement')({
 function AccountStatementPage() {
   const { id } = Route.useParams()
   const accountId = Number(id)
-  const queryClient = useQueryClient()
 
   const [fabOpen, setFabOpen] = useState(false)
 
@@ -52,15 +72,24 @@ function AccountStatementPage() {
     staleTime: REFERENCE_STALE_TIME
   })
 
-  const { mutate, isPending: isCreating } = useMutation({
-    ...createStatementMutation(),
-    onSuccess: () => {
-      toast.add({ title: 'Statement created', type: 'success' })
-      queryClient.invalidateQueries({ queryKey: readStatementsQueryKey() })
-      setFabOpen(false)
+  const {
+    mutate,
+    isPending: isCreating,
+    optimistic
+  } = useOptimisticMutation(
+    {
+      ...createStatementMutation(),
+      onSuccess: () =>
+        toast.add({ title: 'Statement created', type: 'success' }),
+      meta: { errorMessage: 'Failed to create statement' }
     },
-    meta: { errorMessage: 'Failed to create statement' }
-  })
+    [readStatementsQueryKey()]
+  )
+
+  const createStatement = (body: StatementCreate) => {
+    setFabOpen(false)
+    mutate({ body })
+  }
 
   if (isAccountsPending || isStatementsPending) return <StatementsSkeleton />
 
@@ -72,24 +101,36 @@ function AccountStatementPage() {
   }
 
   // The API orders by period_end_on ascending and exposes no sort parameter.
-  const ordered = [...(statements ?? [])].sort((a, b) =>
-    b.period_end_on.localeCompare(a.period_end_on)
+  const ordered = [...(statements ?? [])].sort(byPeriodEndDesc)
+
+  const rows = withOptimisticRow<
+    StatementLike,
+    StatementRead,
+    Options<CreateStatementData>
+  >(
+    ordered,
+    (statement) => String(statement.id),
+    optimistic,
+    ({ body }) => ({ ...body, balance: String(body.balance) }),
+    byPeriodEndDesc
   )
 
   return (
     <>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {ordered.length === 0 ? (
+        {rows.length === 0 ? (
           <p className="text-muted-foreground p-4 text-sm">
             No statements found.
           </p>
         ) : (
           <div className="[&>*:last-child]:border-0">
-            {ordered.map((statement) => (
+            {rows.map(({ key, item, status, retry }) => (
               <StatementRow
-                key={statement.id}
-                statement={statement}
+                key={key}
+                statement={item}
                 currencyCode={account.currency_code}
+                status={status}
+                onRetry={retry}
               />
             ))}
           </div>
@@ -102,17 +143,26 @@ function AccountStatementPage() {
         statements={ordered}
         open={fabOpen}
         onOpenChange={setFabOpen}
-        onSubmit={(body) => mutate({ body })}
+        onSubmit={createStatement}
         isPending={isCreating}
       />
     </>
   )
 }
 
-function StatementRow({ statement, currencyCode }: StatementRowProps) {
+function StatementRow({
+  statement,
+  currencyCode,
+  status,
+  onRetry
+}: StatementRowProps) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b py-3">
-      <div className="min-w-0">
+    <OptimisticItem
+      status={status}
+      onRetry={onRetry}
+      className="flex items-baseline justify-between gap-4 border-b py-3"
+    >
+      <div className="min-w-0 flex-1">
         <div className="truncate font-medium">
           {formatPlainDate(statement.period_start_on)} –{' '}
           {formatPlainDate(statement.period_end_on)}
@@ -124,7 +174,7 @@ function StatementRow({ statement, currencyCode }: StatementRowProps) {
       <div className="shrink-0 font-medium">
         {formatCurrency(parseFloat(statement.balance), currencyCode)}
       </div>
-    </div>
+    </OptimisticItem>
   )
 }
 
