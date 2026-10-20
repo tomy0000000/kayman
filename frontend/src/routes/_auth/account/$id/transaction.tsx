@@ -15,7 +15,11 @@ import { toast } from '@/components/ui/toast'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { useEventActions } from '@/hooks/use-event-actions'
 import {
+  type BillTransactionData,
+  type ClearTransactionData,
   type EventCreate,
+  type Options,
+  type PostTransactionData,
   type TransactionCreate,
   type TransactionReadWithBalance,
   createEvent,
@@ -112,6 +116,21 @@ function AccountTransactionPage() {
     query: { start, end }
   })
 
+  const patchTransaction = <
+    TVariables extends { path: { transaction_id: number } }
+  >(
+    patch: (variables: TVariables) => Partial<TransactionReadWithBalance>
+  ) =>
+    cacheUpdate<TransactionReadWithBalance[], TVariables>(
+      transactionsOptions.queryKey,
+      (transactions, variables) =>
+        transactions.map((transaction) =>
+          transaction.id === variables.path.transaction_id
+            ? { ...transaction, ...patch(variables) }
+            : transaction
+        )
+    )
+
   const invalidateTransactions = () => {
     queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
     queryClient.invalidateQueries({
@@ -124,7 +143,7 @@ function AccountTransactionPage() {
   // One mutation for the FAB's create and edit; `id` rides in the variables so
   // the cache update can tell them apart. A created row is inserted by instant
   // with the running balance it would have; the rows after it keep their old
-  // balance until the refetch. Edits are not predicted yet.
+  // balance until the refetch. An edit patches its row in place.
   const { mutate, isPending } = useOptimisticMutation(
     {
       mutationFn: async ({
@@ -158,8 +177,13 @@ function AccountTransactionPage() {
         TransactionReadWithBalance[],
         { body: TransactionCreate; id?: number }
       >(transactionsOptions.queryKey, (transactions, { body, id }) => {
-        if (id != null) return transactions
         const amount = String(body.amount)
+        if (id != null)
+          return transactions.map((transaction) =>
+            transaction.id === id
+              ? { ...transaction, ...body, amount }
+              : transaction
+          )
         const created_at = body.created_at ?? new Date().toISOString()
         const instant = Date.parse(created_at)
         let at = transactions.findIndex(
@@ -193,36 +217,59 @@ function AccountTransactionPage() {
     mutate({ body, id: editingTransaction?.id })
   }
 
-  const { mutate: postTransaction, isPending: isPosting } = useMutation({
-    ...postTransactionMutation(),
-    onSuccess: () => {
-      toast.add({ title: 'Transaction posted', type: 'success' })
-      invalidateTransactions()
-      setPostingTransaction(null)
-    },
-    meta: { errorMessage: 'Failed to post transaction' }
-  })
+  const { mutate: postTransaction, isPending: isPosting } =
+    useOptimisticMutation(
+      {
+        ...postTransactionMutation(),
+        onSuccess: () =>
+          toast.add({ title: 'Transaction posted', type: 'success' }),
+        meta: { errorMessage: 'Failed to post transaction' }
+      },
+      [
+        patchTransaction<Options<PostTransactionData>>(({ body }) => ({
+          posted_at: body.posted_at,
+          status: 'POSTED',
+          ...(body.amount != null && { amount: String(body.amount) })
+        })),
+        { queryKey: readEventsQueryKey() }
+      ]
+    )
 
-  const { mutate: billTransaction, isPending: isBilling } = useMutation({
-    ...billTransactionMutation(),
-    onSuccess: () => {
-      toast.add({ title: 'Transaction billed', type: 'success' })
-      invalidateTransactions()
-      setBillingTransaction(null)
-    },
-    meta: { errorMessage: 'Failed to bill transaction' }
-  })
+  const { mutate: billTransaction, isPending: isBilling } =
+    useOptimisticMutation(
+      {
+        ...billTransactionMutation(),
+        onSuccess: () =>
+          toast.add({ title: 'Transaction billed', type: 'success' }),
+        meta: { errorMessage: 'Failed to bill transaction' }
+      },
+      [
+        patchTransaction<Options<BillTransactionData>>(({ body }) => ({
+          statement_id: body.statement_id,
+          status: 'BILLED',
+          ...(body.amount != null && { amount: String(body.amount) })
+        })),
+        { queryKey: readEventsQueryKey() }
+      ]
+    )
 
   // Clearing takes no input beyond the moment it happened, so it fires
   // straight from the context menu like clearing an event does.
-  const { mutate: clearTransaction } = useMutation({
-    ...clearTransactionMutation(),
-    onSuccess: () => {
-      toast.add({ title: 'Transaction cleared', type: 'success' })
-      invalidateTransactions()
+  const { mutate: clearTransaction } = useOptimisticMutation(
+    {
+      ...clearTransactionMutation(),
+      onSuccess: () =>
+        toast.add({ title: 'Transaction cleared', type: 'success' }),
+      meta: { errorMessage: 'Failed to clear transaction' }
     },
-    meta: { errorMessage: 'Failed to clear transaction' }
-  })
+    [
+      patchTransaction<Options<ClearTransactionData>>(({ body }) => ({
+        cleared_at: body.cleared_at,
+        status: 'CLEARED'
+      })),
+      { queryKey: readEventsQueryKey() }
+    ]
+  )
 
   const { mutate: createEventFromTransaction, isPending: isCreatingEvent } =
     useMutation({
@@ -388,6 +435,7 @@ function AccountTransactionPage() {
         }}
         onSubmit={(body) => {
           if (postingTransaction == null) return
+          setPostingTransaction(null)
           postTransaction({
             path: { transaction_id: postingTransaction.id },
             body
@@ -409,6 +457,7 @@ function AccountTransactionPage() {
         }}
         onSubmit={(body) => {
           if (billingTransaction == null) return
+          setBillingTransaction(null)
           billTransaction({
             path: { transaction_id: billingTransaction.id },
             body

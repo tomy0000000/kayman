@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { type EventSheetState } from '@/components/event/event-sheet'
 import { toast } from '@/components/ui/toast'
 import {
+  type ClearEventData,
   type DeleteEventData,
   type EventCreate,
   type EventReadDetailed,
@@ -155,17 +156,25 @@ export function useEventActions(client: Client) {
       ]
     )
 
-  const { mutate: mutateClear, isPending: isClearPending } = useMutation({
-    ...clearEventMutation(),
-    onSuccess: () => {
-      toast.add({ title: 'Event cleared', type: 'success' })
-      setSheet((current) => ({ ...current, open: false }))
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
-    },
-    meta: { errorMessage: 'Failed to clear event' }
-  })
+  const { mutate: mutateClear, isPending: isClearPending } =
+    useOptimisticMutation(
+      {
+        ...clearEventMutation(),
+        onSuccess: () => toast.add({ title: 'Event cleared', type: 'success' }),
+        meta: { errorMessage: 'Failed to clear event' }
+      },
+      [
+        cacheUpdate<EventReadDetailed[], Options<ClearEventData>>(
+          readEventsQueryKey(),
+          (events, { path, body }) =>
+            events.map((event) =>
+              event.id === path.event_id
+                ? { ...event, cleared_at: body.cleared_at }
+                : event
+            )
+        )
+      ]
+    )
 
   const isFormOpen = sheet.open && sheet.state.mode !== 'view'
 
@@ -249,6 +258,7 @@ export function useEventActions(client: Client) {
       isClearPending,
       onClear: () => {
         if (!viewingEvent) return
+        setSheet((current) => ({ ...current, open: false }))
         mutateClear({
           path: { event_id: viewingEvent.id },
           body: { cleared_at: new Date().toISOString() }
