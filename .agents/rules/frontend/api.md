@@ -25,4 +25,14 @@ Why: the generated helpers erase the repeated queryFn/key/unwrap boilerplate and
 
 ## Enum values
 
-- Backend enums arrive as `SCREAMING_SNAKE_CASE` string unions (`'EXPENSE'`, `'CREDIT_CARD'`). Compare and store the raw value; never render it directly. Map it to a display label through a `{ value, label }` table in `lib/` (see `lib/account-types.ts`, `lib/event-types.ts`).
+- Enum values are `SCREAMING_SNAKE_CASE` strings. Never render one directly; map it through a `{ value, label }` table in `lib/` (`lib/account-types.ts`, `lib/event-types.ts`).
+
+## Optimistic updates
+
+Every mutation is optimistic, via the cache (TanStack guide: https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates).
+
+- Use `useOptimisticMutation` from `lib/optimistic.ts`, never a bare `useMutation`. Give it one `cacheUpdate` per query the change affects; `{ queryKey }` alone for queries that only need a refetch.
+- Exact query key when the prediction depends on the list variant; partial key when it applies to every variant.
+- Created rows get `id: PLACEHOLDER_ID`. Never act on a negative id.
+- Close sheets and dialogs when the mutation fires. Success toast in `onSuccess`. No per-mutation error toast; `main.tsx` reports via `meta.errorMessage`, and the rollback is the revert.
+- Reference: event deletion in `hooks/use-event-actions.ts`.

@@ -4,8 +4,10 @@ import { useMemo, useState } from 'react'
 import { type EventSheetState } from '@/components/event/event-sheet'
 import { toast } from '@/components/ui/toast'
 import {
+  type DeleteEventData,
   type EventCreate,
   type EventReadDetailed,
+  type Options,
   createEvent,
   updateEvent
 } from '@/lib/client'
@@ -25,6 +27,7 @@ import { type Client } from '@/lib/client/client'
 import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { syncEventEntries } from '@/lib/event-entries'
 import { hasEventChanges, syncEventTransactions } from '@/lib/events'
+import { cacheUpdate, useOptimisticMutation } from '@/lib/optimistic'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 
 // Everything a page listing events needs to act on a row: the create/edit
@@ -136,18 +139,21 @@ export function useEventActions(client: Client) {
     event: EventReadDetailed | null
   }>({ open: false, event: null })
 
-  const { mutate: mutateDelete, isPending: isDeletePending } = useMutation({
-    ...deleteEventMutation(),
-    onSuccess: () => {
-      toast.add({ title: 'Event deleted', type: 'success' })
-      setDeletion((current) => ({ ...current, open: false }))
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
-      queryClient.invalidateQueries({ queryKey: readTransactionsQueryKey() })
-    },
-    meta: { errorMessage: 'Failed to delete event' }
-  })
+  const { mutate: mutateDelete, isPending: isDeletePending } =
+    useOptimisticMutation(
+      {
+        ...deleteEventMutation(),
+        onSuccess: () => toast.add({ title: 'Event deleted', type: 'success' }),
+        meta: { errorMessage: 'Failed to delete event' }
+      },
+      [
+        cacheUpdate<EventReadDetailed[], Options<DeleteEventData>>(
+          readEventsQueryKey(),
+          (events, { path }) => events.filter((event) => event.id !== path.id)
+        ),
+        { queryKey: readTransactionsQueryKey() }
+      ]
+    )
 
   const { mutate: mutateClear, isPending: isClearPending } = useMutation({
     ...clearEventMutation(),
@@ -256,8 +262,11 @@ export function useEventActions(client: Client) {
         setDeletion((current) => ({ ...current, open })),
       event: deletion.event,
       isPending: isDeletePending,
-      onConfirm: () =>
-        deletion.event && mutateDelete({ path: { id: deletion.event.id } })
+      onConfirm: () => {
+        if (!deletion.event) return
+        setDeletion((current) => ({ ...current, open: false }))
+        mutateDelete({ path: { id: deletion.event.id } })
+      }
     }
   }
 }
