@@ -261,3 +261,13 @@ export function offsetMinutes(timeZone: string): number {
     Temporal.Now.zonedDateTimeISO(timeZone).offsetNanoseconds / 60_000_000_000
   )
 }
+
+export function addDecimals(a: string, b: string): string {
+  const scale = Math.max(decimalScale(a), decimalScale(b))
+  return (parseFloat(a) + parseFloat(b)).toFixed(scale)
+}
+
+function decimalScale(value: string): number {
+  const fraction = value.split('.')[1]
+  return fraction ? fraction.length : 0
+}

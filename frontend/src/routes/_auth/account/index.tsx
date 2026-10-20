@@ -8,7 +8,12 @@ import { CreateAccountFab } from '@/components/create-account-fab'
 import { DragHandle } from '@/components/drag-handle'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
-import { type AccountCreate, type AccountRead } from '@/lib/client'
+import {
+  type AccountCreate,
+  type AccountRead,
+  type CreateAccountData,
+  type Options
+} from '@/lib/client'
 import {
   createAccountMutation,
   readAccountsOptions,
@@ -17,6 +22,11 @@ import {
   updateAccountsMutation
 } from '@/lib/client/@tanstack/react-query.gen'
 import { REFERENCE_STALE_TIME } from '@/lib/constants'
+import {
+  PLACEHOLDER_ID,
+  cacheUpdate,
+  useOptimisticMutation
+} from '@/lib/optimistic'
 import { cn, formatCurrency } from '@/lib/utils'
 
 interface AccountRowProps {
@@ -49,15 +59,27 @@ function AccountListPage() {
     staleTime: REFERENCE_STALE_TIME
   })
 
-  const { mutate, isPending } = useMutation({
-    ...createAccountMutation(),
-    onSuccess: () => {
-      toast.add({ title: 'Account created', type: 'success' })
-      queryClient.invalidateQueries({ queryKey: readAccountsQueryKey() })
-      setFabOpen(false)
+  const { mutate, isPending } = useOptimisticMutation(
+    {
+      ...createAccountMutation(),
+      onSuccess: () => toast.add({ title: 'Account created', type: 'success' }),
+      meta: { errorMessage: 'Failed to create account' }
     },
-    meta: { errorMessage: 'Failed to create account' }
-  })
+    [
+      cacheUpdate<AccountRead[], Options<CreateAccountData>>(
+        readAccountsQueryKey(),
+        (accounts, { body }) => [
+          ...accounts,
+          {
+            ...body,
+            id: PLACEHOLDER_ID,
+            balance: '0',
+            created_at: new Date().toISOString()
+          }
+        ]
+      )
+    ]
+  )
 
   const { mutate: reorder } = useMutation({
     ...updateAccountsMutation(),
@@ -70,8 +92,10 @@ function AccountListPage() {
 
   // Appended, not left at the default 0, which would sort a new account above
   // every row a reorder has already given an index.
-  const createAccount = (body: AccountCreate) =>
+  const createAccount = (body: AccountCreate) => {
+    setFabOpen(false)
     mutate({ body: { ...body, index: accounts?.length ?? 0 } })
+  }
 
   // The drag reorders the cached list so the rows follow the pointer. Each row
   // still carries the index the server has, which is what the drop diffs
@@ -168,7 +192,10 @@ function AccountRow({ account, constraints, onDrop }: AccountRowProps) {
       dragConstraints={constraints}
       dragElastic={0}
       onDragEnd={onDrop}
-      className="bg-background relative -mx-4 flex items-center border-b"
+      className={cn(
+        'bg-background relative -mx-4 flex items-center border-b',
+        account.id < 0 && 'pointer-events-none opacity-50'
+      )}
     >
       <DragHandle dragControls={dragControls} className="px-2" />
       <Link

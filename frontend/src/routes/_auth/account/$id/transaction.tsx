@@ -39,8 +39,14 @@ import {
 import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { syncEventEntries } from '@/lib/event-entries'
 import { syncEventTransactions } from '@/lib/events'
+import {
+  PLACEHOLDER_ID,
+  cacheUpdate,
+  useOptimisticMutation
+} from '@/lib/optimistic'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 import {
+  addDecimals,
   formatCalendarDate,
   zonedCalendarDate,
   zonedDayRange
@@ -86,6 +92,26 @@ function AccountTransactionPage() {
     if (open) setSheetTransaction(null)
   }
 
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const start = dateRange?.from
+    ? zonedDayRange(dateRange.from, timezone).start
+    : null
+  const end = dateRange?.to ? zonedDayRange(dateRange.to, timezone).end : null
+
+  const { data: accounts } = useQuery({
+    ...readAccountsOptions(),
+    meta: { errorMessage: 'Failed to fetch accounts' }
+  })
+
+  // The page's account is just a row of the list the FAB already needs.
+  const account = accounts?.find((a) => a.id === accountId)
+
+  // The exact list this page shows, so predictions land in the right variant.
+  const transactionsOptions = readAccountTransactionsWithRunningBalanceOptions({
+    path: { account_id: accountId },
+    query: { start, end }
+  })
+
   const invalidateTransactions = () => {
     queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
     queryClient.invalidateQueries({
@@ -95,29 +121,77 @@ function AccountTransactionPage() {
     })
   }
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (body: TransactionCreate) => {
-      const { data } = editingTransaction
-        ? await updateTransactions({
-            client,
-            body: [{ ...body, id: editingTransaction.id }],
-            throwOnError: true
-          })
-        : await createTransaction({ client, body, throwOnError: true })
-      return data
+  // One mutation for the FAB's create and edit; `id` rides in the variables so
+  // the cache update can tell them apart. A created row is inserted by instant
+  // with the running balance it would have; the rows after it keep their old
+  // balance until the refetch. Edits are not predicted yet.
+  const { mutate, isPending } = useOptimisticMutation(
+    {
+      mutationFn: async ({
+        body,
+        id
+      }: {
+        body: TransactionCreate
+        id?: number
+      }) => {
+        const { data } =
+          id != null
+            ? await updateTransactions({
+                client,
+                body: [{ ...body, id }],
+                throwOnError: true
+              })
+            : await createTransaction({ client, body, throwOnError: true })
+        return data
+      },
+      onSuccess: (_data, { id }) =>
+        toast.add({
+          title: `Transaction ${id != null ? 'updated' : 'created'}`,
+          type: 'success'
+        }),
+      meta: {
+        errorMessage: `Failed to ${editingTransaction ? 'update' : 'create'} transaction`
+      }
     },
-    onSuccess: () => {
-      toast.add({
-        title: `Transaction ${editingTransaction ? 'updated' : 'created'}`,
-        type: 'success'
-      })
-      invalidateTransactions()
-      setFabOpen(false)
-    },
-    meta: {
-      errorMessage: `Failed to ${editingTransaction ? 'update' : 'create'} transaction`
-    }
-  })
+    [
+      cacheUpdate<
+        TransactionReadWithBalance[],
+        { body: TransactionCreate; id?: number }
+      >(transactionsOptions.queryKey, (transactions, { body, id }) => {
+        if (id != null) return transactions
+        const amount = String(body.amount)
+        const created_at = body.created_at ?? new Date().toISOString()
+        const instant = Date.parse(created_at)
+        let at = transactions.findIndex(
+          (transaction) => Date.parse(transaction.created_at) > instant
+        )
+        if (at === -1) at = transactions.length
+        const previous = transactions[at - 1]?.running_balance ?? '0'
+        const placeholder: TransactionReadWithBalance = {
+          ...body,
+          id: PLACEHOLDER_ID,
+          amount,
+          created_at,
+          currency_code: account?.currency_code ?? '',
+          event: null,
+          tags: [],
+          running_balance: addDecimals(previous, amount),
+          status: 'PENDING'
+        }
+        return [
+          ...transactions.slice(0, at),
+          placeholder,
+          ...transactions.slice(at)
+        ]
+      }),
+      { queryKey: readEventsQueryKey() }
+    ]
+  )
+
+  const saveTransaction = (body: TransactionCreate) => {
+    setFabOpen(false)
+    mutate({ body, id: editingTransaction?.id })
+  }
 
   const { mutate: postTransaction, isPending: isPosting } = useMutation({
     ...postTransactionMutation(),
@@ -194,20 +268,6 @@ function AccountTransactionPage() {
       meta: { errorMessage: 'Failed to create event' }
     })
 
-  const [dateRange, setDateRange] = useState<DateRange | undefined>()
-  const start = dateRange?.from
-    ? zonedDayRange(dateRange.from, timezone).start
-    : null
-  const end = dateRange?.to ? zonedDayRange(dateRange.to, timezone).end : null
-
-  const { data: accounts } = useQuery({
-    ...readAccountsOptions(),
-    meta: { errorMessage: 'Failed to fetch accounts' }
-  })
-
-  // The page's account is just a row of the list the FAB already needs.
-  const account = accounts?.find((a) => a.id === accountId)
-
   // Backs the FAB's event field, so only fetched once the sheet opens.
   const { data: events } = useQuery({
     ...readEventsOptions(),
@@ -242,10 +302,7 @@ function AccountTransactionPage() {
   })
 
   const { isPending: isTransactionsPending, data: transactions } = useQuery({
-    ...readAccountTransactionsWithRunningBalanceOptions({
-      path: { account_id: accountId },
-      query: { start, end }
-    }),
+    ...transactionsOptions,
     meta: { errorMessage: 'Failed to fetch transactions' }
   })
 
@@ -315,7 +372,7 @@ function AccountTransactionPage() {
         onOpenChange={handleFabOpenChange}
         editingTransaction={editingTransaction}
         seedTransaction={seedTransaction}
-        onSubmit={mutate}
+        onSubmit={saveTransaction}
         isPending={isPending}
       />
 

@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/table'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { type TransactionReadWithBalance } from '@/lib/client'
-import { formatCurrency, formatDate, formatTime } from '@/lib/utils'
+import { cn, formatCurrency, formatDate, formatTime } from '@/lib/utils'
 
 interface TransactionsTableProps {
   transactions: TransactionReadWithBalance[] | undefined
@@ -162,7 +162,11 @@ export function TransactionsTable({
             table.getRowModel().rows.map((row) => (
               <ContextMenu key={row.id}>
                 <ContextMenuTrigger asChild>
-                  <TableRow>
+                  <TableRow
+                    className={cn(
+                      row.original.id < 0 && 'pointer-events-none opacity-50'
+                    )}
+                  >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(

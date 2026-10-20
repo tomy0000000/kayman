@@ -1,11 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { CreateStatementFab } from '@/components/statement/create-statement-fab'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
-import { type StatementRead } from '@/lib/client'
+import {
+  type CreateStatementData,
+  type Options,
+  type StatementRead
+} from '@/lib/client'
 import {
   createStatementMutation,
   readAccountsOptions,
@@ -14,7 +18,17 @@ import {
   readStatementsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
 import { REFERENCE_STALE_TIME } from '@/lib/constants'
-import { formatCurrency, formatPlainDate } from '@/lib/utils'
+import {
+  PLACEHOLDER_ID,
+  cacheUpdate,
+  useOptimisticMutation
+} from '@/lib/optimistic'
+import {
+  cn,
+  formatCalendarDate,
+  formatCurrency,
+  formatPlainDate
+} from '@/lib/utils'
 
 interface StatementRowProps {
   statement: StatementRead
@@ -31,7 +45,6 @@ export const Route = createFileRoute('/_auth/account/$id/statement')({
 function AccountStatementPage() {
   const { id } = Route.useParams()
   const accountId = Number(id)
-  const queryClient = useQueryClient()
 
   const [fabOpen, setFabOpen] = useState(false)
 
@@ -52,15 +65,28 @@ function AccountStatementPage() {
     staleTime: REFERENCE_STALE_TIME
   })
 
-  const { mutate, isPending: isCreating } = useMutation({
-    ...createStatementMutation(),
-    onSuccess: () => {
-      toast.add({ title: 'Statement created', type: 'success' })
-      queryClient.invalidateQueries({ queryKey: readStatementsQueryKey() })
-      setFabOpen(false)
+  const { mutate, isPending: isCreating } = useOptimisticMutation(
+    {
+      ...createStatementMutation(),
+      onSuccess: () =>
+        toast.add({ title: 'Statement created', type: 'success' }),
+      meta: { errorMessage: 'Failed to create statement' }
     },
-    meta: { errorMessage: 'Failed to create statement' }
-  })
+    [
+      cacheUpdate<StatementRead[], Options<CreateStatementData>>(
+        readStatementsQueryKey({ query: { account_id: accountId } }),
+        (statements, { body }) => [
+          ...statements,
+          {
+            ...body,
+            id: PLACEHOLDER_ID,
+            balance: String(body.balance),
+            created_on: body.created_on ?? formatCalendarDate(new Date())
+          }
+        ]
+      )
+    ]
+  )
 
   if (isAccountsPending || isStatementsPending) return <StatementsSkeleton />
 
@@ -102,7 +128,10 @@ function AccountStatementPage() {
         statements={ordered}
         open={fabOpen}
         onOpenChange={setFabOpen}
-        onSubmit={(body) => mutate({ body })}
+        onSubmit={(body) => {
+          setFabOpen(false)
+          mutate({ body })
+        }}
         isPending={isCreating}
       />
     </>
@@ -111,7 +140,12 @@ function AccountStatementPage() {
 
 function StatementRow({ statement, currencyCode }: StatementRowProps) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b py-3">
+    <div
+      className={cn(
+        'flex items-baseline justify-between gap-4 border-b py-3',
+        statement.id < 0 && 'pointer-events-none opacity-50'
+      )}
+    >
       <div className="min-w-0">
         <div className="truncate font-medium">
           {formatPlainDate(statement.period_start_on)} –{' '}
