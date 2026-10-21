@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type QueryKey, useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
 import { type EventSheetState } from '@/components/event/event-sheet'
@@ -27,17 +27,31 @@ import {
 import { type Client } from '@/lib/client/client'
 import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { syncEventEntries } from '@/lib/event-entries'
-import { hasEventChanges, syncEventTransactions } from '@/lib/events'
+import {
+  hasEventChanges,
+  predictEvent,
+  syncEventTransactions
+} from '@/lib/events'
 import { cacheUpdate, useOptimisticMutation } from '@/lib/optimistic'
-import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
+import {
+  type EventEntryPayload,
+  type EventSubmit,
+  type TransactionPayload
+} from '@/lib/types'
+
+interface UseEventActionsOptions {
+  // Exact key of the list on screen; without it a create only refetches.
+  listQueryKey?: QueryKey
+}
 
 // Everything a page listing events needs to act on a row: the create/edit
 // sheet, the delete confirmation, and the reference data both of them read.
 // Routes still own the rendering (and what a page shows around it), they just
 // share this wiring instead of repeating it.
-export function useEventActions(client: Client) {
-  const queryClient = useQueryClient()
-
+export function useEventActions(
+  client: Client,
+  { listQueryKey }: UseEventActionsOptions = {}
+) {
   // The state outlives `open` so the sheet keeps its body while closing.
   const [sheet, setSheet] = useState<{
     open: boolean
@@ -72,67 +86,101 @@ export function useEventActions(client: Client) {
 
   const viewingEvent = sheetState.mode === 'view' ? sheetState.event : null
 
-  const { mutate, isPending: isMutationPending } = useMutation({
-    mutationFn: async ({
-      body,
-      transactions,
-      entries
-    }: {
-      body: EventCreate
-      transactions: TransactionPayload[]
-      entries: EventEntryPayload[]
-    }) => {
-      let event: { id: number }
-      if (!editingEvent) {
-        const { data } = await createEvent({ client, body, throwOnError: true })
-        event = data
-      } else if (hasEventChanges(body, editingEvent)) {
-        const { data } = await updateEvent({
-          client,
-          path: { event_id: editingEvent.id },
-          body,
-          throwOnError: true
-        })
-        event = data
-      } else {
-        // Only the transactions or entries changed, so the event needs no patch.
-        event = editingEvent
-      }
-
-      await syncEventTransactions({
-        client,
-        eventId: event.id,
-        transactions,
-        previousTransactions: editingEvent?.transactions ?? [],
-        createdAt: body.timestamp
-      })
-
-      await syncEventEntries({
-        client,
-        eventId: event.id,
-        entries,
-        previousEntries: editingEvent?.entries ?? []
-      })
-
-      return event
-    },
-    onSuccess: () => {
-      toast.add({
-        title: `Event ${editingEvent ? 'updated' : 'created'}`,
-        type: 'success'
-      })
-      setSheet((current) => ({ ...current, open: false }))
-    },
-    // Settled, not success: the submit spans several calls, so a failure partway
-    // can still have deleted or changed rows the table is now showing stale.
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
-      queryClient.invalidateQueries({ queryKey: readTransactionsQueryKey() })
-    },
-    meta: {
-      errorMessage: `Failed to ${editingEvent ? 'update' : 'create'} event`
-    }
+  const { data: accounts } = useQuery({
+    ...readAccountsOptions(),
+    enabled: sheet.open
   })
+
+  const { mutate, isPending: isMutationPending } = useOptimisticMutation(
+    {
+      mutationFn: async ({ body, transactions, entries }: EventSubmit) => {
+        let event: { id: number }
+        if (!editingEvent) {
+          const { data } = await createEvent({
+            client,
+            body,
+            throwOnError: true
+          })
+          event = data
+        } else if (hasEventChanges(body, editingEvent)) {
+          const { data } = await updateEvent({
+            client,
+            path: { event_id: editingEvent.id },
+            body,
+            throwOnError: true
+          })
+          event = data
+        } else {
+          // Only the transactions or entries changed, so the event needs no patch.
+          event = editingEvent
+        }
+
+        await syncEventTransactions({
+          client,
+          eventId: event.id,
+          transactions,
+          previousTransactions: editingEvent?.transactions ?? [],
+          createdAt: body.timestamp
+        })
+
+        await syncEventEntries({
+          client,
+          eventId: event.id,
+          entries,
+          previousEntries: editingEvent?.entries ?? []
+        })
+
+        return event
+      },
+      onSuccess: () =>
+        toast.add({
+          title: `Event ${editingEvent ? 'updated' : 'created'}`,
+          type: 'success'
+        }),
+      meta: {
+        errorMessage: `Failed to ${editingEvent ? 'update' : 'create'} event`
+      }
+    },
+    [
+      editingEvent
+        ? cacheUpdate<EventReadDetailed[], EventSubmit>(
+            readEventsQueryKey(),
+            (events, { body, transactions, entries }) =>
+              events.map((event) =>
+                event.id === editingEvent.id
+                  ? predictEvent(
+                      body,
+                      transactions,
+                      entries,
+                      accounts ?? [],
+                      event
+                    )
+                  : event
+              )
+          )
+        : listQueryKey
+          ? cacheUpdate<EventReadDetailed[], EventSubmit>(
+              listQueryKey,
+              (events, { body, transactions, entries }) => {
+                const created = predictEvent(
+                  body,
+                  transactions,
+                  entries,
+                  accounts ?? []
+                )
+                const instant = Date.parse(body.timestamp)
+                let at = events.findIndex(
+                  (event) => Date.parse(event.timestamp) > instant
+                )
+                if (at === -1) at = events.length
+                return [...events.slice(0, at), created, ...events.slice(at)]
+              }
+            )
+          : { queryKey: readEventsQueryKey() },
+      { queryKey: readEventsQueryKey() },
+      { queryKey: readTransactionsQueryKey() }
+    ]
+  )
 
   // The event outlives `open` so the dialog keeps its body while closing.
   const [deletion, setDeletion] = useState<{
@@ -177,11 +225,6 @@ export function useEventActions(client: Client) {
     )
 
   const isFormOpen = sheet.open && sheet.state.mode !== 'view'
-
-  const { data: accounts } = useQuery({
-    ...readAccountsOptions(),
-    enabled: sheet.open
-  })
 
   const { data: currencies } = useQuery({
     ...readCurrenciesOptions(),
@@ -249,7 +292,10 @@ export function useEventActions(client: Client) {
         body: EventCreate,
         transactions: TransactionPayload[],
         entries: EventEntryPayload[]
-      ) => mutate({ body, transactions, entries }),
+      ) => {
+        setSheet((current) => ({ ...current, open: false }))
+        mutate({ body, transactions, entries })
+      },
       isPending: isMutationPending,
       clearErrors: viewingEvent
         ? (clearable?.[viewingEvent.id]?.errors ?? [])

@@ -1,4 +1,5 @@
 import {
+  type AccountRead,
   type EventCreate,
   type EventReadDetailed,
   type TransactionRead,
@@ -6,7 +7,8 @@ import {
   updateTransactions
 } from '@/lib/client'
 import { type Client } from '@/lib/client/client'
-import { type TransactionPayload } from '@/lib/types'
+import { PLACEHOLDER_ID } from '@/lib/optimistic'
+import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
 
 interface SyncEventTransactionsOptions {
   client: Client
@@ -105,5 +107,53 @@ export async function syncEventTransactions({
       },
       throwOnError: true
     })
+  }
+}
+
+// The cached event once the submit succeeds; rows of `base` keep their server
+// fields where the payload still carries their id.
+export function predictEvent(
+  body: EventCreate,
+  transactions: TransactionPayload[],
+  entries: EventEntryPayload[],
+  accounts: AccountRead[],
+  base?: EventReadDetailed
+): EventReadDetailed {
+  const id = base?.id ?? PLACEHOLDER_ID
+  return {
+    ...base,
+    ...body,
+    id,
+    cleared_at: base?.cleared_at ?? null,
+    transactions: transactions.map((payload, index) => {
+      const existing = base?.transactions.find(({ id }) => id === payload.id)
+      return {
+        ...(existing ?? {
+          id: PLACEHOLDER_ID - index,
+          created_at: body.timestamp,
+          currency_code:
+            accounts.find(({ id }) => id === payload.account_id)
+              ?.currency_code ?? '',
+          event: null,
+          status: 'PENDING' as const
+        }),
+        event_id: id,
+        account_id: payload.account_id,
+        amount: payload.amount,
+        index: payload.index
+      }
+    }),
+    entries: entries.map((payload, index) => ({
+      ...(base?.entries.find(({ id }) => id === payload.id) ?? {
+        id: PLACEHOLDER_ID - index
+      }),
+      event_id: id,
+      category_id: payload.category_id,
+      amount: payload.amount,
+      quantity: payload.quantity,
+      currency_code: payload.currency_code,
+      description: payload.description,
+      index: payload.index
+    }))
   }
 }

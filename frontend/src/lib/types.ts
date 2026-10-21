@@ -1,6 +1,7 @@
 import type {
   CategoryRead,
   CategoryReadWithChildren,
+  EventCreate,
   EventEntryRead
 } from '@/lib/client'
 
@@ -56,6 +57,12 @@ export type EventEntryPayload = {
   currency_code: string
   description: string | null
   index: number
+}
+
+export type EventSubmit = {
+  body: EventCreate
+  transactions: TransactionPayload[]
+  entries: EventEntryPayload[]
 }
 
 let componentKeyCount = 0

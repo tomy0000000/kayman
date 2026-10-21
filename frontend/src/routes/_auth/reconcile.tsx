@@ -16,13 +16,15 @@ export const Route = createFileRoute('/_auth/reconcile')({
 
 function ReconcilePage() {
   const { client } = Route.useRouteContext()
-  const { categoryNames, tableHandlers, sheetProps, deleteDialogProps } =
-    useEventActions(client)
-
   // Every event still waiting to be reconciled, with no date bound: the
   // backlog is the point of the page.
+  const eventsOptions = readEventsOptions({ query: { cleared_at: 'empty' } })
+
+  const { categoryNames, tableHandlers, sheetProps, deleteDialogProps } =
+    useEventActions(client, { listQueryKey: eventsOptions.queryKey })
+
   const { isPending, data: events } = useQuery({
-    ...readEventsOptions({ query: { cleared_at: 'empty' } }),
+    ...eventsOptions,
     meta: { errorMessage: 'Failed to fetch events' }
   })
 

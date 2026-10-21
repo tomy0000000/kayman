@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { type DateRange } from 'react-day-picker'
@@ -17,7 +17,6 @@ import { useEventActions } from '@/hooks/use-event-actions'
 import {
   type BillTransactionData,
   type ClearTransactionData,
-  type EventCreate,
   type Options,
   type PostTransactionData,
   type TransactionCreate,
@@ -48,13 +47,18 @@ import {
   cacheUpdate,
   useOptimisticMutation
 } from '@/lib/optimistic'
-import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
+import { type EventSubmit } from '@/lib/types'
 import {
   addDecimals,
   formatCalendarDate,
   zonedCalendarDate,
   zonedDayRange
 } from '@/lib/utils'
+
+interface TransactionSave {
+  body: TransactionCreate
+  id?: number
+}
 
 export const Route = createFileRoute('/_auth/account/$id/transaction')({
   head: () => ({
@@ -67,7 +71,6 @@ function AccountTransactionPage() {
   const { client } = Route.useRouteContext()
   const { id } = Route.useParams()
   const accountId = Number(id)
-  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { timezone } = useClientTimezone()
 
@@ -131,28 +134,13 @@ function AccountTransactionPage() {
         )
     )
 
-  const invalidateTransactions = () => {
-    queryClient.invalidateQueries({ queryKey: readEventsQueryKey() })
-    queryClient.invalidateQueries({
-      queryKey: readAccountTransactionsWithRunningBalanceQueryKey({
-        path: { account_id: accountId }
-      })
-    })
-  }
-
   // One mutation for the FAB's create and edit; `id` rides in the variables so
   // the cache update can tell them apart. A created row is inserted by instant
   // with the running balance it would have; the rows after it keep their old
   // balance until the refetch. An edit patches its row in place.
   const { mutate, isPending } = useOptimisticMutation(
     {
-      mutationFn: async ({
-        body,
-        id
-      }: {
-        body: TransactionCreate
-        id?: number
-      }) => {
+      mutationFn: async ({ body, id }: TransactionSave) => {
         const { data } =
           id != null
             ? await updateTransactions({
@@ -173,41 +161,41 @@ function AccountTransactionPage() {
       }
     },
     [
-      cacheUpdate<
-        TransactionReadWithBalance[],
-        { body: TransactionCreate; id?: number }
-      >(transactionsOptions.queryKey, (transactions, { body, id }) => {
-        const amount = String(body.amount)
-        if (id != null)
-          return transactions.map((transaction) =>
-            transaction.id === id
-              ? { ...transaction, ...body, amount }
-              : transaction
+      cacheUpdate<TransactionReadWithBalance[], TransactionSave>(
+        transactionsOptions.queryKey,
+        (transactions, { body, id }) => {
+          const amount = String(body.amount)
+          if (id != null)
+            return transactions.map((transaction) =>
+              transaction.id === id
+                ? { ...transaction, ...body, amount }
+                : transaction
+            )
+          const created_at = body.created_at ?? new Date().toISOString()
+          const instant = Date.parse(created_at)
+          let at = transactions.findIndex(
+            (transaction) => Date.parse(transaction.created_at) > instant
           )
-        const created_at = body.created_at ?? new Date().toISOString()
-        const instant = Date.parse(created_at)
-        let at = transactions.findIndex(
-          (transaction) => Date.parse(transaction.created_at) > instant
-        )
-        if (at === -1) at = transactions.length
-        const previous = transactions[at - 1]?.running_balance ?? '0'
-        const placeholder: TransactionReadWithBalance = {
-          ...body,
-          id: PLACEHOLDER_ID,
-          amount,
-          created_at,
-          currency_code: account?.currency_code ?? '',
-          event: null,
-          tags: [],
-          running_balance: addDecimals(previous, amount),
-          status: 'PENDING'
+          if (at === -1) at = transactions.length
+          const previous = transactions[at - 1]?.running_balance ?? '0'
+          const placeholder: TransactionReadWithBalance = {
+            ...body,
+            id: PLACEHOLDER_ID,
+            amount,
+            created_at,
+            currency_code: account?.currency_code ?? '',
+            event: null,
+            tags: [],
+            running_balance: addDecimals(previous, amount),
+            status: 'PENDING'
+          }
+          return [
+            ...transactions.slice(0, at),
+            placeholder,
+            ...transactions.slice(at)
+          ]
         }
-        return [
-          ...transactions.slice(0, at),
-          placeholder,
-          ...transactions.slice(at)
-        ]
-      }),
+      ),
       { queryKey: readEventsQueryKey() }
     ]
   )
@@ -272,48 +260,56 @@ function AccountTransactionPage() {
   )
 
   const { mutate: createEventFromTransaction, isPending: isCreatingEvent } =
-    useMutation({
-      mutationFn: async ({
-        body,
-        transactions,
-        entries
-      }: {
-        body: EventCreate
-        transactions: TransactionPayload[]
-        entries: EventEntryPayload[]
-      }) => {
-        const { data: event } = await createEvent({
-          client,
-          body,
-          throwOnError: true
-        })
+    useOptimisticMutation(
+      {
+        mutationFn: async ({ body, transactions, entries }: EventSubmit) => {
+          const { data: event } = await createEvent({
+            client,
+            body,
+            throwOnError: true
+          })
 
-        await syncEventTransactions({
-          client,
-          eventId: event.id,
-          transactions,
-          previousTransactions: [],
-          createdAt: body.timestamp
-        })
+          await syncEventTransactions({
+            client,
+            eventId: event.id,
+            transactions,
+            previousTransactions: [],
+            createdAt: body.timestamp
+          })
 
-        await syncEventEntries({
-          client,
-          eventId: event.id,
-          entries,
-          previousEntries: []
-        })
+          await syncEventEntries({
+            client,
+            eventId: event.id,
+            entries,
+            previousEntries: []
+          })
 
-        return event
+          return event
+        },
+        onSuccess: () => toast.add({ title: 'Event created', type: 'success' }),
+        meta: { errorMessage: 'Failed to create event' }
       },
-      onSuccess: () => {
-        toast.add({ title: 'Event created', type: 'success' })
-        setCreatingEventTransaction(null)
-      },
-      // Settled, not success: the submit spans several calls, so a failure
-      // partway can still have created rows the table is not showing yet.
-      onSettled: invalidateTransactions,
-      meta: { errorMessage: 'Failed to create event' }
-    })
+      [
+        cacheUpdate<TransactionReadWithBalance[], EventSubmit>(
+          transactionsOptions.queryKey,
+          (rows, { body, transactions }) => {
+            const linked = new Set(transactions.map(({ id }) => id))
+            const event = { ...body, id: PLACEHOLDER_ID, cleared_at: null }
+            return rows.map((row) =>
+              linked.has(row.id)
+                ? { ...row, event_id: PLACEHOLDER_ID, event }
+                : row
+            )
+          }
+        ),
+        { queryKey: readEventsQueryKey() },
+        {
+          queryKey: readAccountTransactionsWithRunningBalanceQueryKey({
+            path: { account_id: accountId }
+          })
+        }
+      ]
+    )
 
   // Backs the FAB's event field, so only fetched once the sheet opens.
   const { data: events } = useQuery({
@@ -477,9 +473,10 @@ function AccountTransactionPage() {
         onOpenChange={(open) => {
           if (!open) setCreatingEventTransaction(null)
         }}
-        onSubmit={(body, transactions, entries) =>
+        onSubmit={(body, transactions, entries) => {
+          setCreatingEventTransaction(null)
           createEventFromTransaction({ body, transactions, entries })
-        }
+        }}
         isPending={isCreatingEvent}
       />
 

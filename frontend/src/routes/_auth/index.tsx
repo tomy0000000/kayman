@@ -10,7 +10,10 @@ import { Fab } from '@/components/fab'
 import { ResponsiveCalendar } from '@/components/responsive-calendar'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { useEventActions } from '@/hooks/use-event-actions'
-import { readEventsOptions } from '@/lib/client/@tanstack/react-query.gen'
+import {
+  readEventsOptions,
+  readEventsQueryKey
+} from '@/lib/client/@tanstack/react-query.gen'
 import {
   formatCalendarDate,
   parseLocalDate,
@@ -60,7 +63,9 @@ function HomePage() {
     tableHandlers,
     sheetProps,
     deleteDialogProps
-  } = useEventActions(client)
+  } = useEventActions(client, {
+    listQueryKey: readEventsQueryKey({ query: dayRange ?? gridRange })
+  })
 
   // Two separate reads: the grid query only feeds the calendar's dots, so it
   // stays out of the table's loading path and keeps showing the previous
