@@ -74,6 +74,32 @@ def reads(
     )
 
 
+@txn_router.post(
+    "/bill", name="Bill Transactions", response_model=list[TransactionRead]
+)
+def bills(
+    *, session: Session = Depends(get_session), bills: Sequence[TransactionBill]
+) -> Sequence[TransactionBase]:
+    try:
+        validate_transactions_billable(session, bills)
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=err.args[0]) from err
+    updates = []
+    for bill in bills:
+        update = TransactionStatusUpdate(
+            id=bill.transaction_id,
+            statement_id=bill.statement_id,
+        )
+        # None would null the column on update.
+        if bill.amount is not None:
+            update.amount = bill.amount
+        updates.append(update)
+    try:
+        return update_transactions_with_balances(session, updates)
+    except ValueError as err:
+        raise HTTPException(status_code=404, detail=err.args[0]) from err
+
+
 @txn_router.patch(
     "/{transaction_id}/posted",
     name="Post Transaction",
