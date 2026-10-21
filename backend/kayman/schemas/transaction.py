@@ -93,7 +93,13 @@ class TransactionPost(SQLModel):
     amount: Decimal | None = None
 
 
+class TransactionBillLegacy(SQLModel):
+    statement_id: int
+    amount: Decimal | None = None
+
+
 class TransactionBill(SQLModel):
+    transaction_id: int
     statement_id: int
     amount: Decimal | None = None
 

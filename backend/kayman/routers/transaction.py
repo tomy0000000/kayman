@@ -11,12 +11,13 @@ from kayman.crud.transaction import create_transactions, read_transactions
 from kayman.logics.account import update_balances_with_transactions
 from kayman.logics.transaction import (
     update_transactions_with_balances,
-    validate_transaction_billable,
     validate_transaction_clearable,
+    validate_transactions_billable,
 )
 from kayman.schemas.transaction import (
     TransactionBase,
     TransactionBill,
+    TransactionBillLegacy,
     TransactionClear,
     TransactionCreate,
     TransactionPost,
@@ -103,10 +104,13 @@ def bill(
     *,
     session: Session = Depends(get_session),
     transaction_id: int,
-    data: TransactionBill,
+    data: TransactionBillLegacy,
 ) -> TransactionBase:
     try:
-        validate_transaction_billable(session, transaction_id, data.statement_id)
+        validate_transactions_billable(
+            session,
+            [TransactionBill(transaction_id=transaction_id, **data.model_dump())],
+        )
     except ValueError as err:
         raise HTTPException(status_code=400, detail=err.args[0]) from err
     update = TransactionStatusUpdate(

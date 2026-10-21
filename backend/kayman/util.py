@@ -1,6 +1,6 @@
 import logging
 import sys
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Collection
 from contextlib import asynccontextmanager
 from datetime import datetime
 from types import FrameType
@@ -109,6 +109,10 @@ def handle_special_types(obj: Any) -> Any:
     if isinstance(obj, ZoneInfo):
         return str(obj)
     return str(obj)  # Not sure if this is a good idea, but we'll see
+
+
+def format_ids(ids: Collection[int]) -> str:
+    return "{" + ", ".join(str(i) for i in sorted(ids)) + "}"
 
 
 class KustomJSONResponse(JSONResponse):

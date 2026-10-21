@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
@@ -10,9 +10,11 @@ from kayman.crud.statement import read_statements
 from kayman.crud.transaction import read_transactions, update_transactions
 from kayman.schemas.transaction import (
     Transaction,
+    TransactionBill,
     TransactionReadWithBalance,
     TransactionUpdate,
 )
+from kayman.util import format_ids
 
 
 def get_transactions_with_running_balance(
@@ -54,25 +56,59 @@ def validate_transaction_clearable(session: Session, transaction_id: int) -> Non
         raise ValueError(f"Transaction {transaction_id} has no associated event")
 
 
-def validate_transaction_billable(
-    session: Session, transaction_id: int, statement_id: int
+def validate_transactions_billable(
+    session: Session, bills: Sequence[TransactionBill]
 ) -> None:
-    txns = read_transactions(session, transaction_ids=[transaction_id])
-    if len(txns) != 1:
-        raise ValueError(f"Transaction id(s) not found: {{{transaction_id}}}")
-    txn = txns[0]
-    if (
-        txn.posted_at is None
-        or txn.statement_id is not None
-        or txn.cleared_at is not None
-    ):
-        raise ValueError(f"Transaction {transaction_id} is not posted")
-    statements = read_statements(session, statement_ids=[statement_id])
-    if len(statements) != 1:
-        raise ValueError(f"Statement id(s) not found: {{{statement_id}}}")
-    if statements[0].account_id != txn.account_id:
+    # Must precede any read: read_transactions treats an empty id list as "all".
+    if not bills:
+        raise ValueError("No transactions to bill")
+    transaction_ids = [bill.transaction_id for bill in bills]
+    duplicates = {i for i, n in Counter(transaction_ids).items() if n > 1}
+    if duplicates:
+        raise ValueError(f"Duplicate transaction id(s): {format_ids(duplicates)}")
+
+    txns = {
+        txn.id: txn
+        for txn in read_transactions(session, transaction_ids=transaction_ids)
+        if txn.id is not None
+    }
+    missing_ids = set(transaction_ids) - txns.keys()
+    if missing_ids:
+        raise ValueError(f"Transaction id(s) not found: {format_ids(missing_ids)}")
+    not_posted = {
+        txn.id
+        for txn in txns.values()
+        if txn.id is not None
+        and (
+            txn.posted_at is None
+            or txn.statement_id is not None
+            or txn.cleared_at is not None
+        )
+    }
+    if not_posted:
+        raise ValueError(f"Transaction id(s) not posted: {format_ids(not_posted)}")
+
+    statement_ids = {bill.statement_id for bill in bills}
+    statements = {
+        statement.id: statement
+        for statement in read_statements(session, statement_ids=statement_ids)
+        if statement.id is not None
+    }
+    missing_statement_ids = statement_ids - statements.keys()
+    if missing_statement_ids:
         raise ValueError(
-            f"Statement {statement_id} does not belong to the transaction's account"
+            f"Statement id(s) not found: {format_ids(missing_statement_ids)}"
+        )
+    other_account = {
+        bill.transaction_id
+        for bill in bills
+        if txns[bill.transaction_id].account_id
+        != statements[bill.statement_id].account_id
+    }
+    if other_account:
+        raise ValueError(
+            "Statement does not belong to the account of "
+            f"transaction id(s): {format_ids(other_account)}"
         )
 
 

@@ -1,3 +1,4 @@
+import re
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -9,11 +10,12 @@ from kayman.logics.transaction import (
     _calculate_account_deltas,
     get_transactions_with_running_balance,
     update_transactions_with_balances,
-    validate_transaction_billable,
     validate_transaction_clearable,
+    validate_transactions_billable,
 )
 from kayman.schemas.transaction import (
     Transaction,
+    TransactionBill,
     TransactionStatusUpdate,
     TransactionUpdate,
 )
@@ -281,15 +283,85 @@ def test_validate_transaction_clearable_missing_id(session: Session):
         validate_transaction_clearable(session, 999)
 
 
-def test_validate_transaction_billable_passes(session: Session):
-    txn = TransactionFactory(cleared_at=None)
-    statement = StatementFactory(account=txn.account)
+def test_validate_transactions_billable_passes(session: Session):
+    statement = StatementFactory()
+    txns = [
+        TransactionFactory(account=statement.account, cleared_at=None) for _ in range(3)
+    ]
 
-    assert validate_transaction_billable(session, txn.id, statement.id) is None
+    assert (
+        validate_transactions_billable(
+            session,
+            [
+                TransactionBill(transaction_id=t.id, statement_id=statement.id)
+                for t in txns
+            ],
+        )
+        is None
+    )
+
+
+def test_validate_transactions_billable_passes_across_statements(session: Session):
+    statement_a = StatementFactory()
+    statement_b = StatementFactory()
+    txn_a = TransactionFactory(account=statement_a.account, cleared_at=None)
+    txn_b = TransactionFactory(account=statement_b.account, cleared_at=None)
+
+    assert (
+        validate_transactions_billable(
+            session,
+            [
+                TransactionBill(transaction_id=txn_a.id, statement_id=statement_a.id),
+                TransactionBill(transaction_id=txn_b.id, statement_id=statement_b.id),
+            ],
+        )
+        is None
+    )
+
+
+def test_validate_transactions_billable_empty(session: Session):
+    with pytest.raises(ValueError, match=re.escape("No transactions to bill")):
+        validate_transactions_billable(session, [])
+
+
+def test_validate_transactions_billable_duplicates(session: Session):
+    statement = StatementFactory()
+    txn_a = TransactionFactory(account=statement.account, cleared_at=None)
+    txn_b = TransactionFactory(account=statement.account, cleared_at=None)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Duplicate transaction id(s): {{{txn_a.id}}}"),
+    ):
+        validate_transactions_billable(
+            session,
+            [
+                TransactionBill(transaction_id=txn_a.id, statement_id=statement.id),
+                TransactionBill(transaction_id=txn_b.id, statement_id=statement.id),
+                TransactionBill(transaction_id=txn_a.id, statement_id=statement.id),
+            ],
+        )
+
+
+def test_validate_transactions_billable_missing_ids(session: Session):
+    statement = StatementFactory()
+    txn = TransactionFactory(account=statement.account, cleared_at=None)
+
+    with pytest.raises(
+        ValueError, match=re.escape("Transaction id(s) not found: {998, 999}")
+    ):
+        validate_transactions_billable(
+            session,
+            [
+                TransactionBill(transaction_id=999, statement_id=statement.id),
+                TransactionBill(transaction_id=txn.id, statement_id=statement.id),
+                TransactionBill(transaction_id=998, statement_id=statement.id),
+            ],
+        )
 
 
 @pytest.mark.parametrize("stage", ["PENDING", "BILLED", "CLEARED"])
-def test_validate_transaction_billable_not_posted(session: Session, stage: str):
+def test_validate_transactions_billable_not_posted(session: Session, stage: str):
     statement = StatementFactory()
     overrides = {
         "PENDING": {"posted_at": None, "cleared_at": None},
@@ -298,30 +370,134 @@ def test_validate_transaction_billable_not_posted(session: Session, stage: str):
     }[stage]
     txn = TransactionFactory(account=statement.account, **overrides)
 
-    with pytest.raises(ValueError, match="not posted"):
-        validate_transaction_billable(session, txn.id, statement.id)
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Transaction id(s) not posted: {{{txn.id}}}"),
+    ):
+        validate_transactions_billable(
+            session, [TransactionBill(transaction_id=txn.id, statement_id=statement.id)]
+        )
 
 
-def test_validate_transaction_billable_other_account(session: Session):
-    txn = TransactionFactory(cleared_at=None)
+def test_validate_transactions_billable_lists_all_not_posted(session: Session):
     statement = StatementFactory()
+    account = statement.account
+    valid = TransactionFactory(account=account, cleared_at=None)
+    pending = TransactionFactory(account=account, posted_at=None, cleared_at=None)
+    billed = TransactionFactory(
+        account=account, statement_id=statement.id, cleared_at=None
+    )
+    cleared = TransactionFactory(account=account)
 
-    with pytest.raises(ValueError, match="does not belong"):
-        validate_transaction_billable(session, txn.id, statement.id)
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            f"Transaction id(s) not posted: {{{pending.id}, {billed.id}, {cleared.id}}}"
+        ),
+    ):
+        validate_transactions_billable(
+            session,
+            [
+                TransactionBill(transaction_id=cleared.id, statement_id=statement.id),
+                TransactionBill(transaction_id=valid.id, statement_id=statement.id),
+                TransactionBill(transaction_id=billed.id, statement_id=statement.id),
+                TransactionBill(transaction_id=pending.id, statement_id=statement.id),
+            ],
+        )
 
 
-def test_validate_transaction_billable_missing_statement(session: Session):
-    txn = TransactionFactory(cleared_at=None)
-
-    with pytest.raises(ValueError, match="Statement id\\(s\\) not found"):
-        validate_transaction_billable(session, txn.id, 999)
-
-
-def test_validate_transaction_billable_missing_transaction(session: Session):
+def test_validate_transactions_billable_missing_statements(session: Session):
     statement = StatementFactory()
+    txns = [
+        TransactionFactory(account=statement.account, cleared_at=None) for _ in range(3)
+    ]
 
-    with pytest.raises(ValueError, match="Transaction id\\(s\\) not found"):
-        validate_transaction_billable(session, 999, statement.id)
+    with pytest.raises(
+        ValueError, match=re.escape("Statement id(s) not found: {998, 999}")
+    ):
+        validate_transactions_billable(
+            session,
+            [
+                TransactionBill(transaction_id=txns[0].id, statement_id=999),
+                TransactionBill(transaction_id=txns[1].id, statement_id=statement.id),
+                TransactionBill(transaction_id=txns[2].id, statement_id=998),
+            ],
+        )
+
+
+def test_validate_transactions_billable_other_account(session: Session):
+    statement = StatementFactory()
+    same_1 = TransactionFactory(account=statement.account, cleared_at=None)
+    same_2 = TransactionFactory(account=statement.account, cleared_at=None)
+    other_1 = TransactionFactory(cleared_at=None)
+    other_2 = TransactionFactory(cleared_at=None)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "Statement does not belong to the account of "
+            f"transaction id(s): {{{other_1.id}, {other_2.id}}}"
+        ),
+    ):
+        validate_transactions_billable(
+            session,
+            [
+                TransactionBill(transaction_id=other_2.id, statement_id=statement.id),
+                TransactionBill(transaction_id=same_1.id, statement_id=statement.id),
+                TransactionBill(transaction_id=other_1.id, statement_id=statement.id),
+                TransactionBill(transaction_id=same_2.id, statement_id=statement.id),
+            ],
+        )
+
+
+def test_validate_transactions_billable_duplicates_before_missing(session: Session):
+    statement = StatementFactory()
+    txn = TransactionFactory(account=statement.account, cleared_at=None)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Duplicate transaction id(s): {{{txn.id}}}"),
+    ):
+        validate_transactions_billable(
+            session,
+            [
+                TransactionBill(transaction_id=txn.id, statement_id=statement.id),
+                TransactionBill(transaction_id=txn.id, statement_id=statement.id),
+                TransactionBill(transaction_id=999, statement_id=statement.id),
+            ],
+        )
+
+
+def test_validate_transactions_billable_missing_before_not_posted(session: Session):
+    statement = StatementFactory()
+    pending = TransactionFactory(
+        account=statement.account, posted_at=None, cleared_at=None
+    )
+
+    with pytest.raises(
+        ValueError, match=re.escape("Transaction id(s) not found: {999}")
+    ):
+        validate_transactions_billable(
+            session,
+            [
+                TransactionBill(transaction_id=pending.id, statement_id=statement.id),
+                TransactionBill(transaction_id=999, statement_id=statement.id),
+            ],
+        )
+
+
+def test_validate_transactions_billable_not_posted_before_missing_statement(
+    session: Session,
+):
+    pending = TransactionFactory(posted_at=None, cleared_at=None)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Transaction id(s) not posted: {{{pending.id}}}"),
+    ):
+        validate_transactions_billable(
+            session, [TransactionBill(transaction_id=pending.id, statement_id=999)]
+        )
 
 
 def test_update_transactions_with_balances_sets_statement(session: Session):

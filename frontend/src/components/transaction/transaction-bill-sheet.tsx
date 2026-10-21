@@ -21,7 +21,7 @@ import {
   type AccountRead,
   type CurrencyRead,
   type StatementRead,
-  type TransactionBill,
+  type TransactionBillLegacy,
   type TransactionReadWithBalance
 } from '@/lib/client'
 import { statementForDay } from '@/lib/statements'
@@ -34,7 +34,7 @@ interface TransactionBillSheetProps {
   statements: StatementRead[]
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (body: TransactionBill) => void
+  onSubmit: (body: TransactionBillLegacy) => void
   isPending: boolean
 }
 
