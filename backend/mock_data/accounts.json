@@ -1,6 +1,6 @@
 [
   {
-    "balance": "4000",
+    "balance": "3880",
     "currency_code": "TWD",
     "id": 1,
     "name": "Wallet",
@@ -40,7 +40,7 @@
     "type": "CASH"
   },
   {
-    "balance": "-110.39",
+    "balance": "-195.39",
     "currency_code": "USD",
     "id": 6,
     "name": "American Express Gold Card",

@@ -311,5 +311,28 @@
     "description": "[pending] Netflix subscription",
     "id": 30,
     "posted_at": null
+  },
+  {
+    "account_id": 6,
+    "amount": "-85",
+    "cleared_at": "2026-02-22T19:00:00-05:00",
+    "created_at": "2026-02-10T19:00:00-05:00",
+    "description": "[cleared] Dinner at the steakhouse",
+    "event_id": 17,
+    "id": 31,
+    "index": 0,
+    "posted_at": "2026-02-11T19:00:00-05:00",
+    "statement_id": 4
+  },
+  {
+    "account_id": 1,
+    "amount": "-120",
+    "cleared_at": null,
+    "created_at": "2026-02-17T19:00:00+08:00",
+    "description": "[posted] Night market snacks",
+    "event_id": 18,
+    "id": 32,
+    "index": 0,
+    "posted_at": "2026-02-18T19:00:00+08:00"
   }
 ]

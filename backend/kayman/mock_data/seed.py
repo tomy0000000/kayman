@@ -79,7 +79,7 @@ def seed(session: Session, logger: Logger) -> None:
     _resync_id_sequence(session, "statement")
     logger.success(f"Statements seeded: {len(statements)}")
 
-    events = load_records("events", Event, datetime_fields=["timestamp"])
+    events = load_records("events", Event, datetime_fields=["timestamp", "cleared_at"])
     for event in sorted(events, key=lambda e: e.id or 0):
         session.add(event)
     session.commit()

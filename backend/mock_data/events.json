@@ -96,5 +96,34 @@
     "timestamp": "2026-02-24T14:00:00+08:00",
     "timezone": "Asia/Taipei",
     "type": "EXCHANGE"
+  },
+  {
+    "description": "[just created, deletable, not clearable: no entries] Bubble tea",
+    "id": 15,
+    "timestamp": "2026-02-28T15:00:00+08:00",
+    "timezone": "Asia/Taipei",
+    "type": "EXPENSE"
+  },
+  {
+    "description": "[just created, deletable, not clearable: no transactions] Move savings to brokerage",
+    "id": 16,
+    "timestamp": "2026-02-28T10:00:00-05:00",
+    "timezone": "America/New_York",
+    "type": "TRANSFER"
+  },
+  {
+    "cleared_at": "2026-02-22T20:00:00-05:00",
+    "description": "[cleared, multi-entry] Dinner at the steakhouse",
+    "id": 17,
+    "timestamp": "2026-02-10T19:00:00-05:00",
+    "timezone": "America/New_York",
+    "type": "EXPENSE"
+  },
+  {
+    "description": "[not clearable: timestamp] Night market snacks",
+    "id": 18,
+    "timestamp": "2026-02-17T20:00:00+08:00",
+    "timezone": "Asia/Taipei",
+    "type": "EXPENSE"
   }
 ]

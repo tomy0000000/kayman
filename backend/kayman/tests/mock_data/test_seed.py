@@ -37,6 +37,17 @@ def _status(transaction: Transaction) -> TransactionStatus:
 
 EVENT_LABEL_CHECKS: dict[str, Callable[[Event], bool]] = {
     "clearable": lambda e: not _clear_error_types(e),
+    "cleared": lambda e: e.cleared_at is not None,
+    "just created": lambda e: not e.entries and not e.transactions,
+    "not clearable: no entries": lambda e: (
+        EventClearErrorType.NO_ENTRIES in _clear_error_types(e)
+    ),
+    "not clearable: no transactions": lambda e: (
+        EventClearErrorType.NO_TRANSACTIONS in _clear_error_types(e)
+    ),
+    "not clearable: timestamp": lambda e: (
+        EventClearErrorType.INCONSISTENT_TIMESTAMPS in _clear_error_types(e)
+    ),
     "not clearable: totals mismatch": lambda e: (
         EventClearErrorType.TOTALS_MISMATCH in _clear_error_types(e)
     ),

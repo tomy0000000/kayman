@@ -168,5 +168,35 @@
     "id": 17,
     "index": 2,
     "quantity": 1
+  },
+  {
+    "amount": "60",
+    "category_id": 4,
+    "currency_code": "USD",
+    "description": "Ribeye",
+    "event_id": 17,
+    "id": 18,
+    "index": 0,
+    "quantity": 1
+  },
+  {
+    "amount": "25",
+    "category_id": 6,
+    "currency_code": "USD",
+    "description": "Red wine",
+    "event_id": 17,
+    "id": 19,
+    "index": 1,
+    "quantity": 1
+  },
+  {
+    "amount": "120",
+    "category_id": 5,
+    "currency_code": "TWD",
+    "description": null,
+    "event_id": 18,
+    "id": 20,
+    "index": 0,
+    "quantity": 1
   }
 ]
