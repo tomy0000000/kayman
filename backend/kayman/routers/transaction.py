@@ -62,6 +62,8 @@ def reads(
     account_id: int | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
+    posted_start: datetime | None = None,
+    posted_end: datetime | None = None,
     event_id: int | Literal["empty"] | None = None,
 ) -> Sequence[TransactionBase]:
     return read_transactions(
@@ -70,6 +72,8 @@ def reads(
         account_id=account_id,
         start=start,
         end=end,
+        posted_start=posted_start,
+        posted_end=posted_end,
         event_id=event_id,
     )
 

@@ -232,6 +232,39 @@ def test_read_transactions_start_and_end_window(session: Session):
     assert {txn.id for txn in results} == {in_window.id}
 
 
+def test_read_transactions_posted_start_and_end_window(session: Session):
+    account = AccountFactory()
+    posted_start = datetime(2026, 1, 1, tzinfo=UTC)
+    posted_end = datetime(2026, 2, 1, tzinfo=UTC)
+    before_dt = datetime(2025, 12, 31, tzinfo=UTC)
+    TransactionFactory(account=account, posted_at=before_dt)
+    on_start = TransactionFactory(account=account, posted_at=posted_start)
+    TransactionFactory(account=account, posted_at=posted_end)
+    TransactionFactory(account=account, posted_at=None)
+
+    results = read_transactions(
+        session,
+        account_id=account.id,
+        posted_start=posted_start,
+        posted_end=posted_end,
+    )
+
+    assert {txn.id for txn in results} == {on_start.id}
+
+
+def test_read_transactions_posted_end_excludes_pending(session: Session):
+    account = AccountFactory()
+    posted_end = datetime(2026, 2, 1, tzinfo=UTC)
+    posted = TransactionFactory(
+        account=account, posted_at=datetime(2026, 1, 15, tzinfo=UTC)
+    )
+    TransactionFactory(account=account, posted_at=None)
+
+    results = read_transactions(session, account_id=account.id, posted_end=posted_end)
+
+    assert {txn.id for txn in results} == {posted.id}
+
+
 def test_read_transactions_order_by_created_at_ascending(session: Session):
     account = AccountFactory()
     d1 = datetime(2026, 1, 1, tzinfo=UTC)

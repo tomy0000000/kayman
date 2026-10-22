@@ -44,6 +44,8 @@ def read_transactions(
     account_id: int | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
+    posted_start: datetime | None = None,
+    posted_end: datetime | None = None,
     event_id: int | Literal["empty"] | None = None,
     order_by: TransactionOrderBy | None = None,
     descending: bool = False,
@@ -66,6 +68,10 @@ def read_transactions(
         scalar = scalar.where(Transaction.created_at >= start)
     if end is not None:
         scalar = scalar.where(Transaction.created_at < end)
+    if posted_start is not None:
+        scalar = scalar.where(col(Transaction.posted_at) >= posted_start)
+    if posted_end is not None:
+        scalar = scalar.where(col(Transaction.posted_at) < posted_end)
     column = (
         getattr(Transaction, order_by) if order_by is not None else col(Transaction.id)
     )
