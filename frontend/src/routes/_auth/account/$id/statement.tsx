@@ -85,8 +85,11 @@ function AccountStatementPage() {
   const { mutate, isPending: isCreating } = useOptimisticMutation(
     {
       ...createStatementMutation(),
-      onSuccess: () =>
-        toast.add({ title: 'Statement created', type: 'success' }),
+      onSuccess: (statement) => {
+        toast.add({ title: 'Statement created', type: 'success' })
+        // Billing needs the real id, so it waits for the server's statement.
+        setBillingStatement(statement)
+      },
       meta: { errorMessage: 'Failed to create statement' }
     },
     [
