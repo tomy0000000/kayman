@@ -41,3 +41,4 @@ Regenerate the client whenever backend routes or schemas change. The router tree
 
 - Don't hand-edit `src/routeTree.gen.ts` or anything under `src/lib/client/`. Regenerate via `mise run build:router` / `mise run build:openapi-client`.
 - Form labels should use `FieldLabel` from `@/components/ui/field`, not the lower-level `Label`.
+- For GUI testing, drive the app with the `agent-browser` CLI (via the `agent-browser` skill), not the Claude in Chrome extension. It runs an isolated, scriptable browser instead of your personal Chrome session.

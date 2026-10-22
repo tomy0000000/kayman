@@ -23,7 +23,7 @@ Historical design notes and context for past decisions live in [`.agents/docs/`]
 
 Run from the repo root. All custom tasks go through `mise run <task>`. For the complete list of available tasks and their usage, see [`.agents/rules/tasks.md`](.agents/rules/tasks.md). Those are the only tasks that exist: don't invent task names or usages.
 
-When debugging in Chrome, the base URL is always `localhost:5173` for the frontend and `localhost:8000` for the backend.
+When testing in a browser (see `frontend/AGENTS.md`), the base URL is always `localhost:5173` for the frontend and `localhost:8000` for the backend.
 
 ## End-to-end request flow
 
