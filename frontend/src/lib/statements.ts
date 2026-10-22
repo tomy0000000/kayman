@@ -23,6 +23,18 @@ export function latestStatement(
   )
 }
 
+// The latest statement whose period ends before `statement`'s starts.
+export function previousStatement(
+  statements: StatementRead[],
+  statement: StatementRead
+): StatementRead | undefined {
+  return latestStatement(
+    statements.filter(
+      (other) => other.period_end_on < statement.period_start_on
+    )
+  )
+}
+
 // The statement whose period covers `day`, a "YYYY-MM-DD" calendar day.
 export function statementForDay(
   statements: StatementRead[],

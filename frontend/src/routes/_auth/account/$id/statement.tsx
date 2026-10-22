@@ -3,19 +3,32 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { CreateStatementFab } from '@/components/statement/create-statement-fab'
+import { StatementBillDialog } from '@/components/statement/statement-bill-dialog'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger
+} from '@/components/ui/context-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
 import {
+  type BillTransactionsData,
   type CreateStatementData,
   type Options,
-  type StatementRead
+  type StatementRead,
+  type TransactionRead
 } from '@/lib/client'
 import {
+  billTransactionsMutation,
   createStatementMutation,
+  readAccountTransactionsWithRunningBalanceQueryKey,
   readAccountsOptions,
   readCurrenciesOptions,
+  readEventsQueryKey,
   readStatementsOptions,
-  readStatementsQueryKey
+  readStatementsQueryKey,
+  readTransactionsQueryKey
 } from '@/lib/client/@tanstack/react-query.gen'
 import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import {
@@ -23,6 +36,7 @@ import {
   cacheUpdate,
   useOptimisticMutation
 } from '@/lib/optimistic'
+import { previousStatement } from '@/lib/statements'
 import {
   cn,
   formatCalendarDate,
@@ -33,6 +47,7 @@ import {
 interface StatementRowProps {
   statement: StatementRead
   currencyCode: string
+  onBill: (statement: StatementRead) => void
 }
 
 export const Route = createFileRoute('/_auth/account/$id/statement')({
@@ -47,6 +62,8 @@ function AccountStatementPage() {
   const accountId = Number(id)
 
   const [fabOpen, setFabOpen] = useState(false)
+  const [billingStatement, setBillingStatement] =
+    useState<StatementRead | null>(null)
 
   const { isPending: isAccountsPending, data: accounts } = useQuery({
     ...readAccountsOptions(),
@@ -88,6 +105,40 @@ function AccountStatementPage() {
     ]
   )
 
+  const { mutate: billTransactions } = useOptimisticMutation(
+    {
+      ...billTransactionsMutation(),
+      onSuccess: () =>
+        toast.add({ title: 'Transactions billed', type: 'success' }),
+      meta: { errorMessage: 'Failed to bill transactions' }
+    },
+    [
+      cacheUpdate<TransactionRead[], Options<BillTransactionsData>>(
+        readTransactionsQueryKey(),
+        (transactions, { body }) => {
+          const billed = new Map(
+            body.map((bill) => [bill.transaction_id, bill.statement_id])
+          )
+          return transactions.map((transaction) =>
+            billed.has(transaction.id)
+              ? {
+                  ...transaction,
+                  statement_id: billed.get(transaction.id),
+                  status: 'BILLED'
+                }
+              : transaction
+          )
+        }
+      ),
+      {
+        queryKey: readAccountTransactionsWithRunningBalanceQueryKey({
+          path: { account_id: accountId }
+        })
+      },
+      { queryKey: readEventsQueryKey() }
+    ]
+  )
+
   if (isAccountsPending || isStatementsPending) return <StatementsSkeleton />
 
   const account = accounts?.find((a) => a.id === accountId)
@@ -116,6 +167,7 @@ function AccountStatementPage() {
                 key={statement.id}
                 statement={statement}
                 currencyCode={account.currency_code}
+                onBill={setBillingStatement}
               />
             ))}
           </div>
@@ -134,31 +186,58 @@ function AccountStatementPage() {
         }}
         isPending={isCreating}
       />
+
+      <StatementBillDialog
+        statement={billingStatement}
+        previousStatement={
+          billingStatement
+            ? previousStatement(ordered, billingStatement)
+            : undefined
+        }
+        account={account}
+        open={billingStatement != null}
+        onOpenChange={(open) => {
+          if (!open) setBillingStatement(null)
+        }}
+        onSubmit={(body) => {
+          setBillingStatement(null)
+          billTransactions({ body })
+        }}
+      />
     </>
   )
 }
 
-function StatementRow({ statement, currencyCode }: StatementRowProps) {
+function StatementRow({ statement, currencyCode, onBill }: StatementRowProps) {
   return (
-    <div
-      className={cn(
-        'flex items-baseline justify-between gap-4 border-b py-3',
-        statement.id < 0 && 'pointer-events-none opacity-50'
-      )}
-    >
-      <div className="min-w-0">
-        <div className="truncate font-medium">
-          {formatPlainDate(statement.period_start_on)} –{' '}
-          {formatPlainDate(statement.period_end_on)}
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          className={cn(
+            'flex items-baseline justify-between gap-4 border-b py-3',
+            statement.id < 0 && 'pointer-events-none opacity-50'
+          )}
+        >
+          <div className="min-w-0">
+            <div className="truncate font-medium">
+              {formatPlainDate(statement.period_start_on)} –{' '}
+              {formatPlainDate(statement.period_end_on)}
+            </div>
+            <div className="text-muted-foreground text-sm">
+              Due {formatPlainDate(statement.due_on)}
+            </div>
+          </div>
+          <div className="shrink-0 font-medium">
+            {formatCurrency(parseFloat(statement.balance), currencyCode)}
+          </div>
         </div>
-        <div className="text-muted-foreground text-sm">
-          Due {formatPlainDate(statement.due_on)}
-        </div>
-      </div>
-      <div className="shrink-0 font-medium">
-        {formatCurrency(parseFloat(statement.balance), currencyCode)}
-      </div>
-    </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent onCloseAutoFocus={(event) => event.preventDefault()}>
+        <ContextMenuItem onSelect={() => onBill(statement)}>
+          Bill transactions…
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }
 
