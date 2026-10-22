@@ -3,5 +3,17 @@
     "deny": [
       "mcp__claude-in-chrome"
     ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/review-gate.sh\""
+          }
+        ]
+      }
+    ]
   }
 }
