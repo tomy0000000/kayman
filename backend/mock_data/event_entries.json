@@ -198,5 +198,15 @@
     "id": 20,
     "index": 0,
     "quantity": 1
+  },
+  {
+    "amount": "350",
+    "category_id": 3,
+    "currency_code": "TWD",
+    "description": null,
+    "event_id": 19,
+    "id": 21,
+    "index": 0,
+    "quantity": 1
   }
 ]

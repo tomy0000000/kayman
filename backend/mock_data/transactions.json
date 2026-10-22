@@ -334,5 +334,36 @@
     "id": 32,
     "index": 0,
     "posted_at": "2026-02-18T19:00:00+08:00"
+  },
+  {
+    "account_id": 6,
+    "amount": "-42.50",
+    "cleared_at": null,
+    "created_at": "2026-02-19T12:00:00-05:00",
+    "description": "[billable] Uber ride",
+    "id": 33,
+    "posted_at": "2026-02-20T12:00:00-05:00"
+  },
+  {
+    "account_id": 3,
+    "amount": "-350",
+    "cleared_at": null,
+    "created_at": "2026-02-12T13:00:00+08:00",
+    "description": "[billed, clearable] Hot pot lunch",
+    "event_id": 19,
+    "id": 34,
+    "index": 0,
+    "posted_at": "2026-02-13T13:00:00+08:00",
+    "statement_id": 2
+  },
+  {
+    "account_id": 6,
+    "amount": "-12.99",
+    "cleared_at": null,
+    "created_at": "2026-02-15T09:00:00-05:00",
+    "description": "[billed, not clearable: no event] Spotify",
+    "id": 35,
+    "posted_at": "2026-02-16T09:00:00-05:00",
+    "statement_id": 4
   }
 ]

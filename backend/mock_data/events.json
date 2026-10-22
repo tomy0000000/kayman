@@ -125,5 +125,12 @@
     "timestamp": "2026-02-17T20:00:00+08:00",
     "timezone": "Asia/Taipei",
     "type": "EXPENSE"
+  },
+  {
+    "description": "[clearable once txns clear] Hot pot lunch",
+    "id": 19,
+    "timestamp": "2026-02-12T13:00:00+08:00",
+    "timezone": "Asia/Taipei",
+    "type": "EXPENSE"
   }
 ]

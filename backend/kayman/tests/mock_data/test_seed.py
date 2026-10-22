@@ -5,6 +5,10 @@ from loguru import logger
 from sqlmodel import Session, select
 
 from kayman.logics.event import validate_event_clearable
+from kayman.logics.transaction import (
+    validate_transaction_clearable,
+    validate_transactions_billable,
+)
 from kayman.mock_data.seed import seed
 from kayman.schemas.account import Account
 from kayman.schemas.category import Category
@@ -13,6 +17,7 @@ from kayman.schemas.event import Event, EventClearErrorType
 from kayman.schemas.statement import Statement
 from kayman.schemas.transaction import (
     Transaction,
+    TransactionBill,
     TransactionRead,
     TransactionStatus,
 )
@@ -35,8 +40,34 @@ def _status(transaction: Transaction) -> TransactionStatus:
     return TransactionRead.model_validate(transaction).status
 
 
+def _billable(session: Session, transaction: Transaction) -> bool:
+    """Whether the transaction bills onto a statement of its own account."""
+    statement = session.exec(
+        select(Statement).where(Statement.account_id == transaction.account_id)
+    ).first()
+    if statement is None or transaction.id is None or statement.id is None:
+        return False
+    bill = TransactionBill(transaction_id=transaction.id, statement_id=statement.id)
+    try:
+        validate_transactions_billable(session, [bill])
+    except ValueError:
+        return False
+    return True
+
+
+def _clearable(session: Session, transaction: Transaction) -> bool:
+    try:
+        validate_transaction_clearable(session, transaction.id)
+    except ValueError:
+        return False
+    return True
+
+
 EVENT_LABEL_CHECKS: dict[str, Callable[[Event], bool]] = {
     "clearable": lambda e: not _clear_error_types(e),
+    "clearable once txns clear": lambda e: (
+        _clear_error_types(e) == {EventClearErrorType.TRANSACTIONS_NOT_CLEARED}
+    ),
     "cleared": lambda e: e.cleared_at is not None,
     "just created": lambda e: not e.entries and not e.transactions,
     "not clearable: no entries": lambda e: (
@@ -59,10 +90,14 @@ EVENT_LABEL_CHECKS: dict[str, Callable[[Event], bool]] = {
     "multi-txn": lambda e: len(e.transactions) > 1,
 }
 
-TRANSACTION_LABEL_CHECKS: dict[str, Callable[[Transaction], bool]] = {
-    "pending": lambda t: _status(t) is TransactionStatus.PENDING,
-    "posted": lambda t: _status(t) is TransactionStatus.POSTED,
-    "cleared": lambda t: _status(t) is TransactionStatus.CLEARED,
+TRANSACTION_LABEL_CHECKS: dict[str, Callable[[Session, Transaction], bool]] = {
+    "pending": lambda _, t: _status(t) is TransactionStatus.PENDING,
+    "posted": lambda _, t: _status(t) is TransactionStatus.POSTED,
+    "billable": lambda s, t: _status(t) is TransactionStatus.POSTED and _billable(s, t),
+    "billed": lambda _, t: _status(t) is TransactionStatus.BILLED,
+    "clearable": _clearable,
+    "not clearable: no event": lambda s, t: t.event_id is None and not _clearable(s, t),
+    "cleared": lambda _, t: _status(t) is TransactionStatus.CLEARED,
 }
 
 
@@ -144,4 +179,6 @@ def test_seeded_transaction_labels_match_state(session: Session) -> None:
     for txn in session.exec(select(Transaction)).all():
         for label in _labels(txn.description):
             assert label in TRANSACTION_LABEL_CHECKS, f"txn id={txn.id}: {label!r}"
-            assert TRANSACTION_LABEL_CHECKS[label](txn), f"txn id={txn.id}: {label!r}"
+            assert TRANSACTION_LABEL_CHECKS[label](session, txn), (
+                f"txn id={txn.id}: {label!r}"
+            )
