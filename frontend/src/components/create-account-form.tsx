@@ -5,6 +5,11 @@ import { KbdForm } from '@/components/kbd-form'
 import { TimezoneCombobox } from '@/components/timezone-combobox'
 import { Button } from '@/components/ui/button'
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -34,6 +39,7 @@ export function CreateAccountForm({
 }: CreateAccountFormProps) {
   const { timezone: clientTimezone } = useClientTimezone()
   const [name, setName] = useState('')
+  const [shortName, setShortName] = useState('')
   const [type, setType] = useState<AccountType>('CASH')
   const [currencyCode, setCurrencyCode] = useState<string | null>(null)
   const [timezone, setTimezone] = useState(clientTimezone)
@@ -44,6 +50,7 @@ export function CreateAccountForm({
     if (currencyCode == null) return
     onSubmit({
       name,
+      short_name: shortName || null,
       type,
       currency_code: currencyCode,
       timezone: timezone as AccountCreate['timezone']
@@ -139,6 +146,24 @@ export function CreateAccountForm({
         />
         <FieldDescription>Will be stored as {timezone}</FieldDescription>
       </Field>
+
+      <Collapsible className="space-y-5">
+        <CollapsibleTrigger className="group flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          Advanced
+          <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-5">
+          <Field>
+            <FieldLabel htmlFor="account-short-name">Short name</FieldLabel>
+            <Input
+              id="account-short-name"
+              placeholder="Optional"
+              value={shortName}
+              onChange={(e) => setShortName(e.target.value)}
+            />
+          </Field>
+        </CollapsibleContent>
+      </Collapsible>
     </KbdForm>
   )
 }
