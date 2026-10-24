@@ -7,7 +7,7 @@ For app-specific guidance, see:
 - [`backend/AGENTS.md`](backend/AGENTS.md): FastAPI server (Python, `uv`)
 - [`frontend/AGENTS.md`](frontend/AGENTS.md): React/Vite SPA (TypeScript, `pnpm`)
 
-Historical design notes and context for past decisions live in [`.agents/docs/`](.agents/docs/). Check there when a current convention's rationale isn't obvious from the code.
+Historical design notes and context for past decisions live in [`.agents/docs/`](.agents/docs/). Check there when a current convention's rationale isn't obvious from the code. Don't date these docs (no "proposed on" or "implemented on"). Git history already records when they changed, and a date in the text goes stale.
 
 ## Stack
 
