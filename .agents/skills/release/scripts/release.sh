@@ -5,16 +5,17 @@
 # Usage: scripts/release.sh <version>     e.g. 0.12.0
 #
 # Steps performed:
-#   1. Pre-flight checks; auto-stash unstaged work if needed
-#   2. Checkout main, fast-forward pull, merge develop
-#   3. Bump versions in frontend/package.json, icon/package.json,
+#   1. Pre-flight checks: on develop, main in sync with origin/main, and
+#      develop fast-forwards from main; auto-stash unstaged work if needed
+#   2. Bump versions in frontend/package.json, icon/package.json,
 #      backend/pyproject.toml, backend/kayman/main.py; refresh backend/uv.lock
-#   4. Commit `🔖 release: <version>`
-#   5. Checkout develop, fast-forward merge main
-#   6. Print follow-up commands (push + gh release create)
+#   3. Commit `🔖 release: <version>` on develop
+#   4. Fast-forward main to develop (no checkout, so files under .agents/ that
+#      only exist on develop are never deleted and recreated)
+#   5. Print follow-up commands (push + gh release create)
 #
-# On exit, working tree is on `develop`. If a stash was created in step 1
-# the script pops it before exiting (success path only).
+# The working tree stays on `develop` throughout. If a stash was created in
+# step 1 the script pops it before exiting (success path only).
 
 set -euo pipefail
 
@@ -46,23 +47,25 @@ if [[ "$START_BRANCH" != "develop" ]]; then
   exit 1
 fi
 
+echo "→ fetching origin"
+git fetch origin
+
+if [[ "$(git rev-parse main)" != "$(git rev-parse origin/main)" ]]; then
+  echo "error: main differs from origin/main; reconcile them before releasing" >&2
+  exit 1
+fi
+
+if ! git merge-base --is-ancestor main develop; then
+  echo "error: develop does not fast-forward from main (someone pushed to main directly?)" >&2
+  exit 1
+fi
+
 STASHED=0
 if ! git diff --quiet || ! git diff --cached --quiet || [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
   echo "→ stashing unstaged/untracked changes"
   git stash push -u -m "release-skill: $VERSION"
   STASHED=1
 fi
-
-echo "→ fetching origin"
-git fetch origin
-
-echo "→ checking out main and fast-forwarding"
-git checkout main
-git pull --ff-only origin main
-
-echo "→ merging develop into main"
-# Expect fast-forward; if it can't FF, bail so user can investigate.
-git merge --ff-only develop
 
 echo "→ bumping versions to $VERSION"
 python3 "$SCRIPT_DIR/bump_package_json.py" "$VERSION"
@@ -76,9 +79,8 @@ echo "→ committing release"
 git add frontend/package.json icon/package.json backend/pyproject.toml backend/kayman/main.py backend/uv.lock
 git commit -m "🔖 release: $VERSION"
 
-echo "→ checking out develop and fast-forwarding main into it"
-git checkout develop
-git merge --ff-only main
+echo "→ fast-forwarding main to develop"
+git branch -f main develop
 
 if [[ "$STASHED" -eq 1 ]]; then
   echo "→ restoring stash"

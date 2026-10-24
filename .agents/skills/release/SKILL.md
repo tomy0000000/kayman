@@ -32,7 +32,7 @@ Apply the versioning rules above to propose a version and tell the user the choi
 
 ### Step 2: Run the release script
 
-`scripts/release.sh <version>` performs the local git work: stash, checkout main, fast-forward pull, merge develop, bump versions in `frontend/package.json`, `icon/package.json`, `backend/pyproject.toml`, `backend/kayman/main.py`, refresh `backend/uv.lock`, commit `🔖 release: <version>`, fast-forward main into develop, and pop the stash.
+`scripts/release.sh <version>` performs the local git work without ever leaving `develop`: check that `main` matches `origin/main` and that `develop` fast-forwards from it, stash, bump versions in `frontend/package.json`, `icon/package.json`, `backend/pyproject.toml`, `backend/kayman/main.py`, refresh `backend/uv.lock`, commit `🔖 release: <version>` on `develop`, fast-forward `main` to `develop` with `git branch -f`, and pop the stash. It never checks out `main`, because switching branches would delete and recreate files under `.agents/`, which the sandbox protects via the `.claude` symlink.
 
 ```bash
 .claude/skills/release/scripts/release.sh <version>
@@ -40,7 +40,7 @@ Apply the versioning rules above to propose a version and tell the user the choi
 
 The script must be run from a clean-ish working tree on the `develop` branch. It refuses to run otherwise. It does **not** push and does **not** publish — those are deliberate later steps.
 
-If the script fails partway through, do not retry blindly; surface the error to the user. Common causes: merge can't fast-forward (someone pushed to main directly), `uv lock` failed, or a version file's pattern didn't match because the file changed shape.
+If the script fails partway through, do not retry blindly; surface the error to the user. Common causes: `main` is out of sync with `origin/main` or doesn't fast-forward to `develop` (someone pushed to main directly), `uv lock` failed, a version file's pattern didn't match because the file changed shape, or commit signing was refused (the 1Password agent prompt needs approval).
 
 ### Step 3: Draft release notes
 
