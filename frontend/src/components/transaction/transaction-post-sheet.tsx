@@ -42,7 +42,11 @@ export function TransactionPostSheet({
   const [txnId, setTxnId] = useState(transaction?.id)
   const [postedAt, setPostedAt] = useState(() =>
     toZonedISOString(
-      withTime(new Date(), '23:59:59', clientTimezone),
+      withTime(
+        transaction ? new Date(transaction.created_at) : new Date(),
+        '23:59:59',
+        clientTimezone
+      ),
       clientTimezone
     )
   )
@@ -56,7 +60,7 @@ export function TransactionPostSheet({
     setTxnId(transaction.id)
     setPostedAt(
       toZonedISOString(
-        withTime(new Date(), '23:59:59', clientTimezone),
+        withTime(new Date(transaction.created_at), '23:59:59', clientTimezone),
         clientTimezone
       )
     )
