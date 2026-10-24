@@ -11,8 +11,8 @@ from kayman.crud.transaction import create_transactions, read_transactions
 from kayman.logics.account import update_balances_with_transactions
 from kayman.logics.transaction import (
     update_transactions_with_balances,
-    validate_transaction_clearable,
     validate_transactions_billable,
+    validate_transactions_clearable,
     validate_transactions_postable,
 )
 from kayman.schemas.transaction import (
@@ -130,29 +130,24 @@ def bills(
         raise HTTPException(status_code=404, detail=err.args[0]) from err
 
 
-@txn_router.patch(
-    "/{transaction_id}/cleared",
-    name="Clear Transaction",
-    response_model=TransactionRead,
+@txn_router.post(
+    "/clear", name="Clear Transactions", response_model=list[TransactionRead]
 )
-def clear(
-    *,
-    session: Session = Depends(get_session),
-    transaction_id: int,
-    data: TransactionClear,
-) -> TransactionBase:
+def clears(
+    *, session: Session = Depends(get_session), clears: Sequence[TransactionClear]
+) -> Sequence[TransactionBase]:
     try:
-        validate_transaction_clearable(session, transaction_id)
+        validate_transactions_clearable(session, clears)
     except ValueError as err:
         raise HTTPException(status_code=400, detail=err.args[0]) from err
-    update = TransactionStatusUpdate(
-        id=transaction_id, **data.model_dump(exclude_unset=True)
-    )
+    updates = [
+        TransactionStatusUpdate(id=clear.transaction_id, cleared_at=clear.cleared_at)
+        for clear in clears
+    ]
     try:
-        updated = update_transactions_with_balances(session, [update])
+        return update_transactions_with_balances(session, updates)
     except ValueError as err:
         raise HTTPException(status_code=404, detail=err.args[0]) from err
-    return updated[0]
 
 
 @txn_router.patch("", name="Update Transactions", response_model=list[TransactionRead])

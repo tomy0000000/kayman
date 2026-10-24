@@ -11,6 +11,7 @@ from kayman.crud.transaction import read_transactions, update_transactions
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBill,
+    TransactionClear,
     TransactionPost,
     TransactionReadWithBalance,
     TransactionUpdate,
@@ -83,17 +84,25 @@ def validate_transactions_postable(
         raise ValueError(f"Transaction id(s) not pending: {format_ids(not_pending)}")
 
 
-def validate_transaction_clearable(session: Session, transaction_id: int) -> None:
-    txns = read_transactions(session, transaction_ids=[transaction_id])
-    if len(txns) != 1:
-        raise ValueError(f"Transaction id(s) not found: {{{transaction_id}}}")
-    txn = txns[0]
-    if txn.posted_at is None:
-        raise ValueError(f"Transaction {transaction_id} is not posted")
-    if txn.statement_id is None:
-        raise ValueError(f"Transaction {transaction_id} is not on a statement")
-    if txn.event_id is None:
-        raise ValueError(f"Transaction {transaction_id} has no associated event")
+def validate_transactions_clearable(
+    session: Session, clears: Sequence[TransactionClear]
+) -> None:
+    txns = _require_transactions(
+        session, [clear.transaction_id for clear in clears], "clear"
+    )
+    not_posted = {i for i, txn in txns.items() if txn.posted_at is None}
+    if not_posted:
+        raise ValueError(f"Transaction id(s) not posted: {format_ids(not_posted)}")
+    no_statement = {i for i, txn in txns.items() if txn.statement_id is None}
+    if no_statement:
+        raise ValueError(
+            f"Transaction id(s) not on a statement: {format_ids(no_statement)}"
+        )
+    no_event = {i for i, txn in txns.items() if txn.event_id is None}
+    if no_event:
+        raise ValueError(
+            f"Transaction id(s) have no associated event: {format_ids(no_event)}"
+        )
 
 
 def validate_transactions_billable(

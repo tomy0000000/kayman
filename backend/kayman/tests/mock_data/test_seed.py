@@ -1,13 +1,14 @@
 import re
 from collections.abc import Callable
+from datetime import UTC, datetime
 
 from loguru import logger
 from sqlmodel import Session, select
 
 from kayman.logics.event import validate_event_clearable
 from kayman.logics.transaction import (
-    validate_transaction_clearable,
     validate_transactions_billable,
+    validate_transactions_clearable,
 )
 from kayman.mock_data.seed import seed
 from kayman.schemas.account import Account
@@ -18,6 +19,7 @@ from kayman.schemas.statement import Statement
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBill,
+    TransactionClear,
     TransactionRead,
     TransactionStatus,
 )
@@ -56,8 +58,13 @@ def _billable(session: Session, transaction: Transaction) -> bool:
 
 
 def _clearable(session: Session, transaction: Transaction) -> bool:
+    if transaction.id is None:
+        return False
+    clear = TransactionClear(
+        transaction_id=transaction.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
+    )
     try:
-        validate_transaction_clearable(session, transaction.id)
+        validate_transactions_clearable(session, [clear])
     except ValueError:
         return False
     return True

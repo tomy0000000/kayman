@@ -101,6 +101,7 @@ class TransactionBill(SQLModel):
 
 
 class TransactionClear(SQLModel):
+    transaction_id: int
     cleared_at: datetime
 
 

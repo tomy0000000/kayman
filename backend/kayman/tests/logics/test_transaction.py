@@ -10,13 +10,14 @@ from kayman.logics.transaction import (
     _calculate_account_deltas,
     get_transactions_with_running_balance,
     update_transactions_with_balances,
-    validate_transaction_clearable,
     validate_transactions_billable,
+    validate_transactions_clearable,
     validate_transactions_postable,
 )
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBill,
+    TransactionClear,
     TransactionPost,
     TransactionStatusUpdate,
     TransactionUpdate,
@@ -369,31 +370,108 @@ def test_validate_transactions_postable_missing_before_not_pending(
         )
 
 
-def test_validate_transaction_clearable_passes(session: Session):
+def test_validate_transactions_clearable_passes(session: Session):
+    statement = StatementFactory()
+    txns = [
+        TransactionFactory(account=statement.account, statement_id=statement.id)
+        for _ in range(3)
+    ]
+
+    assert (
+        validate_transactions_clearable(
+            session,
+            [
+                TransactionClear(
+                    transaction_id=t.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
+                )
+                for t in txns
+            ],
+        )
+        is None
+    )
+
+
+def test_validate_transactions_clearable_empty(session: Session):
+    with pytest.raises(ValueError, match=re.escape("No transactions to clear")):
+        validate_transactions_clearable(session, [])
+
+
+def test_validate_transactions_clearable_missing_ids(session: Session):
     statement = StatementFactory()
     txn = TransactionFactory(account=statement.account, statement_id=statement.id)
 
-    assert validate_transaction_clearable(session, txn.id) is None
+    with pytest.raises(
+        ValueError, match=re.escape("Transaction id(s) not found: {998, 999}")
+    ):
+        validate_transactions_clearable(
+            session,
+            [
+                TransactionClear(
+                    transaction_id=999, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+                TransactionClear(
+                    transaction_id=txn.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+                TransactionClear(
+                    transaction_id=998, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+            ],
+        )
 
 
-def test_validate_transaction_clearable_not_posted(session: Session):
+def test_validate_transactions_clearable_lists_all_not_posted(session: Session):
     statement = StatementFactory()
-    txn = TransactionFactory(
-        account=statement.account, statement_id=statement.id, posted_at=None
+    account = statement.account
+    valid = TransactionFactory(account=account, statement_id=statement.id)
+    pending_1 = TransactionFactory(
+        account=account, statement_id=statement.id, posted_at=None
+    )
+    pending_2 = TransactionFactory(
+        account=account, statement_id=statement.id, posted_at=None
     )
 
-    with pytest.raises(ValueError, match="is not posted"):
-        validate_transaction_clearable(session, txn.id)
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            f"Transaction id(s) not posted: {{{pending_1.id}, {pending_2.id}}}"
+        ),
+    ):
+        validate_transactions_clearable(
+            session,
+            [
+                TransactionClear(
+                    transaction_id=pending_2.id,
+                    cleared_at=datetime(2025, 1, 1, tzinfo=UTC),
+                ),
+                TransactionClear(
+                    transaction_id=valid.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+                TransactionClear(
+                    transaction_id=pending_1.id,
+                    cleared_at=datetime(2025, 1, 1, tzinfo=UTC),
+                ),
+            ],
+        )
 
 
-def test_validate_transaction_clearable_no_statement(session: Session):
+def test_validate_transactions_clearable_no_statement(session: Session):
     txn = TransactionFactory()
 
-    with pytest.raises(ValueError, match="not on a statement"):
-        validate_transaction_clearable(session, txn.id)
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Transaction id(s) not on a statement: {{{txn.id}}}"),
+    ):
+        validate_transactions_clearable(
+            session,
+            [
+                TransactionClear(
+                    transaction_id=txn.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
+                )
+            ],
+        )
 
 
-def test_validate_transaction_clearable_no_event(session: Session):
+def test_validate_transactions_clearable_no_event(session: Session):
     statement = StatementFactory()
     txn = TransactionFactory(
         account=statement.account,
@@ -402,13 +480,38 @@ def test_validate_transaction_clearable_no_event(session: Session):
         event_id=None,
     )
 
-    with pytest.raises(ValueError, match="no associated event"):
-        validate_transaction_clearable(session, txn.id)
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Transaction id(s) have no associated event: {{{txn.id}}}"),
+    ):
+        validate_transactions_clearable(
+            session,
+            [
+                TransactionClear(
+                    transaction_id=txn.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
+                )
+            ],
+        )
 
 
-def test_validate_transaction_clearable_missing_id(session: Session):
-    with pytest.raises(ValueError, match="not found"):
-        validate_transaction_clearable(session, 999)
+def test_validate_transactions_clearable_not_posted_before_no_statement(
+    session: Session,
+):
+    pending = TransactionFactory(posted_at=None)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Transaction id(s) not posted: {{{pending.id}}}"),
+    ):
+        validate_transactions_clearable(
+            session,
+            [
+                TransactionClear(
+                    transaction_id=pending.id,
+                    cleared_at=datetime(2025, 1, 1, tzinfo=UTC),
+                )
+            ],
+        )
 
 
 def test_validate_transactions_billable_passes(session: Session):

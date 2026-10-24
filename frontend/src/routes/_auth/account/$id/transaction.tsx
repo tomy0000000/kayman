@@ -16,7 +16,7 @@ import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { useEventActions } from '@/hooks/use-event-actions'
 import {
   type BillTransactionsData,
-  type ClearTransactionData,
+  type ClearTransactionsData,
   type Options,
   type PostTransactionsData,
   type TransactionCreate,
@@ -27,7 +27,7 @@ import {
 } from '@/lib/client'
 import {
   billTransactionsMutation,
-  clearTransactionMutation,
+  clearTransactionsMutation,
   postTransactionsMutation,
   readAccountTransactionsWithRunningBalanceOptions,
   readAccountTransactionsWithRunningBalanceQueryKey,
@@ -118,21 +118,6 @@ function AccountTransactionPage() {
     path: { account_id: accountId },
     query: { start, end }
   })
-
-  const patchTransaction = <
-    TVariables extends { path: { transaction_id: number } }
-  >(
-    patch: (variables: TVariables) => Partial<TransactionReadWithBalance>
-  ) =>
-    cacheUpdate<TransactionReadWithBalance[], TVariables>(
-      transactionsOptions.queryKey,
-      (transactions, variables) =>
-        transactions.map((transaction) =>
-          transaction.id === variables.path.transaction_id
-            ? { ...transaction, ...patch(variables) }
-            : transaction
-        )
-    )
 
   const patchTransactions = <
     TVariables extends { body: Array<{ transaction_id: number }> }
@@ -261,16 +246,16 @@ function AccountTransactionPage() {
 
   // Clearing takes no input beyond the moment it happened, so it fires
   // straight from the context menu like clearing an event does.
-  const { mutate: clearTransaction } = useOptimisticMutation(
+  const { mutate: clearTransactions } = useOptimisticMutation(
     {
-      ...clearTransactionMutation(),
+      ...clearTransactionsMutation(),
       onSuccess: () =>
         toast.add({ title: 'Transaction cleared', type: 'success' }),
       meta: { errorMessage: 'Failed to clear transaction' }
     },
     [
-      patchTransaction<Options<ClearTransactionData>>(({ body }) => ({
-        cleared_at: body.cleared_at,
+      patchTransactions<Options<ClearTransactionsData>>((clear) => ({
+        cleared_at: clear.cleared_at,
         status: 'CLEARED'
       })),
       { queryKey: readEventsQueryKey() }
@@ -397,9 +382,13 @@ function AccountTransactionPage() {
           onTransactionPost={setPostingTransaction}
           onTransactionBill={setBillingTransaction}
           onTransactionClear={(transaction) =>
-            clearTransaction({
-              path: { transaction_id: transaction.id },
-              body: { cleared_at: new Date().toISOString() }
+            clearTransactions({
+              body: [
+                {
+                  transaction_id: transaction.id,
+                  cleared_at: new Date().toISOString()
+                }
+              ]
             })
           }
           onTransactionCreateEvent={setCreatingEventTransaction}
