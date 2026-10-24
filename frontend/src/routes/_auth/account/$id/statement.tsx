@@ -226,9 +226,11 @@ function StatementRow({ statement, currencyCode, onBill }: StatementRowProps) {
               {formatPlainDate(statement.period_start_on)} –{' '}
               {formatPlainDate(statement.period_end_on)}
             </div>
-            <div className="text-muted-foreground text-sm">
-              Due {formatPlainDate(statement.due_on)}
-            </div>
+            {statement.due_on && (
+              <div className="text-muted-foreground text-sm">
+                Due {formatPlainDate(statement.due_on)}
+              </div>
+            )}
           </div>
           <div className="shrink-0 font-medium">
             {formatCurrency(parseFloat(statement.balance), currencyCode)}

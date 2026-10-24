@@ -102,6 +102,18 @@ def test_create_statements_preserves_supplied_created_on(session: Session):
     assert db_statement.created_on == date(2020, 1, 15)
 
 
+def test_create_statements_without_due_on(session: Session, session_2: Session):
+    account = AccountFactory()
+    statement = StatementCreate.model_validate(
+        StatementFactory.build(account_id=account.id, due_on=None)
+    )
+    db_statement = create_statements(session, [statement])[0]
+
+    session_2_statement = session_2.get(Statement, db_statement.id)
+    assert session_2_statement is not None
+    assert session_2_statement.due_on is None
+
+
 @pytest.mark.parametrize(
     "balance",
     [Decimal("0.00"), Decimal("1234.56"), Decimal("-987.65")],

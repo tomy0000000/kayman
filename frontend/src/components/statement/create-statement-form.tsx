@@ -77,10 +77,9 @@ export function CreateStatementForm({
   const isValid =
     periodStartOn !== '' &&
     periodEndOn !== '' &&
-    dueOn !== '' &&
     isAmount(balance) &&
     periodStartOn <= periodEndOn &&
-    dueOn >= periodEndOn
+    !isDueBeforePeriodEnd
 
   const dueDays =
     dueOn !== '' && periodEndOn !== ''
@@ -95,7 +94,7 @@ export function CreateStatementForm({
       account_id: accountId,
       period_start_on: periodStartOn,
       period_end_on: periodEndOn,
-      due_on: dueOn,
+      due_on: dueOn || null,
       balance
     })
 

@@ -15,13 +15,13 @@ class StatementBase(SQLModel):
     period_start_on: date
     period_end_on: date
     balance: Decimal
-    due_on: date
+    due_on: date | None = None
 
     @model_validator(mode="after")
     def _validate_dates(self) -> Self:
         if self.period_start_on > self.period_end_on:
             raise ValueError("period_start_on must not be after period_end_on")
-        if self.due_on < self.period_end_on:
+        if self.due_on is not None and self.due_on < self.period_end_on:
             raise ValueError("due_on must not be before period_end_on")
         return self
 
