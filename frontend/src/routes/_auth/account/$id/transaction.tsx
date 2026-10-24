@@ -15,7 +15,7 @@ import { toast } from '@/components/ui/toast'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { useEventActions } from '@/hooks/use-event-actions'
 import {
-  type BillTransactionData,
+  type BillTransactionsData,
   type ClearTransactionData,
   type Options,
   type PostTransactionsData,
@@ -26,7 +26,7 @@ import {
   updateTransactions
 } from '@/lib/client'
 import {
-  billTransactionMutation,
+  billTransactionsMutation,
   clearTransactionMutation,
   postTransactionsMutation,
   readAccountTransactionsWithRunningBalanceOptions,
@@ -241,19 +241,19 @@ function AccountTransactionPage() {
       ]
     )
 
-  const { mutate: billTransaction, isPending: isBilling } =
+  const { mutate: billTransactions, isPending: isBilling } =
     useOptimisticMutation(
       {
-        ...billTransactionMutation(),
+        ...billTransactionsMutation(),
         onSuccess: () =>
           toast.add({ title: 'Transaction billed', type: 'success' }),
         meta: { errorMessage: 'Failed to bill transaction' }
       },
       [
-        patchTransaction<Options<BillTransactionData>>(({ body }) => ({
-          statement_id: body.statement_id,
+        patchTransactions<Options<BillTransactionsData>>((bill) => ({
+          statement_id: bill.statement_id,
           status: 'BILLED',
-          ...(body.amount != null && { amount: String(body.amount) })
+          ...(bill.amount != null && { amount: String(bill.amount) })
         })),
         { queryKey: readEventsQueryKey() }
       ]
@@ -471,9 +471,8 @@ function AccountTransactionPage() {
         onSubmit={(body) => {
           if (billingTransaction == null) return
           setBillingTransaction(null)
-          billTransaction({
-            path: { transaction_id: billingTransaction.id },
-            body
+          billTransactions({
+            body: [{ ...body, transaction_id: billingTransaction.id }]
           })
         }}
         isPending={isBilling}

@@ -18,7 +18,6 @@ from kayman.logics.transaction import (
 from kayman.schemas.transaction import (
     TransactionBase,
     TransactionBill,
-    TransactionBillLegacy,
     TransactionClear,
     TransactionCreate,
     TransactionPost,
@@ -129,34 +128,6 @@ def bills(
         return update_transactions_with_balances(session, updates)
     except ValueError as err:
         raise HTTPException(status_code=404, detail=err.args[0]) from err
-
-
-@txn_router.patch(
-    "/{transaction_id}/billed",
-    name="Bill Transaction",
-    response_model=TransactionRead,
-)
-def bill(
-    *,
-    session: Session = Depends(get_session),
-    transaction_id: int,
-    data: TransactionBillLegacy,
-) -> TransactionBase:
-    try:
-        validate_transactions_billable(
-            session,
-            [TransactionBill(transaction_id=transaction_id, **data.model_dump())],
-        )
-    except ValueError as err:
-        raise HTTPException(status_code=400, detail=err.args[0]) from err
-    update = TransactionStatusUpdate(
-        id=transaction_id, **data.model_dump(exclude_unset=True)
-    )
-    try:
-        updated = update_transactions_with_balances(session, [update])
-    except ValueError as err:
-        raise HTTPException(status_code=404, detail=err.args[0]) from err
-    return updated[0]
 
 
 @txn_router.patch(
