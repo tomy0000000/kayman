@@ -139,18 +139,22 @@ export function StatementBillDialog({
     setPicked(next)
   }
 
-  const selectedSum = selected.reduce(
+  const negate = (value: string) =>
+    value.startsWith('-')
+      ? value.slice(1)
+      : Number(value) === 0
+        ? value
+        : `-${value}`
+  const transactionSum = selected.reduce(
     (sum, transaction) => addDecimals(sum, transaction.amount),
     '0'
   )
+  // Card issuers print spending as a positive balance, the inverse of transaction amounts.
+  const selectedSum =
+    account.type === 'CREDIT_CARD' ? negate(transactionSum) : transactionSum
   const expected = addDecimals(previousStatement?.balance ?? '0', selectedSum)
   const difference = statement
-    ? Number(
-        addDecimals(
-          statement.balance,
-          expected.startsWith('-') ? expected.slice(1) : `-${expected}`
-        )
-      )
+    ? Number(addDecimals(statement.balance, negate(expected)))
     : 0
   const format = (value: string | number) =>
     formatCurrency(Number(value), account.currency_code)
