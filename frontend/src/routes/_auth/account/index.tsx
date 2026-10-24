@@ -4,15 +4,22 @@ import { Wallet } from 'lucide-react'
 import { Reorder, useDragControls } from 'motion/react'
 import { type RefObject, useRef, useState } from 'react'
 
-import { CreateAccountFab } from '@/components/create-account-fab'
+import { AccountFab } from '@/components/account/account-fab'
 import { DragHandle } from '@/components/drag-handle'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger
+} from '@/components/ui/context-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
 import {
   type AccountCreate,
   type AccountRead,
   type CreateAccountData,
-  type Options
+  type Options,
+  type UpdateAccountsData
 } from '@/lib/client'
 import {
   createAccountMutation,
@@ -33,6 +40,7 @@ interface AccountRowProps {
   account: AccountRead
   constraints: RefObject<HTMLDivElement | null>
   onDrop: () => void
+  onEdit: () => void
 }
 
 export const Route = createFileRoute('/_auth/account/')({
@@ -45,6 +53,7 @@ export const Route = createFileRoute('/_auth/account/')({
 function AccountListPage() {
   const queryClient = useQueryClient()
   const [fabOpen, setFabOpen] = useState(false)
+  const [editingAccount, setEditingAccount] = useState<AccountRead | null>(null)
   const list = useRef<HTMLDivElement>(null)
 
   const { isPending: isAccountsPending, data: accounts } = useQuery({
@@ -81,6 +90,31 @@ function AccountListPage() {
     ]
   )
 
+  const { mutate: update, isPending: isUpdatePending } = useOptimisticMutation(
+    {
+      ...updateAccountsMutation(),
+      onSuccess: () => toast.add({ title: 'Account updated', type: 'success' }),
+      meta: { errorMessage: 'Failed to update account' }
+    },
+    [
+      cacheUpdate<AccountRead[], Options<UpdateAccountsData>>(
+        readAccountsQueryKey(),
+        (accounts, { body }) =>
+          accounts.map((account) => {
+            const patch = body.find(({ id }) => id === account.id)
+            return patch
+              ? {
+                  ...account,
+                  name: patch.name ?? account.name,
+                  short_name: patch.short_name,
+                  type: patch.type ?? account.type
+                }
+              : account
+          })
+      )
+    ]
+  )
+
   const { mutate: reorder } = useMutation({
     ...updateAccountsMutation(),
     // Either way the server order is the one to show: on success it matches
@@ -95,6 +129,27 @@ function AccountListPage() {
   const createAccount = (body: AccountCreate) => {
     setFabOpen(false)
     mutate({ body: { ...body, index: accounts?.length ?? 0 } })
+  }
+
+  // Currency and timezone are left out, the backend does not update them.
+  const submitAccount = (body: AccountCreate) => {
+    if (!editingAccount) return createAccount(body)
+    setFabOpen(false)
+    update({
+      body: [
+        {
+          id: editingAccount.id,
+          name: body.name,
+          short_name: body.short_name,
+          type: body.type
+        }
+      ]
+    })
+  }
+
+  const handleFabOpenChange = (open: boolean) => {
+    if (open && !fabOpen) setEditingAccount(null)
+    setFabOpen(open)
   }
 
   // The drag reorders the cached list so the rows follow the pointer. Each row
@@ -157,6 +212,10 @@ function AccountListPage() {
               account={account}
               constraints={list}
               onDrop={persistOrder}
+              onEdit={() => {
+                setEditingAccount(account)
+                setFabOpen(true)
+              }}
             />
           ))}
         </Reorder.Group>
@@ -166,18 +225,19 @@ function AccountListPage() {
         <p className="text-muted-foreground p-4 text-sm">No accounts found.</p>
       )}
 
-      <CreateAccountFab
+      <AccountFab
         currencies={currencies ?? []}
         open={fabOpen}
-        onOpenChange={setFabOpen}
-        onSubmit={createAccount}
-        isPending={isPending}
+        onOpenChange={handleFabOpenChange}
+        editingAccount={editingAccount}
+        onSubmit={submitAccount}
+        isPending={isPending || isUpdatePending}
       />
     </div>
   )
 }
 
-function AccountRow({ account, constraints, onDrop }: AccountRowProps) {
+function AccountRow({ account, constraints, onDrop, onEdit }: AccountRowProps) {
   const dragControls = useDragControls()
 
   const balance = parseFloat(account.balance)
@@ -198,26 +258,41 @@ function AccountRow({ account, constraints, onDrop }: AccountRowProps) {
       )}
     >
       <DragHandle dragControls={dragControls} className="px-2" />
-      <Link
-        to="/account/$id"
-        params={{ id: account.id.toString() }}
-        className="hover:bg-muted/50 flex min-w-0 flex-1 items-center gap-3 py-3 pr-4 transition-colors"
-      >
-        <Wallet className="text-muted-foreground size-6 shrink-0" />
-        <div className="min-w-0 flex-1">
-          <div className="font-semibold">{account.name}</div>
-          <div
-            className={cn(
-              'text-sm',
-              isNegative ? 'text-red-500' : 'text-green-500'
-            )}
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <Link
+            to="/account/$id"
+            params={{ id: account.id.toString() }}
+            onClick={(clickEvent) => {
+              // The long press that opens the context menu also ends in a click.
+              if (clickEvent.currentTarget.dataset.state === 'open') {
+                clickEvent.preventDefault()
+              }
+            }}
+            className="hover:bg-muted/50 flex min-w-0 flex-1 items-center gap-3 py-3 pr-4 transition-colors"
           >
-            {isNegative
-              ? `(${formatCurrency(Math.abs(balance), account.currency_code)})`
-              : formatCurrency(balance, account.currency_code)}
-          </div>
-        </div>
-      </Link>
+            <Wallet className="text-muted-foreground size-6 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold">{account.name}</div>
+              <div
+                className={cn(
+                  'text-sm',
+                  isNegative ? 'text-red-500' : 'text-green-500'
+                )}
+              >
+                {isNegative
+                  ? `(${formatCurrency(Math.abs(balance), account.currency_code)})`
+                  : formatCurrency(balance, account.currency_code)}
+              </div>
+            </div>
+          </Link>
+        </ContextMenuTrigger>
+        <ContextMenuContent
+          onCloseAutoFocus={(event) => event.preventDefault()}
+        >
+          <ContextMenuItem onSelect={onEdit}>Edit</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
     </Reorder.Item>
   )
 }

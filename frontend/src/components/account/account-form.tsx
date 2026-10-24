@@ -22,31 +22,41 @@ import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { ACCOUNT_TYPES } from '@/lib/account-types'
 import {
   type AccountCreate,
+  type AccountRead,
   type AccountType,
   type CurrencyRead
 } from '@/lib/client'
 
-interface CreateAccountFormProps {
+interface AccountFormProps {
   currencies: CurrencyRead[]
+  editingAccount: AccountRead | null
   onSubmit: (body: AccountCreate) => void
   isPending: boolean
 }
 
-export function CreateAccountForm({
+export function AccountForm({
   currencies,
+  editingAccount,
   onSubmit,
   isPending
-}: CreateAccountFormProps) {
+}: AccountFormProps) {
   const { timezone: clientTimezone } = useClientTimezone()
-  const [name, setName] = useState('')
-  const [shortName, setShortName] = useState('')
-  const [type, setType] = useState<AccountType>('CASH')
-  const [currencyCode, setCurrencyCode] = useState<string | null>(null)
-  const [timezone, setTimezone] = useState(clientTimezone)
+  const [name, setName] = useState(editingAccount?.name ?? '')
+  const [shortName, setShortName] = useState(editingAccount?.short_name ?? '')
+  const [type, setType] = useState<AccountType>(editingAccount?.type ?? 'CASH')
+  const [currencyCode, setCurrencyCode] = useState<string | null>(
+    editingAccount?.currency_code ?? null
+  )
+  const [timezone, setTimezone] = useState<string>(
+    editingAccount?.timezone ?? clientTimezone
+  )
+
+  // Currency and timezone are fixed once the account exists.
+  const isEditing = editingAccount != null
 
   const selectedCurrency = currencies.find((c) => c.code === currencyCode)
 
-  const handleCreate = () => {
+  const handleSubmit = () => {
     if (currencyCode == null) return
     onSubmit({
       name,
@@ -59,8 +69,9 @@ export function CreateAccountForm({
 
   return (
     <KbdForm
-      onSubmit={handleCreate}
+      onSubmit={handleSubmit}
       isPending={isPending}
+      isEditing={isEditing}
       disabled={!name || currencyCode == null}
     >
       <Field>
@@ -104,6 +115,7 @@ export function CreateAccountForm({
               type="button"
               variant="outline"
               className="w-full justify-between"
+              disabled={isEditing}
             >
               {selectedCurrency ? (
                 <span className="flex items-center gap-2">
@@ -143,11 +155,18 @@ export function CreateAccountForm({
           id="account-timezone"
           value={timezone}
           onValueChange={setTimezone}
+          disabled={isEditing}
         />
-        <FieldDescription>Will be stored as {timezone}</FieldDescription>
+        {!isEditing && (
+          <FieldDescription>Will be stored as {timezone}</FieldDescription>
+        )}
       </Field>
 
-      <Collapsible className="space-y-5">
+      {/* Opened when editing, so an existing short name is not hidden. */}
+      <Collapsible
+        className="space-y-5"
+        defaultOpen={editingAccount?.short_name != null}
+      >
         <CollapsibleTrigger className="group flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           Advanced
           <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />

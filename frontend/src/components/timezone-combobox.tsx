@@ -57,12 +57,14 @@ interface TimezoneComboboxProps {
   id?: string
   value: string
   onValueChange: (value: string) => void
+  disabled?: boolean
 }
 
 export function TimezoneCombobox({
   id,
   value,
-  onValueChange
+  onValueChange,
+  disabled
 }: TimezoneComboboxProps) {
   const anchor = useComboboxAnchor()
   const selected = TIMEZONE_OPTIONS.find((tz) => tz.value === value) ?? null
@@ -75,9 +77,10 @@ export function TimezoneCombobox({
       onValueChange={(option) => {
         if (option) onValueChange(option.value)
       }}
+      disabled={disabled}
     >
       <div ref={anchor}>
-        <ComboboxInput placeholder="Select timezone">
+        <ComboboxInput placeholder="Select timezone" disabled={disabled}>
           <InputGroupAddon>
             <Globe className="size-4" />
           </InputGroupAddon>
