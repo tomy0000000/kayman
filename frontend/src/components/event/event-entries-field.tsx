@@ -7,6 +7,7 @@ import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { DescriptionPopover } from '@/components/description-popover'
 import { DragHandle } from '@/components/drag-handle'
 import { FieldEmpty } from '@/components/field-empty'
+import { TableSubtotal } from '@/components/table-subtotal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -19,6 +20,7 @@ import {
 import { useClientCurrency } from '@/hooks/use-client-currency'
 import { type CategoryRead, type CurrencyRead } from '@/lib/client'
 import { type EventEntryDraft, componentKey } from '@/lib/types'
+import { sumByCurrency } from '@/lib/utils'
 
 interface EventEntriesFieldProps {
   categories: CategoryRead[]
@@ -74,6 +76,18 @@ export function EventEntriesField({
   const removeEntry = (key: string) =>
     onChange(value.filter((item) => item.key !== key))
 
+  // Rows still being filled in are left out rather than counted as zero.
+  const totals = sumByCurrency(
+    value.flatMap((entry) => {
+      const amount = Number(entry.amount) * parseInt(entry.quantity, 10)
+      return entry.amount !== '' &&
+        entry.currencyCode != null &&
+        Number.isFinite(amount)
+        ? [{ amount, currencyCode: entry.currencyCode }]
+        : []
+    })
+  )
+
   if (value.length === 0) {
     return (
       <FieldEmpty
@@ -122,6 +136,7 @@ export function EventEntriesField({
               />
             ))}
           </Reorder.Group>
+          <TableSubtotal totals={totals} colSpan={6} />
         </Table>
       </div>
       <Button type="button" variant="outline" size="sm" onClick={addEntry}>

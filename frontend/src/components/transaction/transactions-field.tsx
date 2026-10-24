@@ -7,6 +7,7 @@ import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { DragHandle } from '@/components/drag-handle'
 import { FieldEmpty } from '@/components/field-empty'
 import { type SelectedTransaction } from '@/components/link-transactions-table'
+import { TableSubtotal } from '@/components/table-subtotal'
 import { TransactionTagsPopover } from '@/components/transaction/transaction-tags-popover'
 import { TransactionsLinkDialog } from '@/components/transaction/transactions-link-dialog'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,7 @@ import {
   componentKey,
   toTransactionDraft
 } from '@/lib/types'
+import { sumByCurrency } from '@/lib/utils'
 
 interface TransactionsFieldProps {
   accounts: AccountRead[]
@@ -78,6 +80,21 @@ export function TransactionsField({
 
   const removeTransaction = (key: string) =>
     onChange(value.filter((item) => item.key !== key))
+
+  // Rows still being filled in are left out rather than counted as zero.
+  const totals = sumByCurrency(
+    value.flatMap((transaction) => {
+      const currencyCode = accounts.find(
+        (item) => item.id === transaction.accountId
+      )?.currency_code
+      const amount = Number(transaction.amount)
+      return transaction.amount !== '' &&
+        currencyCode != null &&
+        Number.isFinite(amount)
+        ? [{ amount, currencyCode }]
+        : []
+    })
+  )
 
   const actions = (
     <>
@@ -143,6 +160,7 @@ export function TransactionsField({
               />
             ))}
           </Reorder.Group>
+          <TableSubtotal totals={totals} colSpan={5} signed />
         </Table>
       </div>
       <div className="flex gap-2">{actions}</div>
