@@ -11,6 +11,7 @@ from kayman.crud.transaction import read_transactions, update_transactions
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBill,
+    TransactionPost,
     TransactionReadWithBalance,
     TransactionUpdate,
 )
@@ -43,17 +44,43 @@ def get_transactions_with_running_balance(
     return results
 
 
-def validate_transaction_postable(session: Session, transaction_id: int) -> None:
-    txns = read_transactions(session, transaction_ids=[transaction_id])
-    if len(txns) != 1:
-        raise ValueError(f"Transaction id(s) not found: {{{transaction_id}}}")
-    txn = txns[0]
-    if txn.posted_at is not None:
-        raise ValueError(f"Transaction {transaction_id} is already posted")
-    if txn.statement_id is not None:
-        raise ValueError(f"Transaction {transaction_id} is already on a statement")
-    if txn.cleared_at is not None:
-        raise ValueError(f"Transaction {transaction_id} is already cleared")
+def _require_transactions(
+    session: Session, transaction_ids: Sequence[int], verb: str
+) -> dict[int, Transaction]:
+    """Raise unless the ids are non-empty, unique, and all exist."""
+    # Must precede any read: read_transactions treats an empty id list as "all".
+    if not transaction_ids:
+        raise ValueError(f"No transactions to {verb}")
+    duplicates = {i for i, n in Counter(transaction_ids).items() if n > 1}
+    if duplicates:
+        raise ValueError(f"Duplicate transaction id(s): {format_ids(duplicates)}")
+
+    txns = {
+        txn.id: txn
+        for txn in read_transactions(session, transaction_ids=transaction_ids)
+        if txn.id is not None
+    }
+    missing_ids = set(transaction_ids) - txns.keys()
+    if missing_ids:
+        raise ValueError(f"Transaction id(s) not found: {format_ids(missing_ids)}")
+    return txns
+
+
+def validate_transactions_postable(
+    session: Session, posts: Sequence[TransactionPost]
+) -> None:
+    txns = _require_transactions(
+        session, [post.transaction_id for post in posts], "post"
+    )
+    not_pending = {
+        txn_id
+        for txn_id, txn in txns.items()
+        if txn.posted_at is not None
+        or txn.statement_id is not None
+        or txn.cleared_at is not None
+    }
+    if not_pending:
+        raise ValueError(f"Transaction id(s) not pending: {format_ids(not_pending)}")
 
 
 def validate_transaction_clearable(session: Session, transaction_id: int) -> None:
@@ -72,22 +99,9 @@ def validate_transaction_clearable(session: Session, transaction_id: int) -> Non
 def validate_transactions_billable(
     session: Session, bills: Sequence[TransactionBill]
 ) -> None:
-    # Must precede any read: read_transactions treats an empty id list as "all".
-    if not bills:
-        raise ValueError("No transactions to bill")
-    transaction_ids = [bill.transaction_id for bill in bills]
-    duplicates = {i for i, n in Counter(transaction_ids).items() if n > 1}
-    if duplicates:
-        raise ValueError(f"Duplicate transaction id(s): {format_ids(duplicates)}")
-
-    txns = {
-        txn.id: txn
-        for txn in read_transactions(session, transaction_ids=transaction_ids)
-        if txn.id is not None
-    }
-    missing_ids = set(transaction_ids) - txns.keys()
-    if missing_ids:
-        raise ValueError(f"Transaction id(s) not found: {format_ids(missing_ids)}")
+    txns = _require_transactions(
+        session, [bill.transaction_id for bill in bills], "bill"
+    )
     not_posted = {
         txn.id
         for txn in txns.values()

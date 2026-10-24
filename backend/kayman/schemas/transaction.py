@@ -89,6 +89,7 @@ class TransactionReadWithBalance(TransactionRead):
 
 
 class TransactionPost(SQLModel):
+    transaction_id: int
     posted_at: datetime
     amount: Decimal | None = None
 

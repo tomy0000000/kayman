@@ -25,7 +25,7 @@ interface TransactionPostSheetProps {
   currency: CurrencyRead | null | undefined
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (body: TransactionPost) => void
+  onSubmit: (body: Omit<TransactionPost, 'transaction_id'>) => void
   isPending: boolean
 }
 

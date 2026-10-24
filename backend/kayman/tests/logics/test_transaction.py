@@ -11,12 +11,13 @@ from kayman.logics.transaction import (
     get_transactions_with_running_balance,
     update_transactions_with_balances,
     validate_transaction_clearable,
-    validate_transaction_postable,
     validate_transactions_billable,
+    validate_transactions_postable,
 )
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBill,
+    TransactionPost,
     TransactionStatusUpdate,
     TransactionUpdate,
 )
@@ -242,42 +243,130 @@ def test_update_transactions_with_balances_does_not_mutate_input(session: Sessio
     assert [update.id for update in updates] == [txn_2.id, txn_1.id]
 
 
-def test_validate_transaction_postable_passes(session: Session):
-    txn = TransactionFactory(posted_at=None, cleared_at=None)
+def test_validate_transactions_postable_passes(session: Session):
+    txns = [TransactionFactory(posted_at=None, cleared_at=None) for _ in range(3)]
 
-    assert validate_transaction_postable(session, txn.id) is None
-
-
-def test_validate_transaction_postable_already_posted(session: Session):
-    txn = TransactionFactory(cleared_at=None)
-
-    with pytest.raises(ValueError, match="is already posted"):
-        validate_transaction_postable(session, txn.id)
-
-
-def test_validate_transaction_postable_on_statement(session: Session):
-    statement = StatementFactory()
-    txn = TransactionFactory(
-        account=statement.account,
-        statement_id=statement.id,
-        posted_at=None,
-        cleared_at=None,
+    assert (
+        validate_transactions_postable(
+            session,
+            [
+                TransactionPost(
+                    transaction_id=t.id, posted_at=datetime(2025, 1, 1, tzinfo=UTC)
+                )
+                for t in txns
+            ],
+        )
+        is None
     )
 
-    with pytest.raises(ValueError, match="is already on a statement"):
-        validate_transaction_postable(session, txn.id)
+
+def test_validate_transactions_postable_empty(session: Session):
+    with pytest.raises(ValueError, match=re.escape("No transactions to post")):
+        validate_transactions_postable(session, [])
 
 
-def test_validate_transaction_postable_cleared(session: Session):
-    txn = TransactionFactory(posted_at=None)
+def test_validate_transactions_postable_duplicates(session: Session):
+    txn_a = TransactionFactory(posted_at=None, cleared_at=None)
+    txn_b = TransactionFactory(posted_at=None, cleared_at=None)
 
-    with pytest.raises(ValueError, match="is already cleared"):
-        validate_transaction_postable(session, txn.id)
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Duplicate transaction id(s): {{{txn_a.id}}}"),
+    ):
+        validate_transactions_postable(
+            session,
+            [
+                TransactionPost(
+                    transaction_id=txn_a.id, posted_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+                TransactionPost(
+                    transaction_id=txn_b.id, posted_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+                TransactionPost(
+                    transaction_id=txn_a.id, posted_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+            ],
+        )
 
 
-def test_validate_transaction_postable_missing_id(session: Session):
-    with pytest.raises(ValueError, match="not found"):
-        validate_transaction_postable(session, 999)
+def test_validate_transactions_postable_missing_ids(session: Session):
+    txn = TransactionFactory(posted_at=None, cleared_at=None)
+
+    with pytest.raises(
+        ValueError, match=re.escape("Transaction id(s) not found: {998, 999}")
+    ):
+        validate_transactions_postable(
+            session,
+            [
+                TransactionPost(
+                    transaction_id=999, posted_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+                TransactionPost(
+                    transaction_id=txn.id, posted_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+                TransactionPost(
+                    transaction_id=998, posted_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+            ],
+        )
+
+
+def test_validate_transactions_postable_lists_all_not_pending(session: Session):
+    statement = StatementFactory()
+    account = statement.account
+    pending = TransactionFactory(account=account, posted_at=None, cleared_at=None)
+    posted = TransactionFactory(account=account, cleared_at=None)
+    billed = TransactionFactory(
+        account=account, statement_id=statement.id, posted_at=None, cleared_at=None
+    )
+    cleared = TransactionFactory(account=account, posted_at=None)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            f"Transaction id(s) not pending: {{{posted.id}, {billed.id}, {cleared.id}}}"
+        ),
+    ):
+        validate_transactions_postable(
+            session,
+            [
+                TransactionPost(
+                    transaction_id=cleared.id,
+                    posted_at=datetime(2025, 1, 1, tzinfo=UTC),
+                ),
+                TransactionPost(
+                    transaction_id=pending.id,
+                    posted_at=datetime(2025, 1, 1, tzinfo=UTC),
+                ),
+                TransactionPost(
+                    transaction_id=billed.id, posted_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+                TransactionPost(
+                    transaction_id=posted.id, posted_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+            ],
+        )
+
+
+def test_validate_transactions_postable_missing_before_not_pending(
+    session: Session,
+):
+    posted = TransactionFactory(cleared_at=None)
+
+    with pytest.raises(
+        ValueError, match=re.escape("Transaction id(s) not found: {999}")
+    ):
+        validate_transactions_postable(
+            session,
+            [
+                TransactionPost(
+                    transaction_id=posted.id, posted_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+                TransactionPost(
+                    transaction_id=999, posted_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+            ],
+        )
 
 
 def test_validate_transaction_clearable_passes(session: Session):

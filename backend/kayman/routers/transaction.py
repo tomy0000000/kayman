@@ -12,8 +12,8 @@ from kayman.logics.account import update_balances_with_transactions
 from kayman.logics.transaction import (
     update_transactions_with_balances,
     validate_transaction_clearable,
-    validate_transaction_postable,
     validate_transactions_billable,
+    validate_transactions_postable,
 )
 from kayman.schemas.transaction import (
     TransactionBase,
@@ -80,6 +80,32 @@ def reads(
 
 
 @txn_router.post(
+    "/post", name="Post Transactions", response_model=list[TransactionRead]
+)
+def posts(
+    *, session: Session = Depends(get_session), posts: Sequence[TransactionPost]
+) -> Sequence[TransactionBase]:
+    try:
+        validate_transactions_postable(session, posts)
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=err.args[0]) from err
+    updates = []
+    for post in posts:
+        update = TransactionStatusUpdate(
+            id=post.transaction_id,
+            posted_at=post.posted_at,
+        )
+        # None would null the column on update.
+        if post.amount is not None:
+            update.amount = post.amount
+        updates.append(update)
+    try:
+        return update_transactions_with_balances(session, updates)
+    except ValueError as err:
+        raise HTTPException(status_code=404, detail=err.args[0]) from err
+
+
+@txn_router.post(
     "/bill", name="Bill Transactions", response_model=list[TransactionRead]
 )
 def bills(
@@ -103,31 +129,6 @@ def bills(
         return update_transactions_with_balances(session, updates)
     except ValueError as err:
         raise HTTPException(status_code=404, detail=err.args[0]) from err
-
-
-@txn_router.patch(
-    "/{transaction_id}/posted",
-    name="Post Transaction",
-    response_model=TransactionRead,
-)
-def post(
-    *,
-    session: Session = Depends(get_session),
-    transaction_id: int,
-    data: TransactionPost,
-) -> TransactionBase:
-    try:
-        validate_transaction_postable(session, transaction_id)
-    except ValueError as err:
-        raise HTTPException(status_code=400, detail=err.args[0]) from err
-    update = TransactionStatusUpdate(
-        id=transaction_id, **data.model_dump(exclude_unset=True)
-    )
-    try:
-        updated = update_transactions_with_balances(session, [update])
-    except ValueError as err:
-        raise HTTPException(status_code=404, detail=err.args[0]) from err
-    return updated[0]
 
 
 @txn_router.patch(

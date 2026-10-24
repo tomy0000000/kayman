@@ -18,7 +18,7 @@ import {
   type BillTransactionData,
   type ClearTransactionData,
   type Options,
-  type PostTransactionData,
+  type PostTransactionsData,
   type TransactionCreate,
   type TransactionReadWithBalance,
   createEvent,
@@ -28,7 +28,7 @@ import {
 import {
   billTransactionMutation,
   clearTransactionMutation,
-  postTransactionMutation,
+  postTransactionsMutation,
   readAccountTransactionsWithRunningBalanceOptions,
   readAccountTransactionsWithRunningBalanceQueryKey,
   readAccountsOptions,
@@ -134,6 +134,24 @@ function AccountTransactionPage() {
         )
     )
 
+  const patchTransactions = <
+    TVariables extends { body: Array<{ transaction_id: number }> }
+  >(
+    patch: (
+      item: TVariables['body'][number]
+    ) => Partial<TransactionReadWithBalance>
+  ) =>
+    cacheUpdate<TransactionReadWithBalance[], TVariables>(
+      transactionsOptions.queryKey,
+      (transactions, { body }) => {
+        const items = new Map(body.map((item) => [item.transaction_id, item]))
+        return transactions.map((transaction) => {
+          const item = items.get(transaction.id)
+          return item ? { ...transaction, ...patch(item) } : transaction
+        })
+      }
+    )
+
   // One mutation for the FAB's create and edit; `id` rides in the variables so
   // the cache update can tell them apart. A created row is inserted by instant
   // with the running balance it would have; the rows after it keep their old
@@ -205,19 +223,19 @@ function AccountTransactionPage() {
     mutate({ body, id: editingTransaction?.id })
   }
 
-  const { mutate: postTransaction, isPending: isPosting } =
+  const { mutate: postTransactions, isPending: isPosting } =
     useOptimisticMutation(
       {
-        ...postTransactionMutation(),
+        ...postTransactionsMutation(),
         onSuccess: () =>
           toast.add({ title: 'Transaction posted', type: 'success' }),
         meta: { errorMessage: 'Failed to post transaction' }
       },
       [
-        patchTransaction<Options<PostTransactionData>>(({ body }) => ({
-          posted_at: body.posted_at,
+        patchTransactions<Options<PostTransactionsData>>((post) => ({
+          posted_at: post.posted_at,
           status: 'POSTED',
-          ...(body.amount != null && { amount: String(body.amount) })
+          ...(post.amount != null && { amount: String(post.amount) })
         })),
         { queryKey: readEventsQueryKey() }
       ]
@@ -432,9 +450,8 @@ function AccountTransactionPage() {
         onSubmit={(body) => {
           if (postingTransaction == null) return
           setPostingTransaction(null)
-          postTransaction({
-            path: { transaction_id: postingTransaction.id },
-            body
+          postTransactions({
+            body: [{ ...body, transaction_id: postingTransaction.id }]
           })
         }}
         isPending={isPosting}
