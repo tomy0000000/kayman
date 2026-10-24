@@ -26,3 +26,4 @@ Kayman is the one-stop solution for personal finance.
 
 - Backend: FastAPI
 - Frontend: TypeScript + React + Vite
+- CLI: Go

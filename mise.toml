@@ -1,4 +1,5 @@
 [tools]
+go = "1.27.3"
 hadolint = "2.14.0"
 imagemagick = "7.1.2_31"
 node = "26.3.1"
@@ -8,7 +9,7 @@ python = "3.12"
 uv = "0.10.10"
 
 [task_config]
-includes = ["scripts", "backend/scripts", "frontend/scripts", "icon/scripts"]
+includes = ["scripts", "backend/scripts", "frontend/scripts", "icon/scripts", "cli/scripts"]
 
 [tasks."build:icon-bundle"]
 description = "Build icon + social preview images"
