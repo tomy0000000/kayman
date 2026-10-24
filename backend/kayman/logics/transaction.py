@@ -103,6 +103,11 @@ def validate_transactions_clearable(
         raise ValueError(
             f"Transaction id(s) have no associated event: {format_ids(no_event)}"
         )
+    already_cleared = {i for i, txn in txns.items() if txn.cleared_at is not None}
+    if already_cleared:
+        raise ValueError(
+            f"Transaction id(s) already cleared: {format_ids(already_cleared)}"
+        )
 
 
 def validate_transactions_billable(

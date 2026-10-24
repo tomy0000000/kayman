@@ -373,7 +373,9 @@ def test_validate_transactions_postable_missing_before_not_pending(
 def test_validate_transactions_clearable_passes(session: Session):
     statement = StatementFactory()
     txns = [
-        TransactionFactory(account=statement.account, statement_id=statement.id)
+        TransactionFactory(
+            account=statement.account, statement_id=statement.id, cleared_at=None
+        )
         for _ in range(3)
     ]
 
@@ -490,6 +492,39 @@ def test_validate_transactions_clearable_no_event(session: Session):
                 TransactionClear(
                     transaction_id=txn.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
                 )
+            ],
+        )
+
+
+def test_validate_transactions_clearable_lists_all_already_cleared(session: Session):
+    statement = StatementFactory()
+    account = statement.account
+    valid = TransactionFactory(
+        account=account, statement_id=statement.id, cleared_at=None
+    )
+    cleared_1 = TransactionFactory(account=account, statement_id=statement.id)
+    cleared_2 = TransactionFactory(account=account, statement_id=statement.id)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            f"Transaction id(s) already cleared: {{{cleared_1.id}, {cleared_2.id}}}"
+        ),
+    ):
+        validate_transactions_clearable(
+            session,
+            [
+                TransactionClear(
+                    transaction_id=cleared_2.id,
+                    cleared_at=datetime(2025, 1, 1, tzinfo=UTC),
+                ),
+                TransactionClear(
+                    transaction_id=valid.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
+                ),
+                TransactionClear(
+                    transaction_id=cleared_1.id,
+                    cleared_at=datetime(2025, 1, 1, tzinfo=UTC),
+                ),
             ],
         )
 
