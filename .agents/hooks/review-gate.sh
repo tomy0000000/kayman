@@ -22,7 +22,10 @@ if [ "$(jq -r '.stop_hook_active' <<<"$input")" = "true" ]; then
   exit 0
 fi
 
-if git diff --quiet HEAD -- backend frontend && [ -z "$untracked" ]; then
+# A release version bump is not code: skip when nothing else changed.
+non_release=$(git diff HEAD --name-only -- backend frontend |
+  grep -vxF -e backend/kayman/main.py -e backend/pyproject.toml -e backend/uv.lock -e frontend/package.json || true)
+if [ -z "$non_release" ] && [ -z "$untracked" ]; then
   exit 0
 fi
 
