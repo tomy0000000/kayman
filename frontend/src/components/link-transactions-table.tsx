@@ -11,7 +11,7 @@ import {
 import { ListFilter } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import { AccountSelect } from '@/components/account-select'
+import { AccountSelect } from '@/components/account/account-select'
 import { Amount } from '@/components/amount'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
 import { Button } from '@/components/ui/button'

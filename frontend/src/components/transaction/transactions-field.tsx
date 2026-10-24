@@ -2,7 +2,7 @@ import { ArrowLeftRight, X } from 'lucide-react'
 import { Reorder, useDragControls } from 'motion/react'
 import { type RefObject, useRef } from 'react'
 
-import { AccountSelect } from '@/components/account-select'
+import { AccountSelect } from '@/components/account/account-select'
 import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { DragHandle } from '@/components/drag-handle'
 import { FieldEmpty } from '@/components/field-empty'

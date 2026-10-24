@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { AccountSelect } from '@/components/account-select'
+import { AccountSelect } from '@/components/account/account-select'
 import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { KbdForm } from '@/components/kbd-form'
 import { LinkEventField } from '@/components/link-event-field'
