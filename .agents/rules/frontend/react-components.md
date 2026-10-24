@@ -38,6 +38,12 @@ If a second component is reused elsewhere, move it to its own file.
 
 A component used in more than one route or feature belongs in `frontend/src/components/`. Route-local components stay colocated with the route file (either inline-private or as a sibling file under `routes/`).
 
+## Domain components get their own subdirectory
+
+Components tied to one domain (account, event, transaction, statement, ...) live in `frontend/src/components/<domain>/`, e.g. `components/account/account-form.tsx`. Only generic, domain-agnostic components (`fab.tsx`, `responsive-sheet.tsx`, `date-picker.tsx`) stay flat in `components/`. When a domain has a file at the top level, move it into the domain's subdirectory.
+
+Why: groups a domain's form, sheet, table and select in one place, and keeps the top level for the shared building blocks.
+
 ## Utility functions live in `lib/utils.ts`
 
 Pure helpers (formatters, date math, class-name builders, etc.) belong in `frontend/src/lib/utils.ts`, or a sibling module under `frontend/src/lib/` if the file grows unwieldy. A `.tsx` file should contain only its props interface and the component(s) it owns.
