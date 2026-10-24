@@ -199,7 +199,7 @@ function AccountRow({ account, constraints, onDrop }: AccountRowProps) {
     >
       <DragHandle dragControls={dragControls} className="px-2" />
       <Link
-        to="/account/$id/transaction"
+        to="/account/$id"
         params={{ id: account.id.toString() }}
         className="hover:bg-muted/50 flex min-w-0 flex-1 items-center gap-3 py-3 pr-4 transition-colors"
       >
