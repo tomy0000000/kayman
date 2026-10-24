@@ -12,6 +12,7 @@ from kayman.logics.account import update_balances_with_transactions
 from kayman.logics.transaction import (
     update_transactions_with_balances,
     validate_transaction_clearable,
+    validate_transaction_postable,
     validate_transactions_billable,
 )
 from kayman.schemas.transaction import (
@@ -115,6 +116,10 @@ def post(
     transaction_id: int,
     data: TransactionPost,
 ) -> TransactionBase:
+    try:
+        validate_transaction_postable(session, transaction_id)
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=err.args[0]) from err
     update = TransactionStatusUpdate(
         id=transaction_id, **data.model_dump(exclude_unset=True)
     )

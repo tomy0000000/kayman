@@ -11,6 +11,7 @@ from kayman.logics.transaction import (
     get_transactions_with_running_balance,
     update_transactions_with_balances,
     validate_transaction_clearable,
+    validate_transaction_postable,
     validate_transactions_billable,
 )
 from kayman.schemas.transaction import (
@@ -239,6 +240,44 @@ def test_update_transactions_with_balances_does_not_mutate_input(session: Sessio
 
     # The caller's list keeps its original order; sorting happens on a copy.
     assert [update.id for update in updates] == [txn_2.id, txn_1.id]
+
+
+def test_validate_transaction_postable_passes(session: Session):
+    txn = TransactionFactory(posted_at=None, cleared_at=None)
+
+    assert validate_transaction_postable(session, txn.id) is None
+
+
+def test_validate_transaction_postable_already_posted(session: Session):
+    txn = TransactionFactory(cleared_at=None)
+
+    with pytest.raises(ValueError, match="is already posted"):
+        validate_transaction_postable(session, txn.id)
+
+
+def test_validate_transaction_postable_on_statement(session: Session):
+    statement = StatementFactory()
+    txn = TransactionFactory(
+        account=statement.account,
+        statement_id=statement.id,
+        posted_at=None,
+        cleared_at=None,
+    )
+
+    with pytest.raises(ValueError, match="is already on a statement"):
+        validate_transaction_postable(session, txn.id)
+
+
+def test_validate_transaction_postable_cleared(session: Session):
+    txn = TransactionFactory(posted_at=None)
+
+    with pytest.raises(ValueError, match="is already cleared"):
+        validate_transaction_postable(session, txn.id)
+
+
+def test_validate_transaction_postable_missing_id(session: Session):
+    with pytest.raises(ValueError, match="not found"):
+        validate_transaction_postable(session, 999)
 
 
 def test_validate_transaction_clearable_passes(session: Session):
