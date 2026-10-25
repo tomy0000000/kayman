@@ -18,7 +18,6 @@ from kayman.logics.event import (
     validate_event_clearable,
     validate_events_editable,
 )
-from kayman.schemas.api_models import EventReadDetailed
 from kayman.schemas.event import (
     EventBase,
     EventClear,
@@ -26,6 +25,7 @@ from kayman.schemas.event import (
     EventClearConflict,
     EventCreate,
     EventRead,
+    EventReadDetailed,
     EventUpdate,
 )
 

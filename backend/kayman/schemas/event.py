@@ -7,10 +7,11 @@ from pydantic_extra_types.timezone_name import TimeZoneName
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 
 from kayman.schemas._custom_types import SATimezone
+from kayman.schemas.event_entry import EventEntryRead
 
 if TYPE_CHECKING:
     from kayman.schemas.event_entry import EventEntry
-    from kayman.schemas.transaction import Transaction
+    from kayman.schemas.transaction import Transaction, TransactionRead
 
 
 class EventType(enum.Enum):
@@ -67,6 +68,13 @@ class EventCreate(EventBase):
 
 class EventRead(EventBase):
     id: int
+
+
+class EventReadDetailed(EventRead):
+    """Includes transactions and entries."""
+
+    transactions: list["TransactionRead"]
+    entries: list[EventEntryRead]
 
 
 class EventClear(SQLModel):
