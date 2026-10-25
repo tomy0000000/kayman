@@ -9,7 +9,7 @@ class EventEntryFactory(SQLAlchemyModelFactory):
         model = EventEntry
         sqlalchemy_session_persistence = "commit"
 
-    amount = factory.Faker("pydecimal", left_digits=5, right_digits=2)
+    amount = factory.Faker("pydecimal", left_digits=4, right_digits=2)
     category = factory.SubFactory("kayman.tests.factories.category.CategoryFactory")
     category_id = factory.SelfAttribute("category.id")
     description = factory.Faker("sentence")

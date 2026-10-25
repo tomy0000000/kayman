@@ -11,7 +11,7 @@ class TransactionFactory(SQLAlchemyModelFactory):
 
     account = factory.SubFactory("kayman.tests.factories.account.AccountFactory")
     account_id = factory.SelfAttribute("account.id")
-    amount = factory.Faker("pydecimal", left_digits=5, right_digits=2)
+    amount = factory.Faker("pydecimal", left_digits=4, right_digits=2)
     description = factory.Faker("sentence")
     index = factory.Sequence(lambda n: n)
     event = factory.SubFactory("kayman.tests.factories.event.EventFactory")

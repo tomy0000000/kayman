@@ -22,5 +22,5 @@ class StatementFactory(SQLAlchemyModelFactory):
     period_end_on = factory.LazyAttribute(
         lambda o: o.period_start_on + timedelta(days=30)
     )
-    balance = factory.Faker("pydecimal", left_digits=5, right_digits=2)
+    balance = factory.Faker("pydecimal", left_digits=4, right_digits=2)
     due_on = factory.LazyAttribute(lambda o: o.period_end_on + timedelta(days=20))
