@@ -120,9 +120,16 @@ Same flow as renaming: add-new, dual-write (transforming on the way in), backfil
 
 A pure widening (`varchar(50) → varchar(255)`, `int → bigint`) needs no transformation and ships as a single `alter_column` — only use the multi-step dance when the conversion is lossy or the column is hot.
 
-## Composite API models
+## Composite read models
 
-Cross-aggregate request/response wrappers live in `schemas/api_models.py` as plain `SQLModel` subclasses composing the per-aggregate `Create`/`Read` models (e.g. `EventCreateDetailed`, `EventReadDetailed`). Don't put them in the aggregate module.
+A model that nests other aggregates' `Read` models lives in the aggregate module it describes, e.g. `EventReadDetailed` in `event.py` and `TransactionReadWithBalance` in `transaction.py`. There is no shared module for composites.
+
+When the nested import would be circular (`transaction.py` already imports `event.py` at runtime):
+
+- Import the nested model under `TYPE_CHECKING` and annotate the field with a string, e.g. `transactions: list["TransactionRead"]`.
+- Resolve it at the end of `schemas/__init__.py` with `Model.model_rebuild(_types_namespace={...})`.
+
+**Why:** the package `__init__` always finishes before any `kayman.schemas.*` import returns, so the model is complete before first use, and each model stays in its own aggregate.
 
 ## Reference examples
 
@@ -133,5 +140,5 @@ Cross-aggregate request/response wrappers live in `schemas/api_models.py` as pla
 
 These predate the rule. New work should follow the rule above; touch these when convenient.
 
-- `schemas/event.py:25-32`: `EventBase` declares `type`, `timestamp`, `timezone` with `sa_column=Column(...)`. Move those `sa_column` overrides to the `Event` table class; keep `EventBase` data-only.
-- `schemas/event_entry.py:12-43`: `EventEntryBase` includes server-derived `event_id` and `index`, forcing `EventEntryCreate(SQLModel)` to drop Base inheritance. Move both fields to the `EventEntry` table class.
+- `schemas/event_entry.py:12-21`: `EventEntryBase` includes server-derived `event_id` and `index`, and `EventEntryRead` redeclares the inherited `event_id`. Move both fields to the `EventEntry` table class.
+- `schemas/transaction.py:19-36`: `TransactionBase` declares `created_at`, `posted_at`, `cleared_at` with `sa_column=Column(...)`, and `TransactionRead` redeclares the inherited `created_at`. Move those `sa_column` overrides to the `Transaction` table class; keep `TransactionBase` data-only.
