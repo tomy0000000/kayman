@@ -1,53 +1,37 @@
 ---
 name: release
-description: Cut a new kayman release. Use this whenever the user says "release", "cut a release", "ship a release", "publish a new version", "bump the version", or otherwise asks to roll develop into main and publish to GitHub. Drives the project's release workflow: picks the next zero-ver version, runs `scripts/release.sh` to do the develop→main→develop merge dance and version bumps, drafts GitHub release notes from the commit log, and publishes after the user confirms.
+description: Cut a new kayman release. Use this whenever the user says "release", "cut a release", "ship a release", "publish a new version", "bump the version", or otherwise asks to roll develop into main and publish to GitHub. Drives the project's release workflow: assumes a minor bump, drafts GitHub release notes from the commit log, asks the user one question to confirm both, then runs `scripts/release.sh`, pushes, and publishes.
 ---
 
 # Release
 
-Cuts a new kayman release. Most of the mechanical work (branching, version bumps, commit) lives in `scripts/release.sh`. This skill drives the parts that need judgment or human confirmation: picking the version, drafting release notes, and publishing.
+Cuts a new kayman release. Most of the mechanical work (branching, version bumps, commit) lives in `scripts/release.sh`. This skill drafts the release notes and gets a single confirmation from the user. After that one answer, it runs to the published release without asking again.
 
 ## Versioning
 
 The project uses zero-ver: `0.<minor>.<patch>`. Major is always `0`.
 
-- **Bump minor** (`0.X.0`) when the release contains any new feature, breaking change, or other notable change — anything that would land in the 🌟 / 🧨 / 🪜 sections of the release notes.
-- **Bump patch** (`0.X.Y`) when the only user-visible changes are bug fixes and internal/CI/dependency bumps.
+Always assume a **minor** bump (`0.X.0`). The user can pick a patch bump or a custom version when answering the confirmation question.
 
 Tags and GitHub release titles are bare versions like `0.11.0` (no `v` prefix).
 
 ## Workflow
 
-### Step 1: Pick the version
-
-Find the previous tag and the commits since:
+### Step 1: Compute the version
 
 ```bash
 git fetch origin
 git describe --tags --abbrev=0
-git log <previous-tag>..develop --oneline
 ```
 
-Apply the versioning rules above to propose a version and tell the user the choice (e.g., "Previous was 0.11.0, I see new features in the log, so I'd cut 0.12.0 — sound right?"). Let the user override before continuing.
+Bump the minor of the previous tag and reset patch to `0` (e.g. `0.26.0` → `0.27.0`).
 
-### Step 2: Run the release script
+### Step 2: Draft release notes
 
-`scripts/release.sh <version>` performs the local git work without ever leaving `develop`: check that `main` matches `origin/main` and that `develop` fast-forwards from it, stash, bump versions in `frontend/package.json`, `icon/package.json`, `backend/pyproject.toml`, `backend/kayman/main.py`, refresh `backend/uv.lock`, commit `🔖 release: <version>` on `develop`, fast-forward `main` to `develop` with `git branch -f`, and pop the stash. It never checks out `main`, because switching branches would delete and recreate files under `.agents/`, which the sandbox protects via the `.claude` symlink.
-
-```bash
-.claude/skills/release/scripts/release.sh <version>
-```
-
-The script must be run from a clean-ish working tree on the `develop` branch. It refuses to run otherwise. It does **not** push and does **not** publish — those are deliberate later steps.
-
-If the script fails partway through, do not retry blindly; surface the error to the user. Common causes: `main` is out of sync with `origin/main` or doesn't fast-forward to `develop` (someone pushed to main directly), `uv lock` failed, a version file's pattern didn't match because the file changed shape, or commit signing was refused (the 1Password agent prompt needs approval).
-
-### Step 3: Draft release notes
-
-Get the commits that landed in this release (now reachable from main, not develop, since main contains the release commit too):
+Get the commits since the previous tag:
 
 ```bash
-git log <previous-tag>..main --no-merges --pretty=format:'%h %s'
+git log <previous-tag>..develop --no-merges --pretty=format:'%h %s'
 ```
 
 Classify each commit into one of five sections using the template at `assets/release-notes-template.md`. Mapping hints based on the project's emoji-prefixed commit style:
@@ -60,13 +44,37 @@ Classify each commit into one of five sections using the template at `assets/rel
 | `🛠 [fix]`, `🐞`, bug fixes | 🐞 Bug fixes |
 | `⬆️` / `:arrow_up:` dependabot bumps, CI, lint config, internal tooling | ⚙️ Internal |
 
-Do not just paste commit subjects verbatim — past releases (`gh release view 0.11.0`) group related commits and rephrase for a human reader. Skip the release commit itself (`🔖 release: <version>`). Drop sections that end up empty rather than leaving a bare `-`.
+Do not just paste commit subjects verbatim. Past releases (`gh release view 0.11.0`) group related commits and rephrase for a human reader. Skip release commits (`🔖 release: …`). Drop sections that end up empty rather than leaving a bare `-`.
 
-Write the draft to `/tmp/kayman-release-<version>.md` and show it to the user. **Wait for the user to edit or approve before publishing** — release notes are the most visible artifact of a release and benefit most from human review.
+Write the draft to `/tmp/kayman-release-<version>.md`.
 
-### Step 4: Push and publish
+### Step 3: Confirm in one question
 
-Once the user approves the notes, confirm once more before each remote-visible action, then run:
+Use `AskUserQuestion` once, with the full release notes in the question text and the version in the first option. Options:
+
+- `Release <minor version> (Recommended)`: proceed with the minor bump.
+- `Release <patch version> instead`: proceed with a patch bump (`0.X.Y+1`). Rename the notes file to match.
+- `Edit notes first`: stop and let the user edit `/tmp/kayman-release-<version>.md`, then ask the same question again.
+
+The user can also answer "Other" with a custom version or note changes. Apply them and continue without asking again unless the answer is ambiguous.
+
+This answer is the only confirmation. It covers running the script, both pushes, and publishing the GitHub release. Do not ask again before each step.
+
+### Step 4: Run the release script
+
+`scripts/release.sh <version>` performs the local git work without ever leaving `develop`: check that `main` matches `origin/main` and that `develop` fast-forwards from it, stash, bump versions in `frontend/package.json`, `icon/package.json`, `backend/pyproject.toml`, `backend/kayman/main.py`, refresh `backend/uv.lock`, commit `🔖 release: <version>` on `develop`, fast-forward `main` to `develop` with `git branch -f`, and pop the stash. It never checks out `main`, because switching branches would delete and recreate files under `.agents/`, which the sandbox protects via the `.claude` symlink.
+
+```bash
+.claude/skills/release/scripts/release.sh <version>
+```
+
+The script must be run from a clean-ish working tree on the `develop` branch. It refuses to run otherwise. It does **not** push and does **not** publish — those are deliberate later steps.
+
+If the script fails partway through, do not retry blindly; surface the error to the user. Common causes: `main` is out of sync with `origin/main` or doesn't fast-forward to `develop` (someone pushed to main directly), `uv lock` failed, a version file's pattern didn't match because the file changed shape, or commit signing was refused (the 1Password agent prompt needs approval).
+
+### Step 5: Push and publish
+
+Run these straight after the script succeeds, with no further confirmation:
 
 ```bash
 git push origin main
