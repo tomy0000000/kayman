@@ -7,7 +7,21 @@ from kayman.crud.event_entry import (
     read_event_entries,
     update_event_entries,
 )
+from kayman.logics.event import validate_events_editable
 from kayman.schemas.event_entry import EventEntry, EventEntryUpdate
+
+
+def validate_event_entries_editable(
+    session: Session,
+    entry_ids: Collection[int],
+    moved_to_event_ids: Collection[int] = (),
+) -> None:
+    """Raise if the entries belong to, or would move into, a cleared event."""
+    # Must precede the read: read_event_entries treats an empty id list as "all"
+    entries = read_event_entries(session, entry_ids=entry_ids) if entry_ids else []
+    validate_events_editable(
+        session, {entry.event_id for entry in entries} | set(moved_to_event_ids)
+    )
 
 
 def update_event_entries_by_ids(

@@ -1,3 +1,4 @@
+import re
 from decimal import Decimal
 
 import pytest
@@ -6,9 +7,10 @@ from sqlmodel import Session, col, select
 from kayman.logics.event_entry import (
     delete_event_entries_by_ids,
     update_event_entries_by_ids,
+    validate_event_entries_editable,
 )
 from kayman.schemas.event_entry import EventEntry, EventEntryUpdate
-from kayman.tests.factories import EventEntryFactory
+from kayman.tests.factories import EventEntryFactory, EventFactory
 
 
 def test_update_event_entries_by_ids(session: Session):
@@ -124,3 +126,34 @@ def test_delete_event_entries_by_ids_no_commit(session: Session, session_2: Sess
 
     session_2_entries = session_2.exec(select(EventEntry)).all()
     assert len(session_2_entries) == 0
+
+
+def test_validate_event_entries_editable_passes(session: Session):
+    entry = EventEntryFactory(event=EventFactory(cleared_at=None))
+    target = EventFactory(cleared_at=None)
+
+    assert validate_event_entries_editable(session, [entry.id], [target.id]) is None
+
+
+def test_validate_event_entries_editable_empty_ignores_other_entries(session: Session):
+    # An empty id list must not fall through to reading every entry
+    EventEntryFactory()
+
+    assert validate_event_entries_editable(session, []) is None
+
+
+def test_validate_event_entries_editable_entry_in_cleared_event(session: Session):
+    entry = EventEntryFactory()
+
+    with pytest.raises(ValueError, match="already cleared"):
+        validate_event_entries_editable(session, [entry.id])
+
+
+def test_validate_event_entries_editable_move_into_cleared_event(session: Session):
+    entry = EventEntryFactory(event=EventFactory(cleared_at=None))
+    target = EventFactory()
+
+    with pytest.raises(
+        ValueError, match=re.escape(f"already cleared: {{{target.id}}}")
+    ):
+        validate_event_entries_editable(session, [entry.id], [target.id])
