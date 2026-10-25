@@ -67,7 +67,7 @@ def setup_logger() -> None:
 
 # Register startup and shutdown events
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     # Auto migrate the database on startup
     if not app.debug:
         alembic_upgrade()

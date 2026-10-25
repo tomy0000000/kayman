@@ -25,7 +25,7 @@ def _enable_sqlite_fk(engine: Engine) -> None:
 
 
 @pytest.fixture(scope="function")
-def db_uri() -> Generator[str, None, None]:
+def db_uri() -> Generator[str]:
     db_file = os.path.join(tempfile.gettempdir(), f"kayman-test-{uuid4()}.db")
     uri = f"sqlite:///{db_file}"
     yield uri
@@ -36,7 +36,7 @@ def db_uri() -> Generator[str, None, None]:
 
 # Reference: https://github.com/fastapi/sqlmodel/discussions/615
 @pytest.fixture(scope="function")
-def session(db_uri) -> Generator[Session, None, None]:
+def session(db_uri) -> Generator[Session]:
     from kayman.tests import factories  # noqa: F401
 
     engine = create_engine(
@@ -59,7 +59,7 @@ def session(db_uri) -> Generator[Session, None, None]:
 
 
 @pytest.fixture(scope="function")
-def session_2(db_uri) -> Generator[Session, None, None]:
+def session_2(db_uri) -> Generator[Session]:
     from kayman.tests import factories  # noqa: F401
 
     engine = create_engine(
@@ -84,6 +84,6 @@ def currency(session: Session) -> Currency:  # noqa: ARG001 (binds factory sessi
 
 
 @pytest.fixture(scope="module")
-def client() -> Generator[TestClient, None, None]:
+def client() -> Generator[TestClient]:
     with TestClient(app) as c:
         yield c

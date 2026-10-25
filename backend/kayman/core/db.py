@@ -20,6 +20,6 @@ def alembic_upgrade() -> None:
     logger.info("Alembic upgrade completed.")
 
 
-def get_session() -> Generator[Session, Any, None]:
+def get_session() -> Generator[Session, Any]:
     with Session(engine) as session:
         yield session
