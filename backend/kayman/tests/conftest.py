@@ -1,4 +1,5 @@
 import os
+import tempfile
 from collections.abc import Generator
 from typing import Any
 from uuid import uuid4
@@ -25,7 +26,7 @@ def _enable_sqlite_fk(engine: Engine) -> None:
 
 @pytest.fixture(scope="function")
 def db_uri() -> Generator[str, None, None]:
-    db_file = f"/tmp/kayman-test-{str(uuid4())}.db"
+    db_file = os.path.join(tempfile.gettempdir(), f"kayman-test-{uuid4()}.db")
     uri = f"sqlite:///{db_file}"
     yield uri
 
