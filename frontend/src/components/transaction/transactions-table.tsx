@@ -181,6 +181,7 @@ export function TransactionsTable({
                   onCloseAutoFocus={(event) => event.preventDefault()}
                 >
                   <ContextMenuItem
+                    disabled={row.original.status === 'CLEARED'}
                     onSelect={() => onTransactionEdit?.(row.original)}
                   >
                     Edit

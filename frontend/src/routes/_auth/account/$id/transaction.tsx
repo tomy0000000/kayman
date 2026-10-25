@@ -316,7 +316,7 @@ function AccountTransactionPage() {
 
   // Backs the FAB's event field, so only fetched once the sheet opens.
   const { data: events } = useQuery({
-    ...readEventsOptions(),
+    ...readEventsOptions({ query: { cleared_at: 'empty' } }),
     enabled: fabOpen
   })
 

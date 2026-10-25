@@ -217,7 +217,10 @@ export function EventsTable({
                   <ContextMenuItem onSelect={() => onEventView?.(row.original)}>
                     View
                   </ContextMenuItem>
-                  <ContextMenuItem onSelect={() => onEventEdit?.(row.original)}>
+                  <ContextMenuItem
+                    disabled={row.original.cleared_at != null}
+                    onSelect={() => onEventEdit?.(row.original)}
+                  >
                     Edit
                   </ContextMenuItem>
                   <ContextMenuItem

@@ -51,8 +51,9 @@ export function TransactionForm({
       ? editingTransaction.created_at
       : toZonedISOString(new Date(), clientTimezone)
   )
+  // A cleared transaction's event is cleared too, so its duplicate can't join it.
   const [eventId, setEventId] = useState<number | null>(
-    source?.event_id ?? null
+    seedTransaction?.cleared_at ? null : (source?.event_id ?? null)
   )
   const [tagIds, setTagIds] = useState<number[]>(
     () => source?.tags?.map((tag) => tag.id) ?? []
