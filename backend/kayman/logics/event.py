@@ -106,8 +106,25 @@ def validate_transactions_cleared(event: Event) -> list[EventClearError]:
     ]
 
 
+def validate_entries_description(event: Event) -> list[EventClearError]:
+    """Report every entry whose category demands a description it lacks."""
+    return [
+        EventClearError(
+            type=EventClearErrorType.EMPTY_ENTRIES_DESCRIPTION,
+            msg=(
+                f"Entry {entry.id} in category {entry.category.name!r} "
+                "requires a description"
+            ),
+        )
+        for entry in event.entries
+        if entry.category.requires_entry_description
+        and not (entry.description or "").strip()
+    ]
+
+
 CLEAR_VALIDATORS: tuple[EventClearValidator, ...] = (
     validate_entries_present,
+    validate_entries_description,
     validate_transactions_present,
     validate_totals_match,
     validate_transaction_timestamps,

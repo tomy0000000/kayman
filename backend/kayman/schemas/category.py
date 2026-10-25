@@ -10,6 +10,7 @@ class CategoryBase(SQLModel):
     name: str
     description: str | None = None
     disabled: bool = Field(default=False)
+    requires_entry_description: bool = Field(default=False)
     parent_id: int | None = Field(foreign_key="category.id", default=None)
     index: int = Field(
         default=0, ge=0
@@ -46,5 +47,6 @@ class CategoryUpdate(SQLModel):
     name: str | None = None
     description: str | None = None
     disabled: bool | None = None
+    requires_entry_description: bool | None = None
     parent_id: int | None = None
     index: int | None = Field(default=None, ge=0)

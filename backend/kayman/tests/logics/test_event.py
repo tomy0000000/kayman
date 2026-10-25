@@ -10,6 +10,7 @@ from kayman.logics.event import (
     CLEAR_VALIDATORS,
     delete_events_by_ids,
     event_has_transactions,
+    validate_entries_description,
     validate_entries_present,
     validate_event_clearable,
     validate_totals_match,
@@ -26,6 +27,7 @@ from kayman.schemas.event import (
 from kayman.schemas.event_entry import EventEntry
 from kayman.tests.factories import (
     AccountFactory,
+    CategoryFactory,
     CurrencyFactory,
     EventEntryFactory,
     EventFactory,
@@ -207,6 +209,94 @@ def test_validate_entries_present_transaction_driven(
     )
 
     assert len(validate_entries_present(event)) == 0
+
+
+@pytest.mark.parametrize("description", ["Lunch", None, "", "  "])
+def test_validate_entries_description_not_required(description: str | None):
+    """A category without the flag accepts any description, blank included"""
+    event = EventFactory.build(
+        entries=[
+            EventEntryFactory.build(
+                event_id=0,
+                category=CategoryFactory.build(requires_entry_description=False),
+                description=description,
+            )
+        ],
+    )
+
+    assert len(validate_entries_description(event)) == 0
+
+
+def test_validate_entries_description_required_and_present():
+    """A required description that is filled in passes"""
+    event = EventFactory.build(
+        entries=[
+            EventEntryFactory.build(
+                event_id=0,
+                category=CategoryFactory.build(requires_entry_description=True),
+                description="Lunch",
+            )
+        ],
+    )
+
+    assert len(validate_entries_description(event)) == 0
+
+
+@pytest.mark.parametrize("description", [None, "", "  "])
+def test_validate_entries_description_required_and_blank(description: str | None):
+    """A required description that is missing or blank reports one error"""
+    event = EventFactory.build(
+        entries=[
+            EventEntryFactory.build(
+                id=1,
+                event_id=0,
+                category=CategoryFactory.build(
+                    name="Gift", requires_entry_description=True
+                ),
+                description=description,
+            )
+        ],
+    )
+
+    errors = validate_entries_description(event)
+
+    assert len(errors) == 1
+    assert errors[0].type is EventClearErrorType.EMPTY_ENTRIES_DESCRIPTION
+    assert errors[0].msg == "Entry 1 in category 'Gift' requires a description"
+
+
+def test_validate_entries_description_reports_every_offender():
+    """Each offending entry gets its own error, compliant ones none"""
+    required = CategoryFactory.build(requires_entry_description=True)
+    event = EventFactory.build(
+        entries=[
+            EventEntryFactory.build(
+                id=1, event_id=0, category=required, description=None
+            ),
+            EventEntryFactory.build(
+                id=2, event_id=0, category=required, description="Ok"
+            ),
+            EventEntryFactory.build(
+                id=3,
+                event_id=0,
+                category=CategoryFactory.build(requires_entry_description=False),
+                description=None,
+            ),
+            EventEntryFactory.build(
+                id=4, event_id=0, category=required, description=""
+            ),
+        ],
+    )
+
+    errors = validate_entries_description(event)
+
+    # One per offending row, in the event's entry order.
+    assert len(errors) == 2
+    assert all(
+        error.type is EventClearErrorType.EMPTY_ENTRIES_DESCRIPTION for error in errors
+    )
+    assert "Entry 1 " in errors[0].msg
+    assert "Entry 4 " in errors[1].msg
 
 
 @pytest.mark.parametrize("transaction_count", [1, 3])
@@ -548,9 +638,10 @@ def test_validate_event_clearable_real_registry():
 
     # Guard the premise: if another validator lands, this test is the reminder
     # to cover it here rather than a silent pass.
-    assert len(CLEAR_VALIDATORS) == 5
+    assert len(CLEAR_VALIDATORS) == 6
     assert CLEAR_VALIDATORS == (
         validate_entries_present,
+        validate_entries_description,
         validate_transactions_present,
         validate_totals_match,
         validate_transaction_timestamps,
