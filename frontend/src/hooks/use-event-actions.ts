@@ -42,6 +42,8 @@ import {
 interface UseEventActionsOptions {
   // Exact key of the list on screen; without it a create only refetches.
   listQueryKey?: QueryKey
+  // Rows that embed the event outside the events list, refetched after a change.
+  rowsQueryKey?: QueryKey
 }
 
 // Everything a page listing events needs to act on a row: the create/edit
@@ -50,8 +52,10 @@ interface UseEventActionsOptions {
 // share this wiring instead of repeating it.
 export function useEventActions(
   client: Client,
-  { listQueryKey }: UseEventActionsOptions = {}
+  { listQueryKey, rowsQueryKey }: UseEventActionsOptions = {}
 ) {
+  const rowsRefetch = rowsQueryKey ? [{ queryKey: rowsQueryKey }] : []
+
   // The state outlives `open` so the sheet keeps its body while closing.
   const [sheet, setSheet] = useState<{
     open: boolean
@@ -178,7 +182,8 @@ export function useEventActions(
             )
           : { queryKey: readEventsQueryKey() },
       { queryKey: readEventsQueryKey() },
-      { queryKey: readTransactionsQueryKey() }
+      { queryKey: readTransactionsQueryKey() },
+      ...rowsRefetch
     ]
   )
 
@@ -200,7 +205,8 @@ export function useEventActions(
           readEventsQueryKey(),
           (events, { path }) => events.filter((event) => event.id !== path.id)
         ),
-        { queryKey: readTransactionsQueryKey() }
+        { queryKey: readTransactionsQueryKey() },
+        ...rowsRefetch
       ]
     )
 

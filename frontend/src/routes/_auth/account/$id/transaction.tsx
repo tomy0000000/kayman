@@ -87,7 +87,11 @@ function AccountTransactionPage() {
     useState<TransactionReadWithBalance | null>(null)
 
   // The rows only carry their event's id, so the receipt is fetched by the hook.
-  const { openEventView, sheetProps } = useEventActions(client)
+  const { categoryNames, openEventView, sheetProps } = useEventActions(client, {
+    rowsQueryKey: readAccountTransactionsWithRunningBalanceQueryKey({
+      path: { account_id: accountId }
+    })
+  })
 
   const editingTransaction =
     sheetTransaction?.mode === 'edit' ? sheetTransaction.transaction : null
@@ -112,6 +116,9 @@ function AccountTransactionPage() {
 
   // The page's account is just a row of the list the FAB already needs.
   const account = accounts?.find((a) => a.id === accountId)
+  const accountNames = new Map(
+    (accounts ?? []).map(({ id, name }) => [id, name])
+  )
 
   // The exact list this page shows, so predictions land in the right variant.
   const transactionsOptions = readAccountTransactionsWithRunningBalanceOptions({
@@ -375,6 +382,8 @@ function AccountTransactionPage() {
         <TransactionsTable
           transactions={transactions}
           currencyCode={account?.currency_code}
+          categoryNames={categoryNames}
+          accountNames={accountNames}
           isPending={isTransactionsPending}
           onTransactionEdit={(transaction) => {
             setSheetTransaction({ mode: 'edit', transaction })

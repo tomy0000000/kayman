@@ -3,12 +3,70 @@ import {
   type EventCreate,
   type EventReadDetailed,
   type TransactionRead,
+  type TransactionReadWithBalance,
   createTransaction,
   updateTransactions
 } from '@/lib/client'
 import { type Client } from '@/lib/client/client'
 import { PLACEHOLDER_ID } from '@/lib/optimistic'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
+import { formatCurrency } from '@/lib/utils'
+
+export interface TransactionEventSummary {
+  title: string | null
+  subtitle: string | null
+  note: string | null
+}
+
+function joinUnique(values: (string | null | undefined)[]): string | null {
+  const unique = new Set(
+    values.map((value) => value?.trim()).filter((value) => !!value)
+  )
+  return [...unique].join(', ') || null
+}
+
+// What a transaction's row says about its event, as seen from this account.
+export function summarizeTransactionEvent(
+  transaction: TransactionReadWithBalance,
+  categoryNames: Map<number, string>,
+  accountNames: Map<number, string>
+): TransactionEventSummary {
+  const note = transaction.description?.trim() || null
+  const { event } = transaction
+  if (!event) return { title: note, subtitle: null, note: null }
+
+  const categories = joinUnique(
+    event.entries.map(
+      (entry) => categoryNames.get(entry.category_id) ?? `#${entry.category_id}`
+    )
+  )
+  const title =
+    event.description?.trim() ||
+    joinUnique(event.entries.map((entry) => entry.description)) ||
+    categories
+
+  const arrow = Number(transaction.amount) < 0 ? '→' : '←'
+  const others = event.transactions.filter(
+    (leg) => leg.account_id !== transaction.account_id
+  )
+  const accountName = (id: number) => accountNames.get(id) ?? `#${id}`
+  let subtitle: string | null = null
+  if (event.type === 'TRANSFER') {
+    subtitle = joinUnique(
+      others.map((leg) => `${arrow} ${accountName(leg.account_id)}`)
+    )
+  } else if (event.type === 'EXCHANGE') {
+    subtitle = joinUnique(
+      others.map(
+        (leg) =>
+          `${arrow} ${formatCurrency(Math.abs(Number(leg.amount)), leg.currency_code)} · ${accountName(leg.account_id)}`
+      )
+    )
+  } else if (title !== categories) {
+    subtitle = categories
+  }
+  return { title, subtitle, note }
+}
 
 interface SyncEventTransactionsOptions {
   client: Client

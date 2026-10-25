@@ -26,11 +26,14 @@ import {
 } from '@/components/ui/table'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { type TransactionReadWithBalance } from '@/lib/client'
+import { summarizeTransactionEvent } from '@/lib/events'
 import { cn, formatCurrency, formatDate, formatTime } from '@/lib/utils'
 
 interface TransactionsTableProps {
   transactions: TransactionReadWithBalance[] | undefined
   currencyCode?: string
+  categoryNames: Map<number, string>
+  accountNames: Map<number, string>
   isPending: boolean
   onTransactionEdit?: (transaction: TransactionReadWithBalance) => void
   onTransactionDuplicate?: (transaction: TransactionReadWithBalance) => void
@@ -49,6 +52,8 @@ const EMPTY_TRANSACTIONS: TransactionReadWithBalance[] = []
 export function TransactionsTable({
   transactions,
   currencyCode,
+  categoryNames,
+  accountNames,
   isPending,
   onTransactionEdit,
   onTransactionDuplicate,
@@ -85,18 +90,26 @@ export function TransactionsTable({
       {
         accessorKey: 'description',
         header: 'Description',
-        cell: ({ row }) => (
-          <div className="flex flex-col">
-            <span className="font-semibold">
-              {row.original.event?.description}
-            </span>
-            {row.original.description && (
-              <span className="text-muted-foreground text-sm">
-                {row.original.description}
-              </span>
-            )}
-          </div>
-        )
+        cell: ({ row }) => {
+          const { title, subtitle, note } = summarizeTransactionEvent(
+            row.original,
+            categoryNames,
+            accountNames
+          )
+          return (
+            <div className="flex flex-col">
+              {title && <span className="font-semibold">{title}</span>}
+              {subtitle && (
+                <span className="text-muted-foreground text-sm">
+                  {subtitle}
+                </span>
+              )}
+              {note && (
+                <span className="text-muted-foreground text-sm">{note}</span>
+              )}
+            </div>
+          )
+        }
       },
       {
         accessorKey: 'status',
@@ -126,7 +139,7 @@ export function TransactionsTable({
         )
       }
     ],
-    [currencyCode, timezone]
+    [accountNames, categoryNames, currencyCode, timezone]
   )
 
   // TanStack Table manages its own memoization; the React Compiler bail-out
