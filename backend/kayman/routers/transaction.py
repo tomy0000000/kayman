@@ -9,10 +9,12 @@ from kayman.auth import get_client
 from kayman.core.db import get_session
 from kayman.crud.transaction import create_transactions, read_transactions
 from kayman.logics.account import update_balances_with_transactions
+from kayman.logics.event import validate_events_editable
 from kayman.logics.transaction import (
     update_transactions_with_balances,
     validate_transactions_billable,
     validate_transactions_clearable,
+    validate_transactions_editable,
     validate_transactions_postable,
 )
 from kayman.schemas.transaction import (
@@ -40,10 +42,20 @@ txn_router = APIRouter(
 )
 
 
-@txn_router.post("", name="Create Transaction", response_model=TransactionRead)
+@txn_router.post(
+    "",
+    name="Create Transaction",
+    response_model=TransactionRead,
+    responses={409: {"description": "Event is cleared"}},
+)
 def create(
     *, session: Session = Depends(get_session), transaction: TransactionCreate
 ) -> TransactionBase:
+    if transaction.event_id is not None:
+        try:
+            validate_events_editable(session, [transaction.event_id])
+        except ValueError as err:
+            raise HTTPException(status_code=409, detail=err.args[0]) from err
     try:
         db_txns = create_transactions(session, [transaction], commit=False)
     except ValueError as err:
@@ -150,12 +162,21 @@ def clears(
         raise HTTPException(status_code=404, detail=err.args[0]) from err
 
 
-@txn_router.patch("", name="Update Transactions", response_model=list[TransactionRead])
+@txn_router.patch(
+    "",
+    name="Update Transactions",
+    response_model=list[TransactionRead],
+    responses={409: {"description": "Transaction or event is cleared"}},
+)
 def updates(
     *,
     session: Session = Depends(get_session),
     transactions: Sequence[TransactionUpdate],
 ) -> Sequence[TransactionBase]:
+    try:
+        validate_transactions_editable(session, transactions)
+    except ValueError as err:
+        raise HTTPException(status_code=409, detail=err.args[0]) from err
     try:
         updated = update_transactions_with_balances(session, transactions)
     except ValueError as err:

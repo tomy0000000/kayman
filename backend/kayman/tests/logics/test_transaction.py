@@ -12,6 +12,7 @@ from kayman.logics.transaction import (
     update_transactions_with_balances,
     validate_transactions_billable,
     validate_transactions_clearable,
+    validate_transactions_editable,
     validate_transactions_postable,
 )
 from kayman.schemas.transaction import (
@@ -24,6 +25,7 @@ from kayman.schemas.transaction import (
 )
 from kayman.tests.factories import (
     AccountFactory,
+    EventFactory,
     StatementFactory,
     TransactionFactory,
 )
@@ -818,3 +820,45 @@ def test_update_transactions_with_balances_missing_id(session: Session):
 )
 def test_calculate_account_deltas(transactions, updates, expected):
     assert _calculate_account_deltas(transactions, updates) == expected
+
+
+def test_validate_transactions_editable_passes(session: Session):
+    txn = TransactionFactory(cleared_at=None, event=EventFactory(cleared_at=None))
+    target = EventFactory(cleared_at=None)
+
+    assert (
+        validate_transactions_editable(
+            session, [TransactionUpdate(id=txn.id, event_id=target.id)]
+        )
+        is None
+    )
+
+
+def test_validate_transactions_editable_empty_ignores_other_txns(session: Session):
+    # An empty list must not fall through to reading every transaction
+    TransactionFactory()
+
+    assert validate_transactions_editable(session, []) is None
+
+
+def test_validate_transactions_editable_cleared(session: Session):
+    txn = TransactionFactory()
+
+    with pytest.raises(
+        ValueError, match=re.escape(f"Transaction id(s) already cleared: {{{txn.id}}}")
+    ):
+        validate_transactions_editable(
+            session, [TransactionUpdate(id=txn.id, description="edited")]
+        )
+
+
+def test_validate_transactions_editable_move_into_cleared_event(session: Session):
+    txn = TransactionFactory(cleared_at=None, event=EventFactory(cleared_at=None))
+    target = EventFactory()
+
+    with pytest.raises(
+        ValueError, match=re.escape(f"Event id(s) already cleared: {{{target.id}}}")
+    ):
+        validate_transactions_editable(
+            session, [TransactionUpdate(id=txn.id, event_id=target.id)]
+        )

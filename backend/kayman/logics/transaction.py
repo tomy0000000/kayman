@@ -2,12 +2,14 @@ from collections import Counter, defaultdict
 from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
+from typing import cast
 
 from sqlmodel import Session
 
 from kayman.crud.account import read_account_balance, update_account_balances
 from kayman.crud.statement import read_statements
 from kayman.crud.transaction import read_transactions, update_transactions
+from kayman.logics.event import validate_events_editable
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBill,
@@ -151,6 +153,24 @@ def validate_transactions_billable(
             "Statement does not belong to the account of "
             f"transaction id(s): {format_ids(other_account)}"
         )
+
+
+def validate_transactions_editable(
+    session: Session, updates: Sequence[TransactionUpdate]
+) -> None:
+    """Raise if a transaction is cleared, or would move into a cleared event."""
+    # Must precede the read: read_transactions treats an empty id list as "all"
+    if not updates:
+        return
+    txns = read_transactions(
+        session, transaction_ids={update.id for update in updates}, for_update=True
+    )
+    cleared = {cast(int, txn.id) for txn in txns if txn.cleared_at is not None}
+    if cleared:
+        raise ValueError(f"Transaction id(s) already cleared: {format_ids(cleared)}")
+    validate_events_editable(
+        session, {update.event_id for update in updates if update.event_id is not None}
+    )
 
 
 def update_transactions_with_balances(
