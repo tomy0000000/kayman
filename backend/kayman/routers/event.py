@@ -16,6 +16,7 @@ from kayman.logics.event import (
     delete_events_by_ids,
     event_has_transactions,
     validate_event_clearable,
+    validate_events_editable,
 )
 from kayman.schemas.api_models import EventReadDetailed
 from kayman.schemas.event import (
@@ -88,10 +89,19 @@ def reads(
     )
 
 
-@event_router.patch("/{event_id}", name="Update Event", response_model=EventRead)
+@event_router.patch(
+    "/{event_id}",
+    name="Update Event",
+    response_model=EventRead,
+    responses={409: {"description": "Event is cleared"}},
+)
 def update(
     *, session: Session = Depends(get_session), event_id: int, event: EventUpdate
 ) -> EventBase:
+    try:
+        validate_events_editable(session, [event_id])
+    except ValueError as err:
+        raise HTTPException(status_code=409, detail=err.args[0]) from err
     try:
         return update_events(session, [event_id], [event])[0]
     except ValueError as err:

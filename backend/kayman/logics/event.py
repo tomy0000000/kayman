@@ -1,5 +1,6 @@
 from collections.abc import Callable, Collection
 from decimal import Decimal
+from typing import cast
 
 from sqlmodel import Session
 
@@ -11,6 +12,7 @@ from kayman.schemas.event import (
     EventClearErrorType,
     EventType,
 )
+from kayman.util import format_ids
 
 EventClearValidator = Callable[[Event], list[EventClearError]]
 
@@ -139,6 +141,17 @@ def validate_event_clearable(event: Event) -> list[EventClearError]:
     returning would hide the rest.
     """
     return [error for validator in CLEAR_VALIDATORS for error in validator(event)]
+
+
+def validate_events_editable(session: Session, event_ids: Collection[int]) -> None:
+    """Raise if any of the events is cleared. Unknown ids are left to the caller."""
+    # Must precede the read: read_events treats an empty id list as "all"
+    if not event_ids:
+        return
+    events = read_events(session, event_ids=set(event_ids), for_update=True)
+    cleared = {cast(int, event.id) for event in events if event.cleared_at is not None}
+    if cleared:
+        raise ValueError(f"Event id(s) already cleared: {format_ids(cleared)}")
 
 
 def event_has_transactions(

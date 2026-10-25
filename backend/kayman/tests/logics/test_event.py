@@ -1,3 +1,4 @@
+import re
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -13,6 +14,7 @@ from kayman.logics.event import (
     validate_entries_description,
     validate_entries_present,
     validate_event_clearable,
+    validate_events_editable,
     validate_totals_match,
     validate_transaction_timestamps,
     validate_transactions_cleared,
@@ -760,3 +762,26 @@ def test_validate_event_clearable_runs_every_validator_after_a_failure():
         EventClearErrorType.NO_TRANSACTIONS,
         EventClearErrorType.INCONSISTENT_TIMESTAMPS,
     ]
+
+
+def test_validate_events_editable_passes(session: Session):
+    events = EventFactory.create_batch(2, cleared_at=None)
+
+    assert validate_events_editable(session, [e.id for e in events]) is None
+
+
+def test_validate_events_editable_empty_ignores_other_events(session: Session):
+    # An empty id list must not fall through to reading every event
+    EventFactory()
+
+    assert validate_events_editable(session, []) is None
+
+
+def test_validate_events_editable_cleared(session: Session):
+    open_event = EventFactory(cleared_at=None)
+    cleared_event = EventFactory(cleared_at=datetime(2025, 1, 1, tzinfo=UTC))
+
+    with pytest.raises(
+        ValueError, match=re.escape(f"already cleared: {{{cleared_event.id}}}")
+    ):
+        validate_events_editable(session, [open_event.id, cleared_event.id])
