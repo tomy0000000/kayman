@@ -1,10 +1,8 @@
 """Composite Models for direct use in the API."""
 
-from sqlmodel import SQLModel
-
-from kayman.schemas.event import EventCreate, EventRead
-from kayman.schemas.event_entry import EventEntryCreate, EventEntryRead
-from kayman.schemas.transaction import TransactionCreate, TransactionRead
+from kayman.schemas.event import EventRead
+from kayman.schemas.event_entry import EventEntryRead
+from kayman.schemas.transaction import TransactionRead
 
 
 class EventReadDetailed(EventRead):
@@ -12,12 +10,3 @@ class EventReadDetailed(EventRead):
 
     transactions: list[TransactionRead]
     entries: list[EventEntryRead]
-
-
-# TODO: test-only after legacy_create removal, kept for the transaction factories
-class EventCreateDetailed(SQLModel):
-    """Includes transactions and entries."""
-
-    event: EventCreate
-    transactions: list[TransactionCreate]
-    entries: list[EventEntryCreate]

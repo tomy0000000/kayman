@@ -1,9 +1,20 @@
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
+from sqlmodel import SQLModel
 
 from kayman.schemas import Event
-from kayman.schemas.api_models import EventCreateDetailed
-from kayman.schemas.event import EventType
+from kayman.schemas.event import EventCreate, EventType
+from kayman.schemas.event_entry import EventEntryCreate
+from kayman.schemas.transaction import TransactionCreate
+
+
+# TODO: Remove this after we deprecate factory pattern
+class EventCreateDetailed(SQLModel):
+    """Includes transactions and entries."""
+
+    event: EventCreate
+    transactions: list[TransactionCreate]
+    entries: list[EventEntryCreate]
 
 
 class EventFactory(SQLAlchemyModelFactory):
