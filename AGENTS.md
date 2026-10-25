@@ -40,5 +40,5 @@ The backend's built artifact also serves the frontend: `backend/static` is a sym
   - `mise.local.toml` loads `instance/local.env`
   - `mise.development.toml` loads `instance/development.env`.
 - The user runs `git commit` themselves. Do the work, then stop.
-- Commit subjects follow `<emoji> [<type>][<scope>] <Subject>`. Scope is one of `backend`, `frontend`, `cli` (anything under `cli/`), `agent` (anything under `.agents/` or `AGENTS.md`), or `ci`.
+- Commit subjects follow the global prefix list, plus an optional scope: `<emoji> [<type>][<scope>] <Subject>`. Scope is one of `backend`, `frontend`, `cli` (anything under `cli/`), or `agent` (anything under `.agents/` or `AGENTS.md`). CI changes use the `🎛 [ci]` type.
   - A commit that touches both backend and frontend takes the side that drives it, e.g. an API change plus its FE call sites is `backend`.
