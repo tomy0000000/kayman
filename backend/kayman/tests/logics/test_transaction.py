@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from sqlalchemy import event as sa_event
 from sqlmodel import Session
 
 from kayman.crud.account import read_account
@@ -25,6 +26,7 @@ from kayman.schemas.transaction import (
 )
 from kayman.tests.factories import (
     AccountFactory,
+    EventEntryFactory,
     EventFactory,
     StatementFactory,
     TransactionFactory,
@@ -157,6 +159,60 @@ def test_get_transactions_with_running_balance_isolates_account(session: Session
     assert len(results) == 1
     assert results[0].account_id == account_a.id
     assert results[0].running_balance == Decimal("10")
+
+
+def test_get_transactions_with_running_balance_includes_event_details(
+    session: Session,
+):
+    account = AccountFactory()
+    other = AccountFactory()
+    event = EventFactory()
+    EventEntryFactory(event=event, description="Lunch", index=0)
+    EventEntryFactory(event=event, description="Coffee", index=1)
+    TransactionFactory(account=account, event=event, amount=Decimal("-10"), index=0)
+    TransactionFactory(account=other, event=event, amount=Decimal("10"), index=1)
+
+    results = get_transactions_with_running_balance(session, account.id)
+
+    assert len(results) == 1
+    assert results[0].event is not None
+    assert len(results[0].event.entries) == 2
+    assert [e.description for e in results[0].event.entries] == ["Lunch", "Coffee"]
+    assert len(results[0].event.transactions) == 2
+    assert [
+        (t.account_id, t.amount, t.currency_code) for t in results[0].event.transactions
+    ] == [
+        (account.id, Decimal("-10"), account.currency_code),
+        (other.id, Decimal("10"), other.currency_code),
+    ]
+
+
+def test_get_transactions_with_running_balance_eager_loads_event_details(
+    session: Session,
+):
+    account = AccountFactory()
+    for _ in range(3):
+        event = EventFactory()
+        EventEntryFactory(event=event)
+        TransactionFactory(account=account, event=event)
+        TransactionFactory(event=event)
+    account_id = account.id
+    session.expunge_all()
+    statements: list[str] = []
+
+    def record(_conn, _cursor, statement, *_args):
+        statements.append(statement)
+
+    engine = session.get_bind()
+    sa_event.listen(engine, "before_cursor_execute", record)
+    try:
+        results = get_transactions_with_running_balance(session, account_id)
+    finally:
+        sa_event.remove(engine, "before_cursor_execute", record)
+
+    assert len(results) == 3
+    # One query per relationship level, however many rows: no lazy loads.
+    assert len(statements) == 7
 
 
 def test_update_transactions_with_balances_moves_balance_by_delta(session: Session):

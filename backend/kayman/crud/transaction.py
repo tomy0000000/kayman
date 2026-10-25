@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import Session, col, select
 
 from kayman.crud.util import park_moving_indexes
+from kayman.schemas.event import Event
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBase,
@@ -50,12 +51,22 @@ def read_transactions(
     order_by: TransactionOrderBy | None = None,
     descending: bool = False,
     for_update: bool = False,
+    with_event_details: bool = False,
 ) -> Sequence[Transaction]:
-    scalar = select(Transaction).options(
+    options = [
         selectinload(Transaction.account),  # type: ignore[arg-type]
         selectinload(Transaction.event),  # type: ignore[arg-type]
         selectinload(Transaction.tags),  # type: ignore[arg-type]
-    )
+    ]
+    if with_event_details:
+        event = selectinload(Transaction.event)  # type: ignore[arg-type]
+        options += [
+            event.selectinload(Event.entries),  # type: ignore[arg-type]
+            event.selectinload(Event.transactions).selectinload(  # type: ignore[arg-type]
+                Transaction.account  # type: ignore[arg-type]
+            ),
+        ]
+    scalar = select(Transaction).options(*options)
     if transaction_ids:
         scalar = scalar.where(col(Transaction.id).in_(transaction_ids))
     if account_id:

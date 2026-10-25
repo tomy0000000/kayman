@@ -41,7 +41,7 @@ import {
 } from '@/lib/client/@tanstack/react-query.gen'
 import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { syncEventEntries } from '@/lib/event-entries'
-import { syncEventTransactions } from '@/lib/events'
+import { predictEvent, syncEventTransactions } from '@/lib/events'
 import {
   PLACEHOLDER_ID,
   cacheUpdate,
@@ -295,9 +295,14 @@ function AccountTransactionPage() {
       [
         cacheUpdate<TransactionReadWithBalance[], EventSubmit>(
           transactionsOptions.queryKey,
-          (rows, { body, transactions }) => {
+          (rows, { body, transactions, entries }) => {
             const linked = new Set(transactions.map(({ id }) => id))
-            const event = { ...body, id: PLACEHOLDER_ID, cleared_at: null }
+            const event = predictEvent(
+              body,
+              transactions,
+              entries,
+              accounts ?? []
+            )
             return rows.map((row) =>
               linked.has(row.id)
                 ? { ...row, event_id: PLACEHOLDER_ID, event }

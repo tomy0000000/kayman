@@ -7,6 +7,7 @@ from pydantic import computed_field
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, UniqueConstraint
 
 from kayman.schemas.event import EventRead
+from kayman.schemas.event_entry import EventEntryRead
 from kayman.schemas.transaction_tag import TransactionTagLink, TransactionTagRead
 
 if TYPE_CHECKING:
@@ -84,7 +85,24 @@ class TransactionRead(TransactionBase):
         return TransactionStatus.PENDING
 
 
+class TransactionLeg(SQLModel):
+    """A transaction as seen from a sibling on the same event."""
+
+    id: int
+    account_id: int
+    amount: Decimal
+    currency_code: str
+
+
+class TransactionEventRead(EventRead):
+    """An event embedded in a transaction, with its entries and every leg."""
+
+    transactions: list[TransactionLeg]
+    entries: list[EventEntryRead]
+
+
 class TransactionReadWithBalance(TransactionRead):
+    event: TransactionEventRead | None
     running_balance: Decimal
 
 
