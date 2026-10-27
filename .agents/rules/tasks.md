@@ -6,12 +6,14 @@ All tasks available in this repo are listed below, all managed by `mise`. Run an
 
 **These are the only tasks that exist.** Do not invent task names, flags, or usages beyond what is documented here. Tasks are defined either inline in [`mise.toml`](../../mise.toml) or as `#MISE`-annotated scripts under `scripts/`, `backend/scripts/`, and `frontend/scripts/`. If you need something not covered here, add a new script or `mise.toml` task rather than guessing at one.
 
+**Keep shell logic out of `mise.toml`.** A task that runs anything beyond chaining other tasks (conditionals, guards, flags, multi-step commands) lives as a `#MISE`-annotated script under `scripts/`, `backend/scripts/`, or `frontend/scripts/`. Inline `mise.toml` tasks only compose existing tasks via `depends` or `mise run <task>`. Why: inline TOML strings are hard to read, can't be shellchecked, and run under `sh` rather than bash.
+
 ## Setup
 
 | Task           | Description                                                                      | Notes                                                                                 |
 | -------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `setup:dotenv` | Setup environment variables for local development                                | Generates `instance/local.env` with random secrets. Skips if the file already exists. |
-| `setup:db`     | Setup empty database for local development (data will NOT persist, not for prod) | Runs `start:db` then `db:upgrade`. Refuses when `ENVIRONMENT` is `production` or unset. |
+| `setup:db`     | Setup empty database for local development (data will NOT persist, not for prod) | Runs `start:db` then `db:upgrade`.                                                    |
 
 ## Dev servers
 
