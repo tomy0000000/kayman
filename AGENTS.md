@@ -37,8 +37,8 @@ The backend's built artifact also serves the frontend: `backend/static` is a sym
 ## Project conventions
 
 - Environment files live under `instance/` (gitignored).
-  - `mise.local.toml` loads `instance/local.env`
-  - `mise.development.toml` loads `instance/development.env`.
+  - `mise.toml` loads `instance/local.env` by default
+  - `mise.development.toml` loads `instance/development.env` when run with `MISE_ENV=development`.
 - The user runs `git commit` themselves. Do the work, then stop.
 - Commit subjects follow the global prefix list, plus an optional scope: `<emoji> [<type>][<scope>] <Subject>`. Scope is one of `backend`, `frontend`, `cli` (anything under `cli/`), or `agent` (anything under `.agents/` or `AGENTS.md`). CI changes use the `🎛 [ci]` type.
   - A commit that touches both backend and frontend takes the side that drives it, e.g. an API change plus its FE call sites is `backend`.

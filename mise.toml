@@ -8,6 +8,9 @@ pnpm = "12.3.4"
 python = "3.13"
 uv = "0.10.10"
 
+[env]
+_.file = "instance/local.env"
+
 [task_config]
 includes = ["scripts", "backend/scripts", "frontend/scripts", "icon/scripts", "cli/scripts"]
 
