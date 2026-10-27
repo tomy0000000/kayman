@@ -5,7 +5,7 @@ set -euo pipefail
 
 # Validate file path
 if [ $# -eq 0 ]; then
-    echo "Usage: scripts/restore.sh path/to/data.dump"
+    echo "Usage: scripts/restore.sh path/to/data.dump [--force]"
     exit 1
 fi
 RESTORE_FILE="${1}"
@@ -17,6 +17,11 @@ if [ -f "$ENV_FILE" ]; then
     set -a
     source "${ENV_FILE}"
     set +a
+fi
+
+if [[ "${ENVIRONMENT:-production}" == "production" && "${2:-}" != "--force" ]]; then
+    echo "Refusing to restore: ENVIRONMENT is production. Pass --force after the dump path to override." >&2
+    exit 1
 fi
 export PGPASSWORD="${POSTGRES_PASSWORD}"
 

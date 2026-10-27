@@ -11,7 +11,7 @@ All tasks available in this repo are listed below, all managed by `mise`. Run an
 | Task           | Description                                                                      | Notes                                                                                 |
 | -------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `setup:dotenv` | Setup environment variables for local development                                | Generates `instance/local.env` with random secrets. Skips if the file already exists. |
-| `setup:db`     | Setup empty database for local development (data will NOT persist, not for prod) | Runs `start:db` then `db:upgrade`.                                                    |
+| `setup:db`     | Setup empty database for local development (data will NOT persist, not for prod) | Runs `start:db` then `db:upgrade`. Refuses when `ENVIRONMENT` is `production` or unset. |
 
 ## Dev servers
 
@@ -27,9 +27,9 @@ All tasks available in this repo are listed below, all managed by `mise`. Run an
 
 | Task         | Description                                  | Usage / Notes                                                          |
 | ------------ | -------------------------------------------- | ---------------------------------------------------------------------- |
-| `db:upgrade` | Upgrade database schema                      | Runs `alembic upgrade head`.                                           |
+| `db:upgrade` | Upgrade database schema                      | Runs `alembic upgrade head`. Refuses when `ENVIRONMENT` is `production` or unset, unless `-- --force`. |
 | `db:backup`  | Backup PostgreSQL database to a local dump file | Writes `kayman_<timestamp>.dump` in `backend/`. Reads `instance/.env`. |
-| `db:restore` | Restore PostgreSQL database from a dump file | `mise run db:restore -- path/to/data.dump`. Reads `instance/.env`.     |
+| `db:restore` | Restore PostgreSQL database from a dump file | `mise run db:restore -- path/to/data.dump [--force]`. Reads `instance/.env`. Refuses when `ENVIRONMENT` is `production` or unset, unless `--force`. |
 
 ## Build
 
@@ -43,6 +43,7 @@ All tasks available in this repo are listed below, all managed by `mise`. Run an
 | `build:icon`           | Build icon deliverables (favicon, PWA icons, touch icon, avatar) | Outputs to `frontend/public/` and `icon/dist/` per the spec table in `icon/README.md`. Needs `magick` from mise `[tools]` and `pnpm -C icon install` for the `render.mjs` SVG renderer. |
 | `build:og-image`       | Build social preview images (og-image, GitHub social) | Outputs `frontend/public/og-image.png` (1200×630) and `icon/dist/github-social.png` (1280×640). Same tool requirements as `build:icon`. |
 | `build:icon-bundle`    | Build icon + social preview images | Runs `build:icon` and `build:og-image`. |
+| `build:cli`            | Build the kayman CLI binary | Runs `build:openapi-spec` into `cli/openapi.json`, then `go build` with the spec embedded and `git describe` as the version. Outputs `cli/kayman`. Pilot, see `cli/README.md`. |
 
 ## Format
 
