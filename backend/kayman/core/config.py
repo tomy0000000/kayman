@@ -19,6 +19,7 @@ class Settings(BaseSettings):
         return self
 
     PROJECT_NAME: str = "Kayman"
+    COMMIT_SHA: str | None = None
     POSTGRES_HOST: str = "kayman-db"
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str = "kayman"

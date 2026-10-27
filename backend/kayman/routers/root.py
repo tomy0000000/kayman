@@ -1,5 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import PlainTextResponse
+
+from kayman.core.config import settings
+from kayman.schemas.version import VersionRead
 
 TAG_NAME = "Root"
 tag = {
@@ -18,3 +21,8 @@ def ping() -> str:
 @root_router.get("/healthz", name="Healthz", response_class=PlainTextResponse)
 def healthz() -> str:
     return "ok"
+
+
+@root_router.get("/version", name="Read Version", response_model=VersionRead)
+def read_version(request: Request) -> VersionRead:
+    return VersionRead(version=request.app.version, commit=settings.COMMIT_SHA)
