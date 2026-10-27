@@ -10,7 +10,7 @@
   },
   {
     "account_id": 3,
-    "balance": "6350",
+    "balance": "-6350",
     "created_on": "2026-02-15",
     "due_on": "2026-03-06",
     "id": 2,
@@ -28,7 +28,7 @@
   },
   {
     "account_id": 6,
-    "balance": "3097.99",
+    "balance": "-3097.99",
     "created_on": "2026-02-21",
     "due_on": "2026-03-17",
     "id": 4,

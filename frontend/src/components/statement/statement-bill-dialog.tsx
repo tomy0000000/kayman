@@ -145,13 +145,10 @@ export function StatementBillDialog({
       : Number(value) === 0
         ? value
         : `-${value}`
-  const transactionSum = selected.reduce(
+  const selectedSum = selected.reduce(
     (sum, transaction) => addDecimals(sum, transaction.amount),
     '0'
   )
-  // Card issuers print spending as a positive balance, the inverse of transaction amounts.
-  const selectedSum =
-    account.type === 'CREDIT_CARD' ? negate(transactionSum) : transactionSum
   const expected = addDecimals(previousStatement?.balance ?? '0', selectedSum)
   const difference = statement
     ? Number(addDecimals(statement.balance, negate(expected)))
