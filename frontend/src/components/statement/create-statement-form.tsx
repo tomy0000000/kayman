@@ -14,11 +14,16 @@ import {
 } from '@/components/ui/field'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
+  type AccountType,
   type CurrencyRead,
   type StatementCreate,
   type StatementRead
 } from '@/lib/client'
-import { latestStatement, nextStatementCycle } from '@/lib/statements'
+import {
+  issuerBalance,
+  latestStatement,
+  nextStatementCycle
+} from '@/lib/statements'
 import {
   formatCalendarDate,
   formatPlainDate,
@@ -30,6 +35,7 @@ import {
 
 interface CreateStatementFormProps {
   accountId: number
+  accountType: AccountType
   currency: CurrencyRead | undefined
   statements: StatementRead[]
   onSubmit: (body: StatementCreate) => void
@@ -38,6 +44,7 @@ interface CreateStatementFormProps {
 
 export function CreateStatementForm({
   accountId,
+  accountType,
   currency,
   statements,
   onSubmit,
@@ -95,7 +102,7 @@ export function CreateStatementForm({
       period_start_on: periodStartOn,
       period_end_on: periodEndOn,
       due_on: dueOn || null,
-      balance
+      balance: issuerBalance(balance, accountType)
     })
 
   return (
@@ -114,7 +121,9 @@ export function CreateStatementForm({
       />
 
       <Field>
-        <FieldLabel htmlFor="statement-balance">Balance</FieldLabel>
+        <FieldLabel htmlFor="statement-balance">
+          {accountType === 'CREDIT_CARD' ? 'Amount owed' : 'Balance'}
+        </FieldLabel>
         <CurrencyAmountInput
           id="statement-balance"
           amount={balance}

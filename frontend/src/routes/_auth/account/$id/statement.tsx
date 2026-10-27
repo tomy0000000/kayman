@@ -13,6 +13,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
 import {
+  type AccountType,
   type BillTransactionsData,
   type CreateStatementData,
   type Options,
@@ -36,7 +37,7 @@ import {
   cacheUpdate,
   useOptimisticMutation
 } from '@/lib/optimistic'
-import { previousStatement } from '@/lib/statements'
+import { issuerBalance, previousStatement } from '@/lib/statements'
 import {
   cn,
   formatCalendarDate,
@@ -46,6 +47,7 @@ import {
 
 interface StatementRowProps {
   statement: StatementRead
+  accountType: AccountType
   currencyCode: string
   onBill: (statement: StatementRead) => void
 }
@@ -169,6 +171,7 @@ function AccountStatementPage() {
               <StatementRow
                 key={statement.id}
                 statement={statement}
+                accountType={account.type}
                 currencyCode={account.currency_code}
                 onBill={setBillingStatement}
               />
@@ -179,6 +182,7 @@ function AccountStatementPage() {
 
       <CreateStatementFab
         accountId={accountId}
+        accountType={account.type}
         currency={currencies?.find((c) => c.code === account.currency_code)}
         statements={ordered}
         open={fabOpen}
@@ -211,7 +215,12 @@ function AccountStatementPage() {
   )
 }
 
-function StatementRow({ statement, currencyCode, onBill }: StatementRowProps) {
+function StatementRow({
+  statement,
+  accountType,
+  currencyCode,
+  onBill
+}: StatementRowProps) {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -233,7 +242,10 @@ function StatementRow({ statement, currencyCode, onBill }: StatementRowProps) {
             </div>
           </div>
           <div className="shrink-0 font-medium">
-            {formatCurrency(parseFloat(statement.balance), currencyCode)}
+            {formatCurrency(
+              parseFloat(issuerBalance(statement.balance, accountType)),
+              currencyCode
+            )}
           </div>
         </div>
       </ContextMenuTrigger>

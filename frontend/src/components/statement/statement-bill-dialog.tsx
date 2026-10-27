@@ -38,6 +38,7 @@ import {
   formatCurrency,
   formatMonthDayTime,
   formatPlainDate,
+  negateDecimal,
   parseLocalDate,
   pluralize,
   zonedDayRange
@@ -139,19 +140,13 @@ export function StatementBillDialog({
     setPicked(next)
   }
 
-  const negate = (value: string) =>
-    value.startsWith('-')
-      ? value.slice(1)
-      : Number(value) === 0
-        ? value
-        : `-${value}`
   const selectedSum = selected.reduce(
     (sum, transaction) => addDecimals(sum, transaction.amount),
     '0'
   )
   const expected = addDecimals(previousStatement?.balance ?? '0', selectedSum)
   const difference = statement
-    ? Number(addDecimals(statement.balance, negate(expected)))
+    ? Number(addDecimals(statement.balance, negateDecimal(expected)))
     : 0
   const format = (value: string | number) =>
     formatCurrency(Number(value), account.currency_code)

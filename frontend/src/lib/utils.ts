@@ -267,6 +267,14 @@ export function addDecimals(a: string, b: string): string {
   return (parseFloat(a) + parseFloat(b)).toFixed(scale)
 }
 
+export function negateDecimal(value: string): string {
+  return value.startsWith('-')
+    ? value.slice(1)
+    : Number(value) === 0
+      ? value
+      : `-${value}`
+}
+
 function decimalScale(value: string): number {
   const fraction = value.split('.')[1]
   return fraction ? fraction.length : 0

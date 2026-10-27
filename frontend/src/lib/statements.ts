@@ -1,7 +1,7 @@
 import { addDays, addMonths, endOfMonth, startOfMonth, subDays } from 'date-fns'
 
-import { type StatementRead } from '@/lib/client'
-import { formatCalendarDate, parseLocalDate } from '@/lib/utils'
+import { type AccountType, type StatementRead } from '@/lib/client'
+import { formatCalendarDate, negateDecimal, parseLocalDate } from '@/lib/utils'
 
 const DUE_DAYS_AFTER_PERIOD_END = 15
 
@@ -9,6 +9,14 @@ export interface StatementCycle {
   periodStartOn: string
   periodEndOn: string
   dueOn: string
+}
+
+// Card issuers print what you owe as positive, so the sign flips both ways.
+export function issuerBalance(
+  balance: string,
+  accountType: AccountType
+): string {
+  return accountType === 'CREDIT_CARD' ? negateDecimal(balance) : balance
 }
 
 export function latestStatement(
