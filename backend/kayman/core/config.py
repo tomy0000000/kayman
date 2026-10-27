@@ -2,7 +2,7 @@ import os
 import secrets
 from typing import Literal, Self
 
-from pydantic import computed_field, model_validator
+from pydantic import computed_field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
 
@@ -20,6 +20,13 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str = "Kayman"
     COMMIT_SHA: str | None = None
+
+    # Docker sets an empty string when the COMMIT_SHA build arg is omitted.
+    @field_validator("COMMIT_SHA")
+    @classmethod
+    def _empty_commit_sha_to_none(cls, value: str | None) -> str | None:
+        return value or None
+
     POSTGRES_HOST: str = "kayman-db"
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str = "kayman"

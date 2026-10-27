@@ -233,3 +233,4 @@ jobs:
           docker_password: ${{ secrets.DOCKER_PASSWORD }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build_args: COMMIT_SHA=${{ github.sha }}

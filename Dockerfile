@@ -43,6 +43,7 @@ RUN mise run build:openapi-client
 RUN mise run build:router
 
 # Build frontend
+ARG COMMIT_SHA
 RUN mise run build:frontend
 
 ###############################################################################
@@ -67,6 +68,10 @@ COPY backend/ ./
 
 # Copy frontend application
 COPY --from=build /app/frontend/dist ./static
+
+# Report the build's commit from /version
+ARG COMMIT_SHA
+ENV COMMIT_SHA=${COMMIT_SHA}
 
 # Report container health
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
