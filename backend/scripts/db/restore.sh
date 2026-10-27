@@ -19,8 +19,8 @@ if [ -f "$ENV_FILE" ]; then
     set +a
 fi
 
-if [[ "${ENVIRONMENT:-production}" == "production" && "${2:-}" != "--force" ]]; then
-    echo "Refusing to restore: ENVIRONMENT is production. Pass --force after the dump path to override." >&2
+if [[ (",${MISE_ENV:-}," == *,production,* || "${ENVIRONMENT:-}" == "production") && "${2:-}" != "--force" ]]; then
+    echo "Refusing to restore: targeting production. Pass --force after the dump path to override." >&2
     exit 1
 fi
 export PGPASSWORD="${POSTGRES_PASSWORD}"

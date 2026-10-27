@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from typing import TYPE_CHECKING
 
@@ -133,6 +134,12 @@ def main() -> int:
         logger.error(
             f"Refusing to seed: ENVIRONMENT={settings.ENVIRONMENT!r} is not in "
             f"{sorted(ALLOWED_ENVIRONMENTS)}. Pass --force to override."
+        )
+        return 1
+
+    if "production" in os.environ.get("MISE_ENV", "").split(",") and not args.force:
+        logger.error(
+            "Refusing to seed: MISE_ENV includes production. Pass --force to override."
         )
         return 1
 
