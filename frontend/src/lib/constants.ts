@@ -11,3 +11,5 @@ export const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
  * changes with every transaction mutation.
  */
 export const REFERENCE_STALE_TIME = 5 * 60 * 1000
+
+export const REPO_URL = 'https://github.com/tomy0000000/kayman'
