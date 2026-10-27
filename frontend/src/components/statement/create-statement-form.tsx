@@ -141,6 +141,7 @@ export function CreateStatementForm({
           onValueChange={setDueOn}
           min={periodEndOn || undefined}
           invalid={isDueBeforePeriodEnd}
+          clearable
         />
         {isDueBeforePeriodEnd ? (
           <FieldError>

@@ -1,8 +1,9 @@
 import { format } from 'date-fns'
-import { CalendarIcon } from 'lucide-react'
-import { useState } from 'react'
+import { CalendarIcon, XIcon } from 'lucide-react'
+import { useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
@@ -17,6 +18,7 @@ interface DatePickerProps {
   onValueChange: (value: string) => void
   min?: string
   invalid?: boolean
+  clearable?: boolean
 }
 
 export function DatePicker({
@@ -24,20 +26,23 @@ export function DatePicker({
   value,
   onValueChange,
   min,
-  invalid
+  invalid,
+  clearable
 }: DatePickerProps) {
   const [open, setOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
 
   const selected = value ? parseLocalDate(value) : undefined
 
-  return (
+  const picker = (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          ref={triggerRef}
           variant="outline"
           id={id}
           aria-invalid={invalid}
-          className="w-full justify-start px-2.5 font-normal"
+          className="w-full shrink justify-start px-2.5 font-normal"
         >
           <CalendarIcon />
           {selected ? format(selected, 'LLL dd, y') : <span>Pick a date</span>}
@@ -58,5 +63,27 @@ export function DatePicker({
         />
       </PopoverContent>
     </Popover>
+  )
+
+  if (!clearable) return picker
+
+  return (
+    <ButtonGroup className="w-full">
+      {picker}
+      {selected && (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          aria-label="Clear date"
+          onClick={() => {
+            onValueChange('')
+            triggerRef.current?.focus()
+          }}
+        >
+          <XIcon />
+        </Button>
+      )}
+    </ButtonGroup>
   )
 }
