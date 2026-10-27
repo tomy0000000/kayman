@@ -68,5 +68,9 @@ COPY backend/ ./
 # Copy frontend application
 COPY --from=build /app/frontend/dist ./static
 
+# Report container health
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+    CMD ["curl", "-fsS", "http://localhost:8000/healthz"]
+
 # Run application
 ENTRYPOINT ["uv", "run", "uvicorn", "kayman.main:app", "--host", "0.0.0.0", "--port", "8000"]
