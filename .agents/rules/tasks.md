@@ -29,9 +29,9 @@ All tasks available in this repo are listed below, all managed by `mise`. Run an
 
 | Task         | Description                                  | Usage / Notes                                                          |
 | ------------ | -------------------------------------------- | ---------------------------------------------------------------------- |
-| `db:upgrade` | Upgrade database schema                      | Runs `alembic upgrade head`. Refuses when `ENVIRONMENT` is `production` or unset, unless `-- --force`. |
+| `db:upgrade` | Upgrade database schema                      | Runs `alembic upgrade head`. Refuses when `MISE_ENV` includes `production` or `ENVIRONMENT=production`, unless `-- --force`. |
 | `db:backup`  | Backup PostgreSQL database to a local dump file | Writes `kayman_<timestamp>.dump` in `backend/`. Reads `instance/.env`. |
-| `db:restore` | Restore PostgreSQL database from a dump file | `mise run db:restore -- path/to/data.dump [--force]`. Reads `instance/.env`. Refuses when `ENVIRONMENT` is `production` or unset, unless `--force`. |
+| `db:restore` | Restore PostgreSQL database from a dump file | `mise run db:restore -- path/to/data.dump [--force]`. Reads `instance/.env`. Refuses when `MISE_ENV` includes `production` or `ENVIRONMENT=production`, unless `--force`. |
 
 ## Build
 
