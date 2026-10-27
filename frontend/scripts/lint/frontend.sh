@@ -7,6 +7,10 @@ set -euo pipefail
 pnpm exec tsc --build --noEmit
 
 # ESLint
+if [ -n "${CI:-}" ]; then
+  # SARIF report for GitHub code scanning, failures are reported by the run below
+  pnpm exec eslint . --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif || true
+fi
 pnpm exec eslint .
 
 # Format lint

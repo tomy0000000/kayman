@@ -6,3 +6,4 @@ dist
 src/lib/client
 src/routeTree.gen.ts
 pnpm-lock.yaml
+eslint-results.sarif
