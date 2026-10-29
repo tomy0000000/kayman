@@ -3,6 +3,7 @@ import sys
 from collections.abc import AsyncGenerator, Collection
 from contextlib import asynccontextmanager
 from datetime import datetime
+from pathlib import Path
 from types import FrameType
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -12,6 +13,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from loguru import logger
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
@@ -21,6 +23,9 @@ from starlette.types import Scope
 from kayman.auth import setup_clients
 from kayman.core.config import settings
 from kayman.core.db import alembic_upgrade
+
+# Server-rendered pages, see .agents/rules/backend/templates.md
+templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 
 _LOG_LEVELS = {
     "local": "DEBUG",

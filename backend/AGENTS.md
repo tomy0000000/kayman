@@ -27,6 +27,7 @@ Layered FastAPI app:
 - `crud/`: SQL persistence (one module per aggregate: account, currency, event, event_entry, transaction).
 - `logics/`: business logic that composes multiple CRUD calls (account, event, transaction).
 - `schemas/`: SQLModel table models AND pydantic request/response models in the same modules. See `schemas/README.md` for the dbdiagram link, and `.agents/rules/backend/schemas.md` for the `Base`/`table`/`Create`/`Read`/`Update` class conventions, including where composite read models go.
+- `templates/`: Jinja2 pages the backend renders itself (currently the MCP OAuth login). See `.agents/rules/backend/templates.md`.
 - `openapi.py` + `util.py`: custom `operationId` generation and a `KustomJSONResponse` using `simplejson` for Decimal-safe encoding. Decimals are first-class throughout (high-precision currency).
 - `tests/` uses `factory-boy` (see `tests/factories/`) and `conftest.py` fixtures. `test:backend` injects a dummy `POSTGRES_PASSWORD` so settings instantiates without a running DB.
 
