@@ -7,6 +7,7 @@ from kayman.routers import (
     currency,
     event,
     event_entry,
+    oauth,
     root,
     statement,
     transaction,
@@ -16,6 +17,7 @@ from kayman.routers import (
 
 # Served at the root, not under /api
 root_router = root.root_router
+oauth_router = oauth.oauth_router
 
 routers = [
     auth.auth_router,

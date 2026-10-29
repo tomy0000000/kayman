@@ -11,6 +11,7 @@ fi
 mkdir -p "$(dirname "$ENV_FILE")"
 cat > "$ENV_FILE" <<EOF
 ENVIRONMENT=local
+BASE_URL=http://localhost:8000
 SECRET_KEY=$(openssl rand -base64 32)
 POSTGRES_USER=kayman
 POSTGRES_PASSWORD=$(openssl rand -base64 24)

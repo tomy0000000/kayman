@@ -19,6 +19,7 @@ class Settings(BaseSettings):
         return self
 
     PROJECT_NAME: str = "Kayman"
+    BASE_URL: str = "http://localhost:8000"
     COMMIT_SHA: str | None = None
 
     # Docker sets an empty string when the COMMIT_SHA build arg is omitted.

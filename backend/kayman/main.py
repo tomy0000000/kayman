@@ -6,7 +6,7 @@ from loguru import logger
 from kayman.core.config import settings
 from kayman.core.mcp import mount_mcp
 from kayman.openapi import override_openapi
-from kayman.routers import root_router, routers, tags
+from kayman.routers import oauth_router, root_router, routers, tags
 from kayman.util import (
     KustomJSONResponse,
     SPAStaticFiles,
@@ -51,6 +51,7 @@ for router in routers:
 
 # Add root-level routes before the static mount swallows them
 app.include_router(root_router)
+app.include_router(oauth_router)
 
 # Override the OpenAPI generation to customize operationId
 override_openapi(app)

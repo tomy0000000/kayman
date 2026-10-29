@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in to Kayman</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background: #f6f6f6;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+      }
+      form {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 12px;
+        width: 20rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        display: grid;
+        gap: 0.75rem;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin: 0 0 0.5rem;
+      }
+      input {
+        font: inherit;
+        padding: 0.5rem 0.6rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+      button {
+        font: inherit;
+        padding: 0.6rem;
+        border: 0;
+        border-radius: 6px;
+        background: #111;
+        color: #fff;
+        cursor: pointer;
+      }
+      .error {
+        color: #b00020;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <form method="post" action="{{ action }}">
+      <h1>Sign in to Kayman</h1>
+      <p>An MCP client is asking for access to your Kayman API.</p>
+      {% if error %}
+      <p class="error">{{ error }}</p>
+      {% endif %}
+      <input type="hidden" name="request" value="{{ request_id }}" />
+      <input
+        name="username"
+        placeholder="Client name"
+        autocomplete="username"
+        required
+        autofocus
+      />
+      <input
+        name="password"
+        type="password"
+        placeholder="Password"
+        autocomplete="current-password"
+        required
+      />
+      <button type="submit">Authorize</button>
+    </form>
+  </body>
+</html>
