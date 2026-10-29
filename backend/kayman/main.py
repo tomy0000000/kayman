@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from kayman.core.config import settings
+from kayman.core.mcp import mount_mcp
 from kayman.openapi import override_openapi
 from kayman.routers import root_router, routers, tags
 from kayman.util import (
@@ -51,13 +52,16 @@ for router in routers:
 # Add root-level routes before the static mount swallows them
 app.include_router(root_router)
 
+# Override the OpenAPI generation to customize operationId
+override_openapi(app)
+
+# Serve the API as MCP tools, named after the customized operationIds
+mcp = mount_mcp(app)
+
 # Serve the built frontend at root
 app.mount(
     "/", SPAStaticFiles(directory="static", html=True, check_dir=False), name="static"
 )
-
-# Override the OpenAPI generation to customize operationId
-override_openapi(app)
 
 # Log unhandled exceptions through loguru and return a clean 500
 setup_exception_handlers(app)

@@ -22,7 +22,7 @@ Run a single test: `cd backend && uv run pytest kayman/tests/path/to/test_x.py::
 Layered FastAPI app:
 
 - `main.py`: app factory. Mounts all routers under `/api`, then mounts the built frontend (`backend/static` → symlink to `frontend/dist`) as an SPA fallback at `/`.
-- `core/`: `config.py` (pydantic-settings, reads `instance/*.env` via `mise.*.toml`) and `db.py` (engine/session).
+- `core/`: `config.py` (pydantic-settings, reads `instance/*.env` via `mise.*.toml`), `db.py` (engine/session), and `mcp.py` (exposes the API as MCP tools at `/mcp` via FastMCP, named after the customized `operationId`s and gated by the same bearer tokens; admin, auth, invoice, and delete routes are excluded).
 - `routers/`: HTTP layer. `routers/__init__.py` registers every router and its OpenAPI tag. Each file exports `<name>_router` and a `tag` dict.
 - `crud/`: SQL persistence (one module per aggregate: account, currency, event, event_entry, transaction).
 - `logics/`: business logic that composes multiple CRUD calls (account, event, transaction).
