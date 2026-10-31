@@ -140,7 +140,8 @@ function AccountListPage() {
                   ...account,
                   name: patch.name ?? account.name,
                   short_name: patch.short_name,
-                  type: patch.type ?? account.type
+                  type: patch.type ?? account.type,
+                  index: patch.index ?? account.index
                 }
               : account
           })
@@ -157,11 +158,14 @@ function AccountListPage() {
     meta: { errorMessage: 'Failed to reorder accounts' }
   })
 
-  // Appended, not left at the default 0, which would sort a new account above
-  // every row a reorder has already given an index.
+  // An index orders an account within its type, so the next one appends to
+  // that group rather than defaulting to 0 and jumping above it.
+  const nextIndex = (type: AccountType) =>
+    accounts?.filter((account) => account.type === type).length ?? 0
+
   const createAccount = (body: AccountCreate) => {
     setFabOpen(false)
-    mutate({ body: { ...body, index: accounts?.length ?? 0 } })
+    mutate({ body: { ...body, index: nextIndex(body.type) } })
   }
 
   // Currency and timezone are left out, the backend does not update them.
@@ -174,7 +178,10 @@ function AccountListPage() {
           id: editingAccount.id,
           name: body.name,
           short_name: body.short_name,
-          type: body.type
+          type: body.type,
+          ...(body.type !== editingAccount.type && {
+            index: nextIndex(body.type)
+          })
         }
       ]
     })
