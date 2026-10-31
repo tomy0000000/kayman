@@ -1,6 +1,9 @@
+import { useState } from 'react'
+
 import { Amount } from '@/components/amount'
 import { ClearBanner } from '@/components/clear-banner'
 import { ResponsiveSheet } from '@/components/responsive-sheet'
+import { TransactionClearDialog } from '@/components/transaction/transaction-clear-dialog'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
 import { TransactionTagBadge } from '@/components/transaction/transaction-tag-badge'
 import { TransactionTimeline } from '@/components/transaction/transaction-timeline'
@@ -45,6 +48,7 @@ export function TransactionSheet({
   isClearPending
 }: TransactionSheetProps) {
   const { timezone } = useClientTimezone()
+  const [confirmingClear, setConfirmingClear] = useState(false)
 
   return (
     <ResponsiveSheet
@@ -104,10 +108,23 @@ export function TransactionSheet({
               subject="transaction"
               errors={clearErrors}
               isLoading={isClearableLoading}
-              onClear={onClear}
-              isClearPending={isClearPending}
+              onClear={() => setConfirmingClear(true)}
+              // Mutes the banner's ⌘↵ while the dialog owns it.
+              isClearPending={isClearPending || confirmingClear}
             />
           )}
+
+          <TransactionClearDialog
+            open={confirmingClear}
+            onOpenChange={setConfirmingClear}
+            transaction={transaction}
+            timezone={timezone}
+            accountType={account?.type}
+            onConfirm={() => {
+              setConfirmingClear(false)
+              onClear()
+            }}
+          />
         </div>
       )}
     </ResponsiveSheet>
