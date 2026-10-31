@@ -16,6 +16,13 @@ if TYPE_CHECKING:
     from kayman.schemas.transaction_tag import TransactionTag
 
 
+class TransactionClearErrorType(enum.Enum):
+    ALREADY_CLEARED = "ALREADY_CLEARED"
+    NOT_POSTED = "NOT_POSTED"
+    NO_STATEMENT = "NO_STATEMENT"
+    NO_EVENT = "NO_EVENT"
+
+
 class TransactionBase(SQLModel):
     account_id: int = Field(foreign_key="account.id")
     event_id: int | None = Field(foreign_key="event.id", default=None)
@@ -121,6 +128,24 @@ class TransactionBill(SQLModel):
 class TransactionClear(SQLModel):
     transaction_id: int
     cleared_at: datetime
+
+
+class TransactionClearError(SQLModel):
+    type: TransactionClearErrorType
+    msg: str
+
+
+class TransactionClearable(SQLModel):
+    """Whether a transaction can be cleared, and every reason it cannot."""
+
+    clearable: bool
+    errors: list[TransactionClearError]
+
+
+class TransactionClearConflict(SQLModel):
+    """The 409 body. FastAPI's HTTPException always wraps its detail."""
+
+    detail: dict[int, list[TransactionClearError]]
 
 
 class TransactionUpdate(SQLModel):
