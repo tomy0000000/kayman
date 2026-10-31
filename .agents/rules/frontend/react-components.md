@@ -44,6 +44,16 @@ Components tied to one domain (account, event, transaction, statement, ...) live
 
 Why: groups a domain's form, sheet, table and select in one place, and keeps the top level for the shared building blocks.
 
+## Share across domains through a neutral module
+
+A file's name says what it holds, and it holds only that. `event/event-timeline.tsx` holds `EventTimeline`, never a `TransactionTimeline`.
+
+- When two domains' components need the same piece, extract that piece into its own domain-agnostic module. Each domain file then imports it.
+- Shared rendering goes in a flat component under `components/`. Shared non-component logic (types, sorters, builders) goes in a module under `lib/`, because `react-refresh/only-export-components` rejects helpers exported next to a component.
+- Example: `components/milestone-timeline.tsx` renders the timeline, `lib/milestones.ts` builds and sorts its items, and `event/event-timeline.tsx` and `transaction/transaction-timeline.tsx` each import both.
+
+Why: a component tucked into another domain's file can't be found by its name, and it ties one domain to another domain's file.
+
 ## Utility functions live in `lib/utils.ts`
 
 Pure helpers (formatters, date math, class-name builders, etc.) belong in `frontend/src/lib/utils.ts`, or a sibling module under `frontend/src/lib/` if the file grows unwieldy. A `.tsx` file should contain only its props interface and the component(s) it owns.
