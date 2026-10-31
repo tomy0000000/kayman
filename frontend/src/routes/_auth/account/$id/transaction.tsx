@@ -9,6 +9,7 @@ import { EventSheet } from '@/components/event/event-sheet'
 import { TransactionBillSheet } from '@/components/transaction/transaction-bill-sheet'
 import { TransactionFab } from '@/components/transaction/transaction-fab'
 import { TransactionPostSheet } from '@/components/transaction/transaction-post-sheet'
+import { TransactionSheet } from '@/components/transaction/transaction-sheet'
 import { TransactionsTable } from '@/components/transaction/transactions-table'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/toast'
@@ -85,6 +86,11 @@ function AccountTransactionPage() {
     useState<TransactionReadWithBalance | null>(null)
   const [creatingEventTransaction, setCreatingEventTransaction] =
     useState<TransactionReadWithBalance | null>(null)
+  // The id outlives `open` so the sheet keeps its body while closing.
+  const [viewing, setViewing] = useState<{ open: boolean; id: number | null }>({
+    open: false,
+    id: null
+  })
 
   // The rows only carry their event's id, so the receipt is fetched by the hook.
   const { categoryNames, openEventView, sheetProps } = useEventActions(client, {
@@ -364,6 +370,10 @@ function AccountTransactionPage() {
     meta: { errorMessage: 'Failed to fetch transactions' }
   })
 
+  // Read from the list so the sheet follows optimistic updates to its row.
+  const viewingTransaction =
+    transactions?.find((transaction) => transaction.id === viewing.id) ?? null
+
   return (
     <>
       {/* Date Picker */}
@@ -385,6 +395,9 @@ function AccountTransactionPage() {
           categoryNames={categoryNames}
           accountNames={accountNames}
           isPending={isTransactionsPending}
+          onTransactionView={(transaction) =>
+            setViewing({ open: true, id: transaction.id })
+          }
           onTransactionEdit={(transaction) => {
             setSheetTransaction({ mode: 'edit', transaction })
             setFabOpen(true)
@@ -497,6 +510,15 @@ function AccountTransactionPage() {
           createEventFromTransaction({ body, transactions, entries })
         }}
         isPending={isCreatingEvent}
+      />
+
+      <TransactionSheet
+        open={viewing.open}
+        onOpenChange={(open) => setViewing((current) => ({ ...current, open }))}
+        transaction={viewingTransaction}
+        account={account}
+        categoryNames={categoryNames}
+        accountNames={accountNames}
       />
 
       <EventSheet {...sheetProps} />

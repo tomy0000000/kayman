@@ -35,6 +35,7 @@ interface TransactionsTableProps {
   categoryNames: Map<number, string>
   accountNames: Map<number, string>
   isPending: boolean
+  onTransactionView?: (transaction: TransactionReadWithBalance) => void
   onTransactionEdit?: (transaction: TransactionReadWithBalance) => void
   onTransactionDuplicate?: (transaction: TransactionReadWithBalance) => void
   onTransactionPost?: (transaction: TransactionReadWithBalance) => void
@@ -55,6 +56,7 @@ export function TransactionsTable({
   categoryNames,
   accountNames,
   isPending,
+  onTransactionView,
   onTransactionEdit,
   onTransactionDuplicate,
   onTransactionPost,
@@ -205,6 +207,11 @@ export function TransactionsTable({
                 <ContextMenuContent
                   onCloseAutoFocus={(event) => event.preventDefault()}
                 >
+                  <ContextMenuItem
+                    onSelect={() => onTransactionView?.(row.original)}
+                  >
+                    View
+                  </ContextMenuItem>
                   <ContextMenuItem
                     disabled={row.original.status === 'CLEARED'}
                     onSelect={() => onTransactionEdit?.(row.original)}
