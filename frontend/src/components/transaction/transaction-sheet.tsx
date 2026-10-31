@@ -1,10 +1,15 @@
 import { Amount } from '@/components/amount'
+import { ClearBanner } from '@/components/clear-banner'
 import { ResponsiveSheet } from '@/components/responsive-sheet'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
 import { TransactionTagBadge } from '@/components/transaction/transaction-tag-badge'
 import { TransactionTimeline } from '@/components/transaction/transaction-timeline'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
-import { type AccountRead, type TransactionReadWithBalance } from '@/lib/client'
+import {
+  type AccountRead,
+  type TransactionClearError,
+  type TransactionReadWithBalance
+} from '@/lib/client'
 import { summarizeTransactionEvent } from '@/lib/events'
 import { formatDateTime } from '@/lib/utils'
 
@@ -16,6 +21,10 @@ interface TransactionSheetProps {
   account?: AccountRead
   categoryNames: Map<number, string>
   accountNames: Map<number, string>
+  clearErrors: TransactionClearError[]
+  isClearableLoading: boolean
+  onClear: () => void
+  isClearPending: boolean
 }
 
 interface DetailRowProps {
@@ -29,7 +38,11 @@ export function TransactionSheet({
   transaction,
   account,
   categoryNames,
-  accountNames
+  accountNames,
+  clearErrors,
+  isClearableLoading,
+  onClear,
+  isClearPending
 }: TransactionSheetProps) {
   const { timezone } = useClientTimezone()
 
@@ -85,6 +98,16 @@ export function TransactionSheet({
           <div className="border-t" />
 
           <TransactionTimeline transaction={transaction} />
+
+          {!transaction.cleared_at && (
+            <ClearBanner
+              subject="transaction"
+              errors={clearErrors}
+              isLoading={isClearableLoading}
+              onClear={onClear}
+              isClearPending={isClearPending}
+            />
+          )}
         </div>
       )}
     </ResponsiveSheet>

@@ -38,7 +38,8 @@ import {
   readEventsOptions,
   readEventsQueryKey,
   readStatementsOptions,
-  readTransactionTagsOptions
+  readTransactionTagsOptions,
+  readTransactionsClearableOptions
 } from '@/lib/client/@tanstack/react-query.gen'
 import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { syncEventEntries } from '@/lib/event-entries'
@@ -259,21 +260,22 @@ function AccountTransactionPage() {
 
   // Clearing takes no input beyond the moment it happened, so it fires
   // straight from the context menu like clearing an event does.
-  const { mutate: clearTransactions } = useOptimisticMutation(
-    {
-      ...clearTransactionsMutation(),
-      onSuccess: () =>
-        toast.add({ title: 'Transaction cleared', type: 'success' }),
-      meta: { errorMessage: 'Failed to clear transaction' }
-    },
-    [
-      patchTransactions<Options<ClearTransactionsData>>((clear) => ({
-        cleared_at: clear.cleared_at,
-        status: 'CLEARED'
-      })),
-      { queryKey: readEventsQueryKey() }
-    ]
-  )
+  const { mutate: clearTransactions, isPending: isClearing } =
+    useOptimisticMutation(
+      {
+        ...clearTransactionsMutation(),
+        onSuccess: () =>
+          toast.add({ title: 'Transaction cleared', type: 'success' }),
+        meta: { errorMessage: 'Failed to clear transaction' }
+      },
+      [
+        patchTransactions<Options<ClearTransactionsData>>((clear) => ({
+          cleared_at: clear.cleared_at,
+          status: 'CLEARED'
+        })),
+        { queryKey: readEventsQueryKey() }
+      ]
+    )
 
   const { mutate: createEventFromTransaction, isPending: isCreatingEvent } =
     useOptimisticMutation(
@@ -373,6 +375,14 @@ function AccountTransactionPage() {
   // Read from the list so the sheet follows optimistic updates to its row.
   const viewingTransaction =
     transactions?.find((transaction) => transaction.id === viewing.id) ?? null
+
+  const { data: clearable, isLoading: isClearableLoading } = useQuery({
+    ...readTransactionsClearableOptions({
+      query: { ids: viewingTransaction ? [viewingTransaction.id] : [] }
+    }),
+    enabled:
+      viewing.open && !!viewingTransaction && !viewingTransaction.cleared_at
+  })
 
   return (
     <>
@@ -516,6 +526,25 @@ function AccountTransactionPage() {
         open={viewing.open}
         onOpenChange={(open) => setViewing((current) => ({ ...current, open }))}
         transaction={viewingTransaction}
+        clearErrors={
+          viewingTransaction
+            ? (clearable?.[viewingTransaction.id]?.errors ?? [])
+            : []
+        }
+        isClearableLoading={isClearableLoading}
+        isClearPending={isClearing}
+        onClear={() => {
+          if (!viewingTransaction) return
+          setViewing((current) => ({ ...current, open: false }))
+          clearTransactions({
+            body: [
+              {
+                transaction_id: viewingTransaction.id,
+                cleared_at: new Date().toISOString()
+              }
+            ]
+          })
+        }}
         account={account}
         categoryNames={categoryNames}
         accountNames={accountNames}
