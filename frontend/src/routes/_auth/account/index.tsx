@@ -1,9 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Wallet } from 'lucide-react'
+import { LayoutGrid, List, Wallet } from 'lucide-react'
 import { Reorder, useDragControls } from 'motion/react'
 import { type RefObject, useRef, useState } from 'react'
+import { z } from 'zod'
 
+import {
+  AccountCard,
+  AccountCardSkeleton
+} from '@/components/account/account-card'
 import { AccountFab } from '@/components/account/account-fab'
 import { DragHandle } from '@/components/drag-handle'
 import {
@@ -14,6 +19,7 @@ import {
 } from '@/components/ui/context-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   type AccountCreate,
   type AccountRead,
@@ -43,15 +49,27 @@ interface AccountRowProps {
   onEdit: () => void
 }
 
+interface AccountGridCardProps {
+  account: AccountRead
+  onEdit: () => void
+}
+
+const searchSchema = z.object({
+  view: z.enum(['list', 'grid']).optional()
+})
+
 export const Route = createFileRoute('/_auth/account/')({
   head: () => ({
     meta: [{ title: 'Account · Kayman' }]
   }),
+  validateSearch: searchSchema,
   component: AccountListPage
 })
 
 function AccountListPage() {
   const queryClient = useQueryClient()
+  const navigate = Route.useNavigate()
+  const { view = 'list' } = Route.useSearch()
   const [fabOpen, setFabOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<AccountRead | null>(null)
   const list = useRef<HTMLDivElement>(null)
@@ -178,9 +196,59 @@ function AccountListPage() {
     reorder({ body })
   }
 
+  const editAccount = (account: AccountRead) => {
+    setEditingAccount(account)
+    setFabOpen(true)
+  }
+
   return (
     <div className="w-full">
-      {isAccountsPending && (
+      <div className="flex justify-end pb-2">
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          size="sm"
+          spacing={0}
+          value={view}
+          onValueChange={(next) => {
+            // Radix reports an empty value when the active item is clicked again.
+            if (next) {
+              navigate({
+                search: { view: next === 'list' ? undefined : 'grid' }
+              })
+            }
+          }}
+        >
+          <ToggleGroupItem value="list" aria-label="List view">
+            <List />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="grid" aria-label="Grid view">
+            <LayoutGrid />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
+      {view === 'grid' && isAccountsPending && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }, (_, index) => (
+            <AccountCardSkeleton key={index} />
+          ))}
+        </div>
+      )}
+
+      {view === 'grid' && accounts && accounts.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {accounts.map((account) => (
+            <AccountGridCard
+              key={account.id}
+              account={account}
+              onEdit={() => editAccount(account)}
+            />
+          ))}
+        </div>
+      )}
+
+      {view === 'list' && isAccountsPending && (
         <div className="[&>*:last-child]:border-0">
           {Array.from({ length: 3 }, (_, index) => (
             <div
@@ -197,7 +265,7 @@ function AccountListPage() {
         </div>
       )}
 
-      {accounts && accounts.length > 0 && (
+      {view === 'list' && accounts && accounts.length > 0 && (
         <Reorder.Group
           as="div"
           ref={list}
@@ -212,10 +280,7 @@ function AccountListPage() {
               account={account}
               constraints={list}
               onDrop={persistOrder}
-              onEdit={() => {
-                setEditingAccount(account)
-                setFabOpen(true)
-              }}
+              onEdit={() => editAccount(account)}
             />
           ))}
         </Reorder.Group>
@@ -294,5 +359,36 @@ function AccountRow({ account, constraints, onDrop, onEdit }: AccountRowProps) {
         </ContextMenuContent>
       </ContextMenu>
     </Reorder.Item>
+  )
+}
+
+function AccountGridCard({ account, onEdit }: AccountGridCardProps) {
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <Link
+          to="/account/$id"
+          params={{ id: account.id.toString() }}
+          onClick={(clickEvent) => {
+            // The long press that opens the context menu also ends in a click.
+            if (clickEvent.currentTarget.dataset.state === 'open') {
+              clickEvent.preventDefault()
+            }
+          }}
+          className={cn(
+            'rounded-xl',
+            account.id < 0 && 'pointer-events-none opacity-50'
+          )}
+        >
+          <AccountCard
+            account={account}
+            className="hover:bg-muted/50 h-full transition-colors"
+          />
+        </Link>
+      </ContextMenuTrigger>
+      <ContextMenuContent onCloseAutoFocus={(event) => event.preventDefault()}>
+        <ContextMenuItem onSelect={onEdit}>Edit</ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }
