@@ -21,6 +21,7 @@ from kayman.schemas.transaction import (
     TransactionBase,
     TransactionBill,
     TransactionClear,
+    TransactionClearConflict,
     TransactionCreate,
     TransactionPost,
     TransactionRead,
@@ -143,15 +144,35 @@ def bills(
 
 
 @txn_router.post(
-    "/clear", name="Clear Transactions", response_model=list[TransactionRead]
+    "/clear",
+    name="Clear Transactions",
+    response_model=list[TransactionRead],
+    responses={
+        409: {
+            "model": TransactionClearConflict,
+            "description": "Transactions are not clearable",
+        }
+    },
 )
 def clears(
     *, session: Session = Depends(get_session), clears: Sequence[TransactionClear]
 ) -> Sequence[TransactionBase]:
+    # Lock the rows here so validation and the write see the same state.
     try:
-        validate_transactions_clearable(session, clears)
+        errors = validate_transactions_clearable(
+            session, [clear.transaction_id for clear in clears], for_update=True
+        )
     except ValueError as err:
         raise HTTPException(status_code=400, detail=err.args[0]) from err
+    if any(errors.values()):
+        raise HTTPException(
+            status_code=409,
+            detail={
+                txn_id: [error.model_dump(mode="json") for error in txn_errors]
+                for txn_id, txn_errors in errors.items()
+                if txn_errors
+            },
+        )
     updates = [
         TransactionStatusUpdate(id=clear.transaction_id, cleared_at=clear.cleared_at)
         for clear in clears

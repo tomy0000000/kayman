@@ -13,7 +13,8 @@ from kayman.logics.event import validate_events_editable
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBill,
-    TransactionClear,
+    TransactionClearError,
+    TransactionClearErrorType,
     TransactionPost,
     TransactionReadWithBalance,
     TransactionUpdate,
@@ -100,29 +101,40 @@ def validate_transactions_postable(
 
 
 def validate_transactions_clearable(
-    session: Session, clears: Sequence[TransactionClear]
-) -> None:
-    txns = _require_transactions(
-        session, [clear.transaction_id for clear in clears], "clear"
-    )
-    not_posted = {i for i, txn in txns.items() if txn.posted_at is None}
-    if not_posted:
-        raise ValueError(f"Transaction id(s) not posted: {format_ids(not_posted)}")
-    no_statement = {i for i, txn in txns.items() if txn.statement_id is None}
-    if no_statement:
-        raise ValueError(
-            f"Transaction id(s) not on a statement: {format_ids(no_statement)}"
+    session: Session, transaction_ids: Sequence[int], for_update: bool = False
+) -> dict[int, list[TransactionClearError]]:
+    """Collect every reason each transaction cannot be cleared."""
+    txns = _require_transactions(session, transaction_ids, "clear", for_update)
+    errors: dict[int, list[TransactionClearError]] = {}
+    for txn_id, txn in txns.items():
+        checks = (
+            (
+                txn.posted_at is None,
+                TransactionClearErrorType.NOT_POSTED,
+                "is not posted",
+            ),
+            (
+                txn.statement_id is None,
+                TransactionClearErrorType.NO_STATEMENT,
+                "is not on a statement",
+            ),
+            (
+                txn.event_id is None,
+                TransactionClearErrorType.NO_EVENT,
+                "has no associated event",
+            ),
+            (
+                txn.cleared_at is not None,
+                TransactionClearErrorType.ALREADY_CLEARED,
+                "is already cleared",
+            ),
         )
-    no_event = {i for i, txn in txns.items() if txn.event_id is None}
-    if no_event:
-        raise ValueError(
-            f"Transaction id(s) have no associated event: {format_ids(no_event)}"
-        )
-    already_cleared = {i for i, txn in txns.items() if txn.cleared_at is not None}
-    if already_cleared:
-        raise ValueError(
-            f"Transaction id(s) already cleared: {format_ids(already_cleared)}"
-        )
+        errors[txn_id] = [
+            TransactionClearError(type=error_type, msg=f"Transaction {txn_id} {reason}")
+            for failed, error_type, reason in checks
+            if failed
+        ]
+    return errors
 
 
 def validate_transactions_billable(

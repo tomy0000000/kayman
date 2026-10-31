@@ -21,7 +21,7 @@ from kayman.logics.transaction import (
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBill,
-    TransactionClear,
+    TransactionClearErrorType,
     TransactionPost,
     TransactionStatusUpdate,
     TransactionUpdate,
@@ -500,23 +500,37 @@ def test_validate_transactions_clearable_passes(session: Session):
         for _ in range(3)
     ]
 
-    assert (
-        validate_transactions_clearable(
-            session,
-            [
-                TransactionClear(
-                    transaction_id=t.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
-                )
-                for t in txns
-            ],
-        )
-        is None
+    errors = validate_transactions_clearable(session, [t.id for t in txns])
+
+    assert len(errors) == 3
+    assert errors == {t.id: [] for t in txns}
+
+
+def test_validate_transactions_clearable_for_update(session: Session):
+    statement = StatementFactory()
+    txn = TransactionFactory(
+        account=statement.account, statement_id=statement.id, cleared_at=None
     )
+
+    errors = validate_transactions_clearable(session, [txn.id], for_update=True)
+
+    assert len(errors) == 1
+    assert errors == {txn.id: []}
 
 
 def test_validate_transactions_clearable_empty(session: Session):
     with pytest.raises(ValueError, match=re.escape("No transactions to clear")):
         validate_transactions_clearable(session, [])
+
+
+def test_validate_transactions_clearable_duplicates(session: Session):
+    statement = StatementFactory()
+    txn = TransactionFactory(account=statement.account, statement_id=statement.id)
+
+    with pytest.raises(
+        ValueError, match=re.escape(f"Duplicate transaction id(s): {{{txn.id}}}")
+    ):
+        validate_transactions_clearable(session, [txn.id, txn.id])
 
 
 def test_validate_transactions_clearable_missing_ids(session: Session):
@@ -526,148 +540,55 @@ def test_validate_transactions_clearable_missing_ids(session: Session):
     with pytest.raises(
         ValueError, match=re.escape("Transaction id(s) not found: {998, 999}")
     ):
-        validate_transactions_clearable(
-            session,
-            [
-                TransactionClear(
-                    transaction_id=999, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
-                ),
-                TransactionClear(
-                    transaction_id=txn.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
-                ),
-                TransactionClear(
-                    transaction_id=998, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
-                ),
-            ],
-        )
+        validate_transactions_clearable(session, [999, txn.id, 998])
 
 
-def test_validate_transactions_clearable_lists_all_not_posted(session: Session):
-    statement = StatementFactory()
-    account = statement.account
-    valid = TransactionFactory(account=account, statement_id=statement.id)
-    pending_1 = TransactionFactory(
-        account=account, statement_id=statement.id, posted_at=None
-    )
-    pending_2 = TransactionFactory(
-        account=account, statement_id=statement.id, posted_at=None
-    )
+def test_validate_transactions_clearable_collects_every_error(session: Session):
+    txn = TransactionFactory(event=None, event_id=None, posted_at=None)
 
-    with pytest.raises(
-        ValueError,
-        match=re.escape(
-            f"Transaction id(s) not posted: {{{pending_1.id}, {pending_2.id}}}"
-        ),
-    ):
-        validate_transactions_clearable(
-            session,
-            [
-                TransactionClear(
-                    transaction_id=pending_2.id,
-                    cleared_at=datetime(2025, 1, 1, tzinfo=UTC),
-                ),
-                TransactionClear(
-                    transaction_id=valid.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
-                ),
-                TransactionClear(
-                    transaction_id=pending_1.id,
-                    cleared_at=datetime(2025, 1, 1, tzinfo=UTC),
-                ),
-            ],
-        )
+    errors = validate_transactions_clearable(session, [txn.id])
+
+    assert len(errors) == 1
+    assert len(errors[txn.id]) == 4
+    assert [error.type for error in errors[txn.id]] == [
+        TransactionClearErrorType.NOT_POSTED,
+        TransactionClearErrorType.NO_STATEMENT,
+        TransactionClearErrorType.NO_EVENT,
+        TransactionClearErrorType.ALREADY_CLEARED,
+    ]
+    assert [error.msg for error in errors[txn.id]] == [
+        f"Transaction {txn.id} is not posted",
+        f"Transaction {txn.id} is not on a statement",
+        f"Transaction {txn.id} has no associated event",
+        f"Transaction {txn.id} is already cleared",
+    ]
 
 
-def test_validate_transactions_clearable_no_statement(session: Session):
-    txn = TransactionFactory()
-
-    with pytest.raises(
-        ValueError,
-        match=re.escape(f"Transaction id(s) not on a statement: {{{txn.id}}}"),
-    ):
-        validate_transactions_clearable(
-            session,
-            [
-                TransactionClear(
-                    transaction_id=txn.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
-                )
-            ],
-        )
-
-
-def test_validate_transactions_clearable_no_event(session: Session):
-    statement = StatementFactory()
-    txn = TransactionFactory(
-        account=statement.account,
-        statement_id=statement.id,
-        event=None,
-        event_id=None,
-    )
-
-    with pytest.raises(
-        ValueError,
-        match=re.escape(f"Transaction id(s) have no associated event: {{{txn.id}}}"),
-    ):
-        validate_transactions_clearable(
-            session,
-            [
-                TransactionClear(
-                    transaction_id=txn.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
-                )
-            ],
-        )
-
-
-def test_validate_transactions_clearable_lists_all_already_cleared(session: Session):
+def test_validate_transactions_clearable_keys_errors_by_transaction(
+    session: Session,
+):
     statement = StatementFactory()
     account = statement.account
     valid = TransactionFactory(
         account=account, statement_id=statement.id, cleared_at=None
     )
-    cleared_1 = TransactionFactory(account=account, statement_id=statement.id)
-    cleared_2 = TransactionFactory(account=account, statement_id=statement.id)
+    pending = TransactionFactory(
+        account=account, statement_id=statement.id, posted_at=None, cleared_at=None
+    )
+    cleared = TransactionFactory(account=account, statement_id=statement.id)
 
-    with pytest.raises(
-        ValueError,
-        match=re.escape(
-            f"Transaction id(s) already cleared: {{{cleared_1.id}, {cleared_2.id}}}"
-        ),
-    ):
-        validate_transactions_clearable(
-            session,
-            [
-                TransactionClear(
-                    transaction_id=cleared_2.id,
-                    cleared_at=datetime(2025, 1, 1, tzinfo=UTC),
-                ),
-                TransactionClear(
-                    transaction_id=valid.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
-                ),
-                TransactionClear(
-                    transaction_id=cleared_1.id,
-                    cleared_at=datetime(2025, 1, 1, tzinfo=UTC),
-                ),
-            ],
-        )
+    errors = validate_transactions_clearable(
+        session, [cleared.id, valid.id, pending.id]
+    )
 
-
-def test_validate_transactions_clearable_not_posted_before_no_statement(
-    session: Session,
-):
-    pending = TransactionFactory(posted_at=None)
-
-    with pytest.raises(
-        ValueError,
-        match=re.escape(f"Transaction id(s) not posted: {{{pending.id}}}"),
-    ):
-        validate_transactions_clearable(
-            session,
-            [
-                TransactionClear(
-                    transaction_id=pending.id,
-                    cleared_at=datetime(2025, 1, 1, tzinfo=UTC),
-                )
-            ],
-        )
+    assert len(errors) == 3
+    assert errors[valid.id] == []
+    assert [error.type for error in errors[pending.id]] == [
+        TransactionClearErrorType.NOT_POSTED
+    ]
+    assert [error.type for error in errors[cleared.id]] == [
+        TransactionClearErrorType.ALREADY_CLEARED
+    ]
 
 
 def test_validate_transactions_billable_passes(session: Session):

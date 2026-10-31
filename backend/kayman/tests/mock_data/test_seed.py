@@ -1,6 +1,5 @@
 import re
 from collections.abc import Callable
-from datetime import UTC, datetime
 
 from loguru import logger
 from sqlmodel import Session, select
@@ -19,7 +18,6 @@ from kayman.schemas.statement import Statement
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBill,
-    TransactionClear,
     TransactionRead,
     TransactionStatus,
 )
@@ -60,14 +58,9 @@ def _billable(session: Session, transaction: Transaction) -> bool:
 def _clearable(session: Session, transaction: Transaction) -> bool:
     if transaction.id is None:
         return False
-    clear = TransactionClear(
-        transaction_id=transaction.id, cleared_at=datetime(2025, 1, 1, tzinfo=UTC)
-    )
-    try:
-        validate_transactions_clearable(session, [clear])
-    except ValueError:
-        return False
-    return True
+    return not validate_transactions_clearable(session, [transaction.id])[
+        transaction.id
+    ]
 
 
 EVENT_LABEL_CHECKS: dict[str, Callable[[Event], bool]] = {
