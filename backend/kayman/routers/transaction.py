@@ -1,8 +1,8 @@
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session
 
 from kayman.auth import get_client
@@ -21,6 +21,7 @@ from kayman.schemas.transaction import (
     TransactionBase,
     TransactionBill,
     TransactionClear,
+    TransactionClearable,
     TransactionClearConflict,
     TransactionCreate,
     TransactionPost,
@@ -65,6 +66,26 @@ def create(
     session.commit()
     session.refresh(db_txns[0])
     return db_txns[0]
+
+
+@txn_router.get(
+    "/clearable",
+    name="Read Transactions Clearable",
+    response_model=dict[int, TransactionClearable],
+)
+def clearable(
+    *,
+    session: Session = Depends(get_session),
+    ids: Annotated[list[int], Query()],
+) -> dict[int, TransactionClearable]:
+    try:
+        errors = validate_transactions_clearable(session, ids)
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=err.args[0]) from err
+    return {
+        txn_id: TransactionClearable(clearable=not txn_errors, errors=txn_errors)
+        for txn_id, txn_errors in errors.items()
+    }
 
 
 @txn_router.get("", name="Read Transactions", response_model=list[TransactionRead])
