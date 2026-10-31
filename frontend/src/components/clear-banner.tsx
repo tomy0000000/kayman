@@ -1,4 +1,5 @@
 import { CircleAlert, CircleCheck } from 'lucide-react'
+import { useHotkeys } from 'react-hotkeys-hook'
 
 import {
   Alert,
@@ -7,6 +8,7 @@ import {
   AlertTitle
 } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import { Skeleton } from '@/components/ui/skeleton'
 import { type EventClearError, type TransactionClearError } from '@/lib/client'
 
@@ -21,10 +23,13 @@ interface ClearBannerProps {
 
 const ERROR_CLASSES =
   'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200'
+// Wider right padding than Alert's default, so the text clears the button and its hotkey.
 const SUCCESS_CLASSES =
-  'border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200'
+  'border-green-200 bg-green-50 text-green-800 has-data-[slot=alert-action]:pr-30 dark:border-green-800 dark:bg-green-950 dark:text-green-200'
 const SUCCESS_BUTTON_CLASSES =
   'border-green-300 bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900 focus-visible:border-green-400 focus-visible:ring-green-500/20 dark:border-green-700 dark:bg-green-900 dark:text-green-100 dark:hover:bg-green-800 dark:hover:text-green-50 dark:focus-visible:ring-green-400/40'
+const SUCCESS_KBD_CLASSES =
+  'bg-green-300/50 text-green-900 dark:bg-green-700/60 dark:text-green-50'
 
 export function ClearBanner({
   subject,
@@ -33,6 +38,14 @@ export function ClearBanner({
   onClear,
   isClearPending
 }: ClearBannerProps) {
+  const isReady = !isLoading && errors.length === 0
+
+  // Bound only while the Clear button is on screen and usable.
+  useHotkeys('mod+enter', onClear, {
+    enabled: isReady && !isClearPending,
+    preventDefault: true
+  })
+
   if (isLoading) return <Skeleton className="h-14 w-full rounded-lg" />
 
   if (errors.length > 0) {
@@ -63,7 +76,11 @@ export function ClearBanner({
           onClick={onClear}
           disabled={isClearPending}
         >
-          Clear
+          Clear{' '}
+          <KbdGroup>
+            <Kbd className={SUCCESS_KBD_CLASSES}>⌘</Kbd>
+            <Kbd className={SUCCESS_KBD_CLASSES}>↵</Kbd>
+          </KbdGroup>
         </Button>
       </AlertAction>
     </Alert>
