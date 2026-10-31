@@ -258,8 +258,7 @@ function AccountTransactionPage() {
       ]
     )
 
-  // Clearing takes no input beyond the moment it happened, so it fires
-  // straight from the context menu like clearing an event does.
+  // Fired from the details sheet once its dry run finds nothing blocking.
   const { mutate: clearTransactions, isPending: isClearing } =
     useOptimisticMutation(
       {
@@ -418,16 +417,6 @@ function AccountTransactionPage() {
           }}
           onTransactionPost={setPostingTransaction}
           onTransactionBill={setBillingTransaction}
-          onTransactionClear={(transaction) =>
-            clearTransactions({
-              body: [
-                {
-                  transaction_id: transaction.id,
-                  cleared_at: new Date().toISOString()
-                }
-              ]
-            })
-          }
           onTransactionCreateEvent={setCreatingEventTransaction}
           onTransactionViewEvent={(transaction) => {
             if (!transaction.event) return

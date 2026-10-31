@@ -40,7 +40,6 @@ interface TransactionsTableProps {
   onTransactionDuplicate?: (transaction: TransactionReadWithBalance) => void
   onTransactionPost?: (transaction: TransactionReadWithBalance) => void
   onTransactionBill?: (transaction: TransactionReadWithBalance) => void
-  onTransactionClear?: (transaction: TransactionReadWithBalance) => void
   onTransactionCreateEvent?: (transaction: TransactionReadWithBalance) => void
   onTransactionViewEvent?: (transaction: TransactionReadWithBalance) => void
   onTransactionGoToEvent?: (transaction: TransactionReadWithBalance) => void
@@ -61,7 +60,6 @@ export function TransactionsTable({
   onTransactionDuplicate,
   onTransactionPost,
   onTransactionBill,
-  onTransactionClear,
   onTransactionCreateEvent,
   onTransactionViewEvent,
   onTransactionGoToEvent
@@ -235,15 +233,6 @@ export function TransactionsTable({
                     onSelect={() => onTransactionBill?.(row.original)}
                   >
                     Bill
-                  </ContextMenuItem>
-                  <ContextMenuItem
-                    disabled={
-                      row.original.status !== 'BILLED' ||
-                      row.original.event_id == null
-                    }
-                    onSelect={() => onTransactionClear?.(row.original)}
-                  >
-                    Clear
                   </ContextMenuItem>
                   <ContextMenuSeparator />
                   <ContextMenuItem
