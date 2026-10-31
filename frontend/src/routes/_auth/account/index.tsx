@@ -20,9 +20,11 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { ACCOUNT_TYPES } from '@/lib/account-types'
 import {
   type AccountCreate,
   type AccountRead,
+  type AccountType,
   type CreateAccountData,
   type Options,
   type UpdateAccountsData
@@ -49,10 +51,24 @@ interface AccountRowProps {
   onEdit: () => void
 }
 
+interface AccountReorderListProps {
+  accounts: AccountRead[]
+  onReorder: (next: AccountRead[]) => void
+  onDrop: () => void
+  onEdit: (account: AccountRead) => void
+}
+
 interface AccountGridCardProps {
   account: AccountRead
   onEdit: () => void
 }
+
+const GROUP_ORDER: AccountType[] = [
+  'CREDIT_CARD',
+  'CASH',
+  'REWARD',
+  'INVESTMENT'
+]
 
 const searchSchema = z.object({
   view: z.enum(['list', 'grid']).optional()
@@ -72,7 +88,6 @@ function AccountListPage() {
   const { view = 'list' } = Route.useSearch()
   const [fabOpen, setFabOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<AccountRead | null>(null)
-  const list = useRef<HTMLDivElement>(null)
 
   const { isPending: isAccountsPending, data: accounts } = useQuery({
     ...readAccountsOptions(),
@@ -172,9 +187,15 @@ function AccountListPage() {
 
   // The drag reorders the cached list so the rows follow the pointer. Each row
   // still carries the index the server has, which is what the drop diffs
-  // against.
-  const handleReorder = (next: AccountRead[]) =>
-    queryClient.setQueryData(readAccountsQueryKey(), next)
+  // against. A group's rows only swap among the slots that group already holds.
+  const handleReorder = (type: AccountType, next: AccountRead[]) => {
+    const queue = [...next]
+    queryClient.setQueryData<AccountRead[]>(readAccountsQueryKey(), (current) =>
+      current?.map((account) =>
+        account.type === type ? (queue.shift() ?? account) : account
+      )
+    )
+  }
 
   const persistOrder = () => {
     const current = queryClient.getQueryData<AccountRead[]>(
@@ -200,6 +221,12 @@ function AccountListPage() {
     setEditingAccount(account)
     setFabOpen(true)
   }
+
+  const groups = GROUP_ORDER.map((type) => ({
+    type,
+    meta: ACCOUNT_TYPES.find((t) => t.value === type),
+    accounts: accounts?.filter((account) => account.type === type) ?? []
+  })).filter((group) => group.accounts.length > 0)
 
   return (
     <div className="w-full">
@@ -236,14 +263,36 @@ function AccountListPage() {
         </div>
       )}
 
-      {view === 'grid' && accounts && accounts.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {accounts.map((account) => (
-            <AccountGridCard
-              key={account.id}
-              account={account}
-              onEdit={() => editAccount(account)}
-            />
+      {groups.length > 0 && (
+        <div className="flex flex-col gap-6">
+          {groups.map(({ type, meta, accounts: groupAccounts }) => (
+            <section key={type} className="flex flex-col gap-2">
+              {meta && (
+                <h2 className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
+                  <meta.icon className="size-4" />
+                  {meta.label}
+                </h2>
+              )}
+
+              {view === 'grid' ? (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {groupAccounts.map((account) => (
+                    <AccountGridCard
+                      key={account.id}
+                      account={account}
+                      onEdit={() => editAccount(account)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <AccountReorderList
+                  accounts={groupAccounts}
+                  onReorder={(next) => handleReorder(type, next)}
+                  onDrop={persistOrder}
+                  onEdit={editAccount}
+                />
+              )}
+            </section>
           ))}
         </div>
       )}
@@ -265,27 +314,6 @@ function AccountListPage() {
         </div>
       )}
 
-      {view === 'list' && accounts && accounts.length > 0 && (
-        <Reorder.Group
-          as="div"
-          ref={list}
-          axis="y"
-          values={accounts}
-          onReorder={handleReorder}
-          className="[&>*:last-child]:border-0"
-        >
-          {accounts.map((account) => (
-            <AccountRow
-              key={account.id}
-              account={account}
-              constraints={list}
-              onDrop={persistOrder}
-              onEdit={() => editAccount(account)}
-            />
-          ))}
-        </Reorder.Group>
-      )}
-
       {!isAccountsPending && accounts?.length === 0 && (
         <p className="text-muted-foreground p-4 text-sm">No accounts found.</p>
       )}
@@ -299,6 +327,36 @@ function AccountListPage() {
         isPending={isPending || isUpdatePending}
       />
     </div>
+  )
+}
+
+function AccountReorderList({
+  accounts,
+  onReorder,
+  onDrop,
+  onEdit
+}: AccountReorderListProps) {
+  const list = useRef<HTMLDivElement>(null)
+
+  return (
+    <Reorder.Group
+      as="div"
+      ref={list}
+      axis="y"
+      values={accounts}
+      onReorder={onReorder}
+      className="[&>*:last-child]:border-0"
+    >
+      {accounts.map((account) => (
+        <AccountRow
+          key={account.id}
+          account={account}
+          constraints={list}
+          onDrop={onDrop}
+          onEdit={() => onEdit(account)}
+        />
+      ))}
+    </Reorder.Group>
   )
 }
 
