@@ -56,6 +56,7 @@ def session(db_uri) -> Generator[Session]:
 
     session.rollback()
     session.close()
+    engine.dispose()
 
 
 @pytest.fixture(scope="function")
@@ -74,6 +75,7 @@ def session_2(db_uri) -> Generator[Session]:
 
     session.rollback()
     session.close()
+    engine.dispose()
 
 
 @pytest.fixture(scope="function")
