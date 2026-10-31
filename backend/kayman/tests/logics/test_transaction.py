@@ -1,6 +1,7 @@
 import re
 from datetime import UTC, datetime
 from decimal import Decimal
+from unittest.mock import patch
 
 import pytest
 from sqlalchemy import event as sa_event
@@ -9,6 +10,7 @@ from sqlmodel import Session
 from kayman.crud.account import read_account
 from kayman.logics.transaction import (
     _calculate_account_deltas,
+    _require_transactions,
     get_transactions_with_running_balance,
     update_transactions_with_balances,
     validate_transactions_billable,
@@ -300,6 +302,67 @@ def test_update_transactions_with_balances_does_not_mutate_input(session: Sessio
 
     # The caller's list keeps its original order; sorting happens on a copy.
     assert [update.id for update in updates] == [txn_2.id, txn_1.id]
+
+
+def test_require_transactions_keyed_in_id_order(session: Session):
+    first, second, third = TransactionFactory.create_batch(3)
+
+    txns = _require_transactions(session, [third.id, first.id, second.id], "clear")
+
+    assert len(txns) == 3
+    assert list(txns) == [first.id, second.id, third.id]
+
+
+def test_require_transactions_does_not_lock_by_default(session: Session):
+    txn = TransactionFactory()
+
+    with patch.object(session, "exec", wraps=session.exec) as mock_exec:
+        _require_transactions(session, [txn.id], "clear")
+        statement = str(mock_exec.call_args[0][0])
+        assert "FOR UPDATE" not in statement
+
+
+def test_require_transactions_for_update(session: Session):
+    txn = TransactionFactory()
+
+    with patch.object(session, "exec", wraps=session.exec) as mock_exec:
+        _require_transactions(session, [txn.id], "clear", for_update=True)
+        statement = str(mock_exec.call_args[0][0])
+        assert "FOR UPDATE" in statement
+
+
+@pytest.mark.parametrize("verb", ["post", "bill", "clear"])
+def test_require_transactions_empty_names_the_verb(session: Session, verb: str):
+    with pytest.raises(ValueError, match=re.escape(f"No transactions to {verb}")):
+        _require_transactions(session, [], verb)
+
+
+def test_require_transactions_lists_all_duplicates(session: Session):
+    first, second, third = TransactionFactory.create_batch(3)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Duplicate transaction id(s): {{{first.id}, {second.id}}}"),
+    ):
+        _require_transactions(
+            session, [second.id, first.id, third.id, first.id, second.id], "clear"
+        )
+
+
+def test_require_transactions_lists_all_missing(session: Session):
+    txn = TransactionFactory()
+
+    with pytest.raises(
+        ValueError, match=re.escape("Transaction id(s) not found: {998, 999}")
+    ):
+        _require_transactions(session, [999, txn.id, 998], "clear")
+
+
+def test_require_transactions_duplicates_before_missing(session: Session):
+    with pytest.raises(
+        ValueError, match=re.escape("Duplicate transaction id(s): {999}")
+    ):
+        _require_transactions(session, [999, 999], "clear")
 
 
 def test_validate_transactions_postable_passes(session: Session):

@@ -53,7 +53,10 @@ def get_transactions_with_running_balance(
 
 
 def _require_transactions(
-    session: Session, transaction_ids: Sequence[int], verb: str
+    session: Session,
+    transaction_ids: Sequence[int],
+    verb: str,
+    for_update: bool = False,
 ) -> dict[int, Transaction]:
     """Raise unless the ids are non-empty, unique, and all exist."""
     # Must precede any read: read_transactions treats an empty id list as "all".
@@ -65,7 +68,12 @@ def _require_transactions(
 
     txns = {
         txn.id: txn
-        for txn in read_transactions(session, transaction_ids=transaction_ids)
+        for txn in read_transactions(
+            session,
+            transaction_ids=transaction_ids,
+            order_by="id",
+            for_update=for_update,
+        )
         if txn.id is not None
     }
     missing_ids = set(transaction_ids) - txns.keys()
