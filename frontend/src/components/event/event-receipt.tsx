@@ -2,7 +2,7 @@ import { Download } from 'lucide-react'
 import { useMemo } from 'react'
 
 import { Amount } from '@/components/amount'
-import { EventClearBanner } from '@/components/event/event-clear-banner'
+import { ClearBanner } from '@/components/clear-banner'
 import { EventTimeline } from '@/components/event/event-timeline'
 import { EventTypeBadge } from '@/components/event/event-type-badge'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
@@ -170,7 +170,8 @@ export function EventReceipt({
           Cleared {formatDateTime(event.cleared_at, timezone)}
         </span>
       ) : (
-        <EventClearBanner
+        <ClearBanner
+          subject="event"
           errors={clearErrors}
           isLoading={isClearableLoading}
           onClear={onClear}

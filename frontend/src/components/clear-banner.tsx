@@ -8,10 +8,12 @@ import {
 } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { type EventClearError } from '@/lib/client'
+import { type EventClearError, type TransactionClearError } from '@/lib/client'
 
-interface EventClearBannerProps {
-  errors: EventClearError[]
+interface ClearBannerProps {
+  // What is being cleared, as the success message names it.
+  subject: 'event' | 'transaction'
+  errors: (EventClearError | TransactionClearError)[]
   isLoading: boolean
   onClear: () => void
   isClearPending: boolean
@@ -24,12 +26,13 @@ const SUCCESS_CLASSES =
 const SUCCESS_BUTTON_CLASSES =
   'border-green-300 bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900 focus-visible:border-green-400 focus-visible:ring-green-500/20 dark:border-green-700 dark:bg-green-900 dark:text-green-100 dark:hover:bg-green-800 dark:hover:text-green-50 dark:focus-visible:ring-green-400/40'
 
-export function EventClearBanner({
+export function ClearBanner({
+  subject,
   errors,
   isLoading,
   onClear,
   isClearPending
-}: EventClearBannerProps) {
+}: ClearBannerProps) {
   if (isLoading) return <Skeleton className="h-14 w-full rounded-lg" />
 
   if (errors.length > 0) {
@@ -50,7 +53,7 @@ export function EventClearBanner({
       <CircleCheck />
       <AlertTitle>Ready to clear</AlertTitle>
       <AlertDescription className="text-green-800/90 dark:text-green-200/90">
-        Nothing is blocking this event.
+        Nothing is blocking this {subject}.
       </AlertDescription>
       <AlertAction>
         <Button
