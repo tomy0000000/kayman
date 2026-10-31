@@ -66,6 +66,13 @@ export function TransactionsTable({
 }: TransactionsTableProps) {
   const { timezone } = useClientTimezone()
 
+  const columnWidths: Record<string, string> = {
+    date: 'w-28',
+    time: 'w-24',
+    status: 'w-28',
+    amount: 'w-36'
+  }
+
   const columns = useMemo<ColumnDef<TransactionReadWithBalance>[]>(
     () => [
       {
@@ -98,14 +105,16 @@ export function TransactionsTable({
           )
           return (
             <div className="flex flex-col">
-              {title && <span className="font-semibold">{title}</span>}
+              {title && <span className="truncate font-semibold">{title}</span>}
               {subtitle && (
-                <span className="text-muted-foreground text-sm">
+                <span className="truncate text-muted-foreground text-sm">
                   {subtitle}
                 </span>
               )}
               {note && (
-                <span className="text-muted-foreground text-sm">{note}</span>
+                <span className="truncate text-muted-foreground text-sm">
+                  {note}
+                </span>
               )}
             </div>
           )
@@ -153,12 +162,15 @@ export function TransactionsTable({
 
   return (
     <div className="overflow-hidden rounded-md border">
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
+                <TableHead
+                  key={header.id}
+                  className={columnWidths[header.column.id]}
+                >
                   {header.isPlaceholder
                     ? null
                     : flexRender(
