@@ -3,13 +3,27 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlmodel import Integer, Session, cast, col, select
 
-from kayman.schemas.account import Account, AccountBase, AccountCreate, AccountUpdate
+from kayman.schemas.account import (
+    Account,
+    AccountBase,
+    AccountCreate,
+    AccountType,
+    AccountUpdate,
+)
 from kayman.schemas.transaction import Transaction
 
 AccountOrderBy = Literal["name", "balance", "created_at", "id", "index"]
+
+# An account's index orders it among accounts of the same type only.
+ACCOUNT_TYPE_ORDER = [
+    AccountType.CREDIT_CARD,
+    AccountType.CASH,
+    AccountType.REWARD,
+    AccountType.INVESTMENT,
+]
 
 
 def create_accounts(
@@ -52,7 +66,11 @@ def read_accounts(
     if account_ids:
         statement = statement.where(cast(Account.id, Integer).in_(account_ids))
     if order_by is None or order_by == "index":
-        columns = [col(Account.index), col(Account.id)]
+        type_rank = case(
+            {type_.name: rank for rank, type_ in enumerate(ACCOUNT_TYPE_ORDER)},
+            value=col(Account.type),
+        )
+        columns = [type_rank, col(Account.index), col(Account.id)]
     else:
         columns = [getattr(Account, order_by)]
     statement = statement.order_by(
@@ -69,7 +87,7 @@ def update_accounts(
     updates: Sequence[AccountUpdate],
     commit: bool = True,
 ) -> Sequence[Account]:
-    # Pair by id, not by row order: read_accounts orders by (index, id), so
+    # Pair by id, not by row order: read_accounts orders by (type, index, id), so
     # positional pairing would misassign rows to updates
     id_to_db_account = {account.id: account for account in previous_accounts}
     for update in updates:

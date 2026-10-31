@@ -8,13 +8,13 @@ from kayman.logics.account import (
     update_accounts_by_ids,
     update_balances_with_transactions,
 )
-from kayman.schemas.account import Account, AccountUpdate
+from kayman.schemas.account import Account, AccountType, AccountUpdate
 from kayman.tests.factories import AccountFactory, TransactionFactory
 
 
 def test_update_accounts_by_ids(session: Session):
-    first = AccountFactory(name="first", index=0)
-    second = AccountFactory(name="second", index=1)
+    first = AccountFactory(name="first", type=AccountType.CASH, index=0)
+    second = AccountFactory(name="second", type=AccountType.CASH, index=1)
 
     updated_accounts = update_accounts_by_ids(
         session,

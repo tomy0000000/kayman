@@ -28,7 +28,9 @@ class AccountBase(SQLModel):
     type: AccountType
     currency_code: str = Field(foreign_key="currency.code")
     timezone: TimeZoneName
-    index: int = Field(default=0, ge=0)
+    index: int = Field(
+        default=0, ge=0, description="Position among accounts of the same type"
+    )
 
 
 class Account(AccountBase, table=True):
@@ -67,4 +69,6 @@ class AccountUpdate(SQLModel):
     name: str | None = None
     short_name: str | None = None
     type: AccountType | None = None
-    index: int | None = Field(default=None, ge=0)
+    index: int | None = Field(
+        default=None, ge=0, description="Position among accounts of the same type"
+    )

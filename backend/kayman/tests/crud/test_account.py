@@ -217,7 +217,7 @@ def test_read_account_balance_isolates_account(session: Session):
 
 
 def test_read_accounts(session: Session):
-    accounts = AccountFactory.create_batch(10)
+    accounts = AccountFactory.create_batch(10, type=AccountType.CASH)
     db_accounts = read_accounts(session)
 
     assert len(db_accounts) == 10
@@ -226,7 +226,7 @@ def test_read_accounts(session: Session):
 
 
 def test_read_accounts_by_ids(session: Session):
-    accounts = AccountFactory.create_batch(10)
+    accounts = AccountFactory.create_batch(10, type=AccountType.CASH)
     interest_accounts = [accounts[index] for index in range(0, 10, 2)]
     db_accounts = read_accounts(session, [account.id for account in interest_accounts])
 
@@ -272,9 +272,9 @@ def test_read_accounts_order_by_created_at(session: Session):
 
 
 def test_read_accounts_order_by_index(session: Session):
-    last = AccountFactory(index=2)
-    first = AccountFactory(index=0)
-    middle = AccountFactory(index=1)
+    last = AccountFactory(type=AccountType.CASH, index=2)
+    first = AccountFactory(type=AccountType.CASH, index=0)
+    middle = AccountFactory(type=AccountType.CASH, index=1)
 
     results = read_accounts(session, order_by="index")
 
@@ -283,9 +283,9 @@ def test_read_accounts_order_by_index(session: Session):
 
 
 def test_read_accounts_without_order_by_defaults_to_index_ascending(session: Session):
-    last = AccountFactory(index=2)
-    first = AccountFactory(index=0)
-    middle = AccountFactory(index=1)
+    last = AccountFactory(type=AccountType.CASH, index=2)
+    first = AccountFactory(type=AccountType.CASH, index=0)
+    middle = AccountFactory(type=AccountType.CASH, index=1)
 
     results = read_accounts(session)
 
@@ -293,8 +293,46 @@ def test_read_accounts_without_order_by_defaults_to_index_ascending(session: Ses
     assert [account.id for account in results] == [first.id, middle.id, last.id]
 
 
+def test_read_accounts_without_order_by_groups_by_type(session: Session):
+    cash = AccountFactory(type=AccountType.CASH, index=0)
+    second_card = AccountFactory(type=AccountType.CREDIT_CARD, index=1)
+    investment = AccountFactory(type=AccountType.INVESTMENT, index=0)
+    reward = AccountFactory(type=AccountType.REWARD, index=0)
+    first_card = AccountFactory(type=AccountType.CREDIT_CARD, index=0)
+
+    results = read_accounts(session)
+
+    assert len(results) == 5
+    assert [account.id for account in results] == [
+        first_card.id,
+        second_card.id,
+        cash.id,
+        reward.id,
+        investment.id,
+    ]
+
+
+def test_read_accounts_order_by_index_groups_by_type(session: Session):
+    reward = AccountFactory(type=AccountType.REWARD, index=0)
+    second_cash = AccountFactory(type=AccountType.CASH, index=1)
+    card = AccountFactory(type=AccountType.CREDIT_CARD, index=2)
+    first_cash = AccountFactory(type=AccountType.CASH, index=0)
+
+    results = read_accounts(session, order_by="index")
+
+    assert len(results) == 4
+    assert [account.id for account in results] == [
+        card.id,
+        first_cash.id,
+        second_cash.id,
+        reward.id,
+    ]
+
+
 def test_read_accounts_breaks_index_ties_by_id(session: Session):
-    first, second, third = AccountFactory.create_batch(3, index=0)
+    first, second, third = AccountFactory.create_batch(
+        3, type=AccountType.CASH, index=0
+    )
 
     results = read_accounts(session)
 
@@ -305,9 +343,9 @@ def test_read_accounts_breaks_index_ties_by_id(session: Session):
 def test_read_accounts_descending_without_order_by_is_index_descending(
     session: Session,
 ):
-    low_first = AccountFactory(index=0)
-    high = AccountFactory(index=1)
-    low_second = AccountFactory(index=0)
+    low_first = AccountFactory(type=AccountType.CASH, index=0)
+    high = AccountFactory(type=AccountType.CASH, index=1)
+    low_second = AccountFactory(type=AccountType.CASH, index=0)
 
     results = read_accounts(session, descending=True)
 
@@ -382,10 +420,10 @@ def test_update_accounts_type(session: Session):
 
 
 def test_update_accounts_pairs_by_id_not_row_order(session: Session):
-    # read_accounts returns (index, id) order, so rows come back reversed
+    # read_accounts returns (type, index, id) order, so rows come back reversed
     # relative to the updates below. Positional pairing would swap them.
-    first = AccountFactory(name="first", index=1)
-    second = AccountFactory(name="second", index=0)
+    first = AccountFactory(name="first", type=AccountType.CASH, index=1)
+    second = AccountFactory(name="second", type=AccountType.CASH, index=0)
     rows = read_accounts(session)
     assert [account.id for account in rows] == [second.id, first.id]
 
@@ -425,7 +463,7 @@ def test_update_accounts_no_commit(session: Session, session_2: Session):
 
 
 def test_update_account_balances(session: Session):
-    accounts = AccountFactory.create_batch(3)
+    accounts = AccountFactory.create_batch(3, type=AccountType.CASH)
     account_amounts: dict[int, Decimal] = {}
     account_balances: dict[int, Decimal] = {}
     for account in accounts:
