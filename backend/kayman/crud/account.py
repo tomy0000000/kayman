@@ -67,8 +67,10 @@ def read_accounts(
         statement = statement.where(cast(Account.id, Integer).in_(account_ids))
     if order_by is None or order_by == "index":
         type_rank = case(
-            {type_.name: rank for rank, type_ in enumerate(ACCOUNT_TYPE_ORDER)},
-            value=col(Account.type),
+            *[
+                (col(Account.type) == type_, rank)
+                for rank, type_ in enumerate(ACCOUNT_TYPE_ORDER)
+            ]
         )
         columns = [type_rank, col(Account.index), col(Account.id)]
     else:
