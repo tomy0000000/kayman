@@ -4,9 +4,10 @@ import {
   getCoreRowModel,
   useReactTable
 } from '@tanstack/react-table'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import { Amount } from '@/components/amount'
+import { TableEnumFilter } from '@/components/table-enum-filter'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
 import {
   ContextMenu,
@@ -25,7 +26,10 @@ import {
   TableRow
 } from '@/components/ui/table'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
-import { type TransactionReadWithBalance } from '@/lib/client'
+import {
+  type TransactionReadWithBalance,
+  type TransactionStatus
+} from '@/lib/client'
 import { summarizeTransactionEvent } from '@/lib/events'
 import { cn, formatCurrency, formatDate, formatTime } from '@/lib/utils'
 
@@ -49,6 +53,8 @@ interface TransactionsTableProps {
 // react-table treat `data` as changed every render and loops forever.
 const EMPTY_TRANSACTIONS: TransactionReadWithBalance[] = []
 
+const STATUSES: TransactionStatus[] = ['PENDING', 'POSTED', 'BILLED', 'CLEARED']
+
 export function TransactionsTable({
   transactions,
   currencyCode,
@@ -65,6 +71,17 @@ export function TransactionsTable({
   onTransactionGoToEvent
 }: TransactionsTableProps) {
   const { timezone } = useClientTimezone()
+  const [visibleStatuses, setVisibleStatuses] =
+    useState<TransactionStatus[]>(STATUSES)
+
+  // Filter before the table so the date column compares against the previous visible row.
+  const visibleTransactions = useMemo(
+    () =>
+      transactions?.filter((transaction) =>
+        visibleStatuses.includes(transaction.status)
+      ),
+    [transactions, visibleStatuses]
+  )
 
   const columnWidths: Record<string, string> = {
     date: 'w-28',
@@ -155,7 +172,7 @@ export function TransactionsTable({
   // for `useReactTable` is expected and safe here.
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: transactions ?? EMPTY_TRANSACTIONS,
+    data: visibleTransactions ?? EMPTY_TRANSACTIONS,
     columns,
     getCoreRowModel: getCoreRowModel()
   })
@@ -171,12 +188,23 @@ export function TransactionsTable({
                   key={header.id}
                   className={columnWidths[header.column.id]}
                 >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
+                  {header.isPlaceholder ? null : header.column.id ===
+                    'status' ? (
+                    <TableEnumFilter
+                      label="Status"
+                      options={STATUSES}
+                      selected={visibleStatuses}
+                      onSelectedChange={setVisibleStatuses}
+                      renderOption={(status) => (
+                        <TransactionStatusBadge status={status} />
                       )}
+                    />
+                  ) : (
+                    flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )
+                  )}
                 </TableHead>
               ))}
             </TableRow>
