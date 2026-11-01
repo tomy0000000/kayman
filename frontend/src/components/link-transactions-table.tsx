@@ -235,9 +235,9 @@ export function LinkTransactionsTable({
         onValueChange={setSelectedAccount}
       />
 
-      <div className="h-66 overflow-y-auto rounded-md border">
+      <div className="h-66 overflow-y-auto rounded-md border [&_[data-slot=table-container]]:overflow-visible">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10 bg-popover shadow-[0_1px_0_var(--color-border)] [&_tr]:border-0">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (

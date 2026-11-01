@@ -161,9 +161,9 @@ export function TransactionsTable({
   })
 
   return (
-    <div className="overflow-hidden rounded-md border">
+    <div className="min-h-0 overflow-y-auto rounded-md border [&_[data-slot=table-container]]:overflow-visible">
       <Table className="table-fixed">
-        <TableHeader>
+        <TableHeader className="sticky top-0 z-10 bg-background shadow-[0_1px_0_var(--color-border)] [&_tr]:border-0">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (

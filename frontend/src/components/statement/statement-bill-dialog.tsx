@@ -186,9 +186,9 @@ export function StatementBillDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="h-66 overflow-y-auto rounded-md border">
+        <div className="h-66 overflow-y-auto rounded-md border [&_[data-slot=table-container]]:overflow-visible">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-10 bg-popover shadow-[0_1px_0_var(--color-border)] [&_tr]:border-0">
               <TableRow>
                 <TableHead />
                 <TableHead>Date</TableHead>
