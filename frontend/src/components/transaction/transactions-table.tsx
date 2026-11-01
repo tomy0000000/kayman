@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react'
 import { Amount } from '@/components/amount'
 import { TableEnumFilter } from '@/components/table-enum-filter'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
+import { TransactionTagBadge } from '@/components/transaction/transaction-tag-badge'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -120,18 +121,30 @@ export function TransactionsTable({
             categoryNames,
             accountNames
           )
+          const tags = row.original.tags ?? []
           return (
-            <div className="flex flex-col">
-              {title && <span className="truncate font-semibold">{title}</span>}
-              {subtitle && (
-                <span className="truncate text-muted-foreground text-sm">
-                  {subtitle}
-                </span>
-              )}
-              {note && (
-                <span className="truncate text-muted-foreground text-sm">
-                  {note}
-                </span>
+            <div className="flex items-center gap-2">
+              <div className="flex min-w-0 flex-1 flex-col">
+                {title && (
+                  <span className="truncate font-semibold">{title}</span>
+                )}
+                {subtitle && (
+                  <span className="truncate text-muted-foreground text-sm">
+                    {subtitle}
+                  </span>
+                )}
+                {note && (
+                  <span className="truncate text-muted-foreground text-sm">
+                    {note}
+                  </span>
+                )}
+              </div>
+              {tags.length > 0 && (
+                <div className="flex shrink-0 gap-1">
+                  {tags.map((tag) => (
+                    <TransactionTagBadge key={tag.id} tag={tag} />
+                  ))}
+                </div>
               )}
             </div>
           )
