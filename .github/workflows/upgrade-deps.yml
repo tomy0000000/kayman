@@ -1,0 +1,33 @@
+name: "⬆️ Upgrade Dependencies"
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  upgrade:
+    name: "⬆️ Upgrade Dependencies"
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: "🛒 Checkout"
+        uses: actions/checkout@v7
+        with:
+          ref: "develop"
+          fetch-depth: 0
+
+      - name: "🐭 Setup mise"
+        uses: jdx/mise-action@v5
+
+      - name: "🤖 Run upgrade-deps"
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: "Run the upgrade-deps skill."
+          claude_args: |
+            --allowedTools "Skill,Bash,Read,Edit,Write,Glob,Grep,WebFetch,WebSearch"
