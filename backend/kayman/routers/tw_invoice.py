@@ -128,7 +128,7 @@ def create_or_update_details(
             session.add(db_detail)
             session.commit()
             session.refresh(db_detail)
-            created.append(db_detail)
+            created.append(InvoiceDetailRead.model_validate(db_detail))
             session.expunge(db_detail)
         else:
             # Update existing detail
