@@ -176,8 +176,7 @@ export function LinkTransactionsTable({
 
   const statusFilter =
     (columnFilters.find((filter) => filter.id === 'status')?.value as
-      | TransactionStatus
-      | undefined) ?? 'ALL'
+      TransactionStatus | undefined) ?? 'ALL'
 
   const setStatusFilter = (value: StatusFilter) =>
     setColumnFilters((prev) => {
