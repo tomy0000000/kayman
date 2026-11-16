@@ -10,7 +10,7 @@ require (
 require (
 	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
 	github.com/amazon-ion/ion-go v1.5.0 // indirect
-	github.com/andybalholm/brotli v1.2.8 // indirect
+	github.com/andybalholm/brotli v1.3.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
@@ -44,16 +44,16 @@ require (
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/pb33f/go-yaml v0.1.1 // indirect
 	github.com/pb33f/jsonpath v0.8.5 // indirect
-	github.com/pb33f/libopenapi v0.42.4 // indirect
+	github.com/pb33f/libopenapi v0.42.5 // indirect
 	github.com/pb33f/ordered-map/v2 v2.3.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/sandrolain/httpcache v1.4.3 // indirect
+	github.com/sandrolain/httpcache v1.4.4 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3 // indirect
 	github.com/shamaton/msgpack/v3 v3.2.7 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.1.0 // indirect
 	github.com/tailscale/hujson v0.0.0-20260727124030-b80ff77dac4f // indirect
-	github.com/tidwall/jsonc v0.3.3 // indirect
+	github.com/tidwall/jsonc v0.3.4 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xo/terminfo v1.3.1 // indirect
 	github.com/yuin/goldmark v1.8.7 // indirect
