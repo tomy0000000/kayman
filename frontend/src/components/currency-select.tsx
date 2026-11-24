@@ -70,7 +70,12 @@ export function CurrencySelect({
   }
 
   return (
-    <Select value={value ?? ''} onValueChange={onValueChange}>
+    <Select
+      value={value ?? ''}
+      onValueChange={(code) => {
+        if (code) onValueChange(code)
+      }}
+    >
       <SelectTrigger id={id} className={cn('w-full font-normal', className)}>
         <SelectValue placeholder="Currency">{value}</SelectValue>
       </SelectTrigger>
