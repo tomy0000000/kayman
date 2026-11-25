@@ -32,6 +32,14 @@ async def login(
     return clients.Token(access_token=access_token, token_type="bearer")
 
 
+@auth_router.post("/token/refresh", name="Refresh Token")
+async def refresh_token(
+    client: clients.Client = Depends(get_client),
+) -> clients.Token:
+    access_token = create_access_token(data={"sub": client.name})
+    return clients.Token(access_token=access_token, token_type="bearer")
+
+
 @auth_router.get("/client", name="Check Credential")
 async def check_credential(
     client: clients.Client = Depends(get_client),
