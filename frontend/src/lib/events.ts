@@ -2,16 +2,20 @@ import {
   type AccountRead,
   type EventCreate,
   type EventReadDetailed,
+  type TransactionEventLinkRead,
   type TransactionEventRead,
   type TransactionRead,
   type TransactionReadWithBalance,
   createTransaction,
+  createTransactionEventLinks,
+  deleteTransactionEventLinks,
+  updateTransactionEventLinks,
   updateTransactions
 } from '@/lib/client'
 import { type Client } from '@/lib/client/client'
 import { PLACEHOLDER_ID } from '@/lib/optimistic'
 import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, sameDecimal } from '@/lib/utils'
 
 export interface TransactionEventSummary {
   title: string | null
@@ -92,9 +96,8 @@ interface SyncEventTransactionsOptions {
   eventId: number
   // Rows as submitted by the event form, in display order.
   transactions: TransactionPayload[]
-  // Rows the event carried before this submit, so dropped rows can be unlinked
-  // and an untouched set can skip the patch.
-  previousTransactions: TransactionRead[]
+  // The event before this submit (null for a new event), for its legs' links.
+  previousEvent: EventReadDetailed | null
   // Applied to newly created transactions, so they land on the event's instant.
   createdAt: string
 }
@@ -117,71 +120,139 @@ function sameTagIds(next: number[], previous: { id: number }[]) {
   return previous.every(({ id }) => nextIds.has(id))
 }
 
-// Reconcile an event's transactions with the rows the form submitted: existing
-// rows are patched onto the event, dropped rows are unlinked (the API has no
-// delete), and new rows are created.
+// A leg's amount on this event: its link's share, else the whole transaction.
+export function legAmount(
+  event: EventReadDetailed,
+  transaction: TransactionRead
+): string {
+  const link = event.transaction_links.find(
+    (link) => link.transaction_id === transaction.id
+  )
+  return link?.amount ?? transaction.amount
+}
+
+// Whether the transaction's whole amount sits on this one link.
+function isUnsplit(
+  transaction: TransactionRead,
+  link?: TransactionEventLinkRead
+) {
+  return (
+    transaction.event_links.length <= 1 &&
+    (!link || sameDecimal(link.amount, transaction.amount))
+  )
+}
+
+// Reconcile an event's legs with the rows the form submitted, through links.
 export async function syncEventTransactions({
   client,
   eventId,
   transactions,
-  previousTransactions,
+  previousEvent,
   createdAt
 }: SyncEventTransactionsOptions) {
-  const nextIds = new Set(
-    transactions.map(({ id }) => id).filter((id) => id != null)
+  const previousById = new Map(
+    (previousEvent?.transactions ?? []).map((row) => [row.id, row])
   )
-  const previousById = new Map(previousTransactions.map((row) => [row.id, row]))
-  const existing = transactions.filter(({ id }) => id != null)
-  const unlinked = previousTransactions.filter(({ id }) => !nextIds.has(id))
+  const linkByTransaction = new Map(
+    (previousEvent?.transaction_links ?? []).map((link) => [
+      link.transaction_id,
+      link
+    ])
+  )
+  const nextIds = new Set(transactions.map(({ id }) => id))
 
-  // All or nothing: a reorder can move a row into an index another row still
-  // holds, and only the rows in the batch get parked out of the way. So the
-  // patch either carries every row or is skipped entirely.
-  const changed = existing.some((transaction) => {
-    const previous = previousById.get(transaction.id as number)
-    return (
-      !previous ||
-      previous.account_id !== transaction.account_id ||
-      previous.amount !== transaction.amount ||
-      (previous.index ?? null) !== transaction.index ||
-      !sameTagIds(transaction.tag_ids, previous.tags ?? [])
-    )
-  })
-  if (changed || unlinked.length > 0) {
-    await updateTransactions({
+  // Dropping a leg deletes its link, which also unlinks the row if it was the FK.
+  const removed = [...linkByTransaction.values()].filter(
+    (link) => !nextIds.has(link.transaction_id)
+  )
+  if (removed.length > 0) {
+    await deleteTransactionEventLinks({
       client,
-      body: [
-        ...existing.map(({ id, account_id, amount, tag_ids, index }) => ({
-          id: id as number,
-          account_id,
-          amount,
-          tag_ids,
-          index,
-          event_id: eventId
-        })),
-        // Unlinked rows keep their tags: omitting `tag_ids` leaves them alone,
-        // where `[]` would clear them.
-        ...unlinked.map(({ id }) => ({ id, event_id: null }))
-      ],
+      query: { ids: removed.map(({ id }) => id) },
       throwOnError: true
     })
   }
 
+  const linked = transactions.filter(
+    ({ id }) => id != null && linkByTransaction.has(id)
+  )
+  // All or nothing: a reorder can only park the links in the batch
+  const linksChanged = linked.some((row) => {
+    const link = linkByTransaction.get(row.id as number)!
+    return link.index !== row.index || !sameDecimal(link.amount, row.amount)
+  })
+  if (linksChanged) {
+    await updateTransactionEventLinks({
+      client,
+      body: linked.map((row) => ({
+        id: linkByTransaction.get(row.id as number)!.id,
+        index: row.index,
+        amount: row.amount
+      })),
+      throwOnError: true
+    })
+  }
+
+  // Existing rows new to this event carry no links yet, so they are unsplit
+  const attached = transactions.filter(
+    ({ id }) => id != null && !linkByTransaction.has(id)
+  )
+  const transactionUpdates = [
+    ...linked.flatMap((row) => {
+      const previous = previousById.get(row.id as number)!
+      const link = linkByTransaction.get(row.id as number)
+      const amount = isUnsplit(previous, link) ? row.amount : previous.amount
+      const unchanged =
+        previous.account_id === row.account_id &&
+        sameDecimal(previous.amount, amount) &&
+        sameTagIds(row.tag_ids, previous.tags ?? [])
+      if (unchanged) return []
+      return [
+        {
+          id: previous.id,
+          account_id: row.account_id,
+          amount,
+          tag_ids: row.tag_ids
+        }
+      ]
+    }),
+    ...attached.map(({ id, account_id, amount, tag_ids }) => ({
+      id: id as number,
+      account_id,
+      amount,
+      tag_ids
+    }))
+  ]
+  if (transactionUpdates.length > 0) {
+    await updateTransactions({
+      client,
+      body: transactionUpdates,
+      throwOnError: true
+    })
+  }
+
+  const newLinks = attached.map(({ id, amount, index }) => ({
+    transaction_id: id as number,
+    event_id: eventId,
+    amount,
+    index
+  }))
   // Created one at a time: the API has no batch create, and the account balance
   // is server-derived, so concurrent creates on one account would race.
   for (const { account_id, amount, tag_ids, index } of transactions.filter(
     ({ id }) => id == null
   )) {
-    await createTransaction({
+    const { data } = await createTransaction({
       client,
-      body: {
-        account_id,
-        amount,
-        tag_ids,
-        index,
-        event_id: eventId,
-        created_at: createdAt
-      },
+      body: { account_id, amount, tag_ids, created_at: createdAt },
+      throwOnError: true
+    })
+    newLinks.push({ transaction_id: data.id, event_id: eventId, amount, index })
+  }
+  if (newLinks.length > 0) {
+    await createTransactionEventLinks({
+      client,
+      body: newLinks,
       throwOnError: true
     })
   }
@@ -197,31 +268,54 @@ export function predictEvent(
   base?: EventReadDetailed
 ): EventReadDetailed {
   const id = base?.id ?? PLACEHOLDER_ID
+  const cleared_at = base?.cleared_at ?? null
+  const legs = transactions.map((payload, index) => {
+    const existing = base?.transactions.find(({ id }) => id === payload.id)
+    const transactionId = payload.id ?? PLACEHOLDER_ID - index
+    const previousLink = base?.transaction_links.find(
+      (link) => link.transaction_id === transactionId
+    )
+    const link = {
+      id: previousLink?.id ?? PLACEHOLDER_ID - index,
+      transaction_id: transactionId,
+      event_id: id,
+      amount: payload.amount,
+      index: payload.index
+    }
+    const transaction: TransactionRead = {
+      ...(existing ?? {
+        id: transactionId,
+        created_at: body.timestamp,
+        currency_code:
+          accounts.find(({ id }) => id === payload.account_id)?.currency_code ??
+          '',
+        event: null,
+        event_id: null,
+        event_links: [],
+        status: 'PENDING' as const
+      }),
+      account_id: payload.account_id,
+      // A split leg's row keeps its whole amount, only its share changed
+      amount:
+        existing && !isUnsplit(existing, previousLink)
+          ? existing.amount
+          : payload.amount,
+      event_links: [
+        ...(existing?.event_links ?? []).filter(
+          (other) => other.event_id !== id
+        ),
+        { ...link, event: { ...body, id, cleared_at } }
+      ]
+    }
+    return { link, transaction }
+  })
   return {
     ...base,
     ...body,
     id,
-    cleared_at: base?.cleared_at ?? null,
-    transaction_links: base?.transaction_links ?? [],
-    transactions: transactions.map((payload, index) => {
-      const existing = base?.transactions.find(({ id }) => id === payload.id)
-      return {
-        ...(existing ?? {
-          id: PLACEHOLDER_ID - index,
-          created_at: body.timestamp,
-          currency_code:
-            accounts.find(({ id }) => id === payload.account_id)
-              ?.currency_code ?? '',
-          event: null,
-          event_links: [],
-          status: 'PENDING' as const
-        }),
-        event_id: id,
-        account_id: payload.account_id,
-        amount: payload.amount,
-        index: payload.index
-      }
-    }),
+    cleared_at,
+    transaction_links: legs.map(({ link }) => link),
+    transactions: legs.map(({ transaction }) => transaction),
     entries: entries.map((payload, index) => ({
       ...(base?.entries.find(({ id }) => id === payload.id) ?? {
         id: PLACEHOLDER_ID - index

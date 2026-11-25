@@ -123,7 +123,7 @@ export function useEventActions(
           client,
           eventId: event.id,
           transactions,
-          previousTransactions: editingEvent?.transactions ?? [],
+          previousEvent: editingEvent,
           createdAt: body.timestamp
         })
 

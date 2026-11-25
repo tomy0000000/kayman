@@ -26,6 +26,7 @@ import {
   type TransactionTagRead
 } from '@/lib/client'
 import { EVENT_TYPES, eventTypeTabActiveClass } from '@/lib/event-types'
+import { legAmount } from '@/lib/events'
 import {
   type EventEntryDraft,
   type EventEntryPayload,
@@ -115,11 +116,25 @@ export function EventForm({
     return toZonedISOString(now, clientTimezone)
   })
   const [transactions, setTransactions] = useState<TransactionDraft[]>(() => {
-    if (isEditing) return editingEvent.transactions.map(toTransactionDraft)
+    // A leg shows its share of the transaction on this event
+    if (isEditing)
+      return editingEvent.transactions.map((transaction) =>
+        toTransactionDraft({
+          ...transaction,
+          amount: legAmount(editingEvent, transaction)
+        })
+      )
     // Detached, so submitting creates copies instead of moving the seed event's
     // own transactions onto the new event.
     if (seedEvent)
-      return seedEvent.transactions.map(toTransactionDraft).map(detachDraft)
+      return seedEvent.transactions
+        .map((transaction) =>
+          toTransactionDraft({
+            ...transaction,
+            amount: legAmount(seedEvent, transaction)
+          })
+        )
+        .map(detachDraft)
     return seedTransaction
       ? [toTransactionDraft(seedTransaction.transaction)]
       : []

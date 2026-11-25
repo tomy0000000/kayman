@@ -303,7 +303,7 @@ function AccountTransactionPage() {
             client,
             eventId: event.id,
             transactions,
-            previousTransactions: [],
+            previousEvent: null,
             createdAt: body.timestamp
           })
 
@@ -341,12 +341,7 @@ function AccountTransactionPage() {
                 index: leg.index,
                 event
               }
-              return {
-                ...row,
-                event_id: PLACEHOLDER_ID,
-                event,
-                event_links: [...row.event_links, link]
-              }
+              return { ...row, event_links: [...row.event_links, link] }
             })
           }
         ),

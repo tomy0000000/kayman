@@ -24,7 +24,9 @@ export function EventTimeline({ event, accountNames }: EventTimelineProps) {
             TRANSACTION_STAGES,
             transaction,
             `transaction-${transaction.id}`,
-            transaction.index ?? 0,
+            event.transaction_links.find(
+              (link) => link.transaction_id === transaction.id
+            )?.index ?? 0,
             accountNames.get(transaction.account_id) ??
               `#${transaction.account_id}`
           )

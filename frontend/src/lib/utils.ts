@@ -275,6 +275,28 @@ export function negateDecimal(value: string): string {
       : `-${value}`
 }
 
+// Exact by value, unlike Number(): amounts are unbounded and may use exponents.
+export function sameDecimal(a: string, b: string): boolean {
+  const left = canonicalDecimal(a)
+  const right = canonicalDecimal(b)
+  return left !== null && right !== null ? left === right : a === b
+}
+
+// Sign, significant digits and exponent, so equal values print the same.
+function canonicalDecimal(value: string): string | null {
+  const match = /^([+-]?)(\d*)(?:\.(\d*))?(?:e([+-]?\d+))?$/i.exec(value.trim())
+  if (!match || !(match[2] || match[3])) return null
+  const [, sign, whole, fraction = '', exponent = '0'] = match
+  const digits = `${whole}${fraction}`.replace(/^0+/, '')
+  if (!digits) return '0'
+  const significant = digits.replace(/0+$/, '')
+  const power =
+    BigInt(exponent) -
+    BigInt(fraction.length) +
+    BigInt(digits.length - significant.length)
+  return `${sign === '-' ? '-' : ''}${significant}e${power}`
+}
+
 function decimalScale(value: string): number {
   const fraction = value.split('.')[1]
   return fraction ? fraction.length : 0
