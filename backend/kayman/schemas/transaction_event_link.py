@@ -32,3 +32,14 @@ class TransactionEventLink(TransactionEventLinkBase, table=True):
     id: int | None = Field(primary_key=True, default=None)
     transaction: "Transaction" = Relationship(back_populates="event_links")
     event: "Event" = Relationship(back_populates="transaction_links")
+
+
+class TransactionEventLinkCreate(TransactionEventLinkBase):
+    pass
+
+
+# A link never moves between transactions or events: delete and recreate it
+class TransactionEventLinkUpdate(SQLModel):
+    id: int
+    amount: Decimal | None = None
+    index: int | None = Field(default=None, ge=0)
