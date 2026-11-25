@@ -39,19 +39,38 @@ def upgrade():
             "event_id", "index", name="transaction_event_link_event_id_index_key"
         ),
     )
-    # Renumber per event so a NULL transaction.index still gets a slot, keeping order.
+    # A link needs a position, so legs without one go after the event's last leg
+    op.execute(
+        sa.text(
+            """
+            UPDATE transaction
+            SET index = ranked.filled
+            FROM (
+                SELECT
+                    t.id,
+                    COALESCE(m.max_index, -1) + ROW_NUMBER() OVER (
+                        PARTITION BY t.event_id ORDER BY t.id
+                    ) AS filled
+                FROM transaction AS t
+                LEFT JOIN (
+                    SELECT event_id, MAX(index) AS max_index
+                    FROM transaction
+                    WHERE event_id IS NOT NULL
+                    GROUP BY event_id
+                ) AS m ON m.event_id = t.event_id
+                WHERE t.event_id IS NOT NULL AND t.index IS NULL
+            ) AS ranked
+            WHERE transaction.id = ranked.id
+            """
+        )
+    )
+    # Copy positions as-is: the dual-write shim expects links to mirror transactions
     op.execute(
         sa.text(
             """
             INSERT INTO transaction_event_link
                 (transaction_id, event_id, amount, index)
-            SELECT
-                id,
-                event_id,
-                amount,
-                ROW_NUMBER() OVER (
-                    PARTITION BY event_id ORDER BY index NULLS LAST, id
-                ) - 1
+            SELECT id, event_id, amount, index
             FROM transaction
             WHERE event_id IS NOT NULL
             """
