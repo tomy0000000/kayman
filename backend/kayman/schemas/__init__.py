@@ -6,6 +6,7 @@ from kayman.schemas.event import Event, EventReadDetailed
 from kayman.schemas.event_entry import EventEntry
 from kayman.schemas.statement import Statement
 from kayman.schemas.transaction import Transaction, TransactionRead
+from kayman.schemas.transaction_event_link import TransactionEventLink
 from kayman.schemas.transaction_tag import TransactionTag, TransactionTagLink
 from kayman.schemas.tw_invoice import Invoice, InvoiceCarrier, InvoiceDetail
 
@@ -25,6 +26,7 @@ __all__ = [
     "Statement",
     "Token",
     "Transaction",
+    "TransactionEventLink",
     "TransactionTag",
     "TransactionTagLink",
 ]

@@ -5,6 +5,7 @@ from kayman.tests.factories.event import EventFactory
 from kayman.tests.factories.event_entry import EventEntryFactory
 from kayman.tests.factories.statement import StatementFactory
 from kayman.tests.factories.transaction import TransactionFactory
+from kayman.tests.factories.transaction_event_link import TransactionEventLinkFactory
 from kayman.tests.factories.transaction_tag import TransactionTagFactory
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     "EventEntryFactory",
     "EventFactory",
     "StatementFactory",
+    "TransactionEventLinkFactory",
     "TransactionFactory",
     "TransactionTagFactory",
 ]

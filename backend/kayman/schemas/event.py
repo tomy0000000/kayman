@@ -12,6 +12,7 @@ from kayman.schemas.event_entry import EventEntryRead
 if TYPE_CHECKING:
     from kayman.schemas.event_entry import EventEntry
     from kayman.schemas.transaction import Transaction, TransactionRead
+    from kayman.schemas.transaction_event_link import TransactionEventLink
 
 
 class EventType(enum.Enum):
@@ -59,6 +60,11 @@ class Event(EventBase, table=True):
         back_populates="event",
         cascade_delete=True,
         sa_relationship_kwargs={"order_by": "EventEntry.index"},
+    )
+    transaction_links: list["TransactionEventLink"] = Relationship(
+        back_populates="event",
+        cascade_delete=True,
+        sa_relationship_kwargs={"order_by": "TransactionEventLink.index"},
     )
 
 

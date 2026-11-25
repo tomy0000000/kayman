@@ -13,6 +13,7 @@ from kayman.schemas.transaction_tag import TransactionTagLink, TransactionTagRea
 if TYPE_CHECKING:
     from kayman.schemas.account import Account
     from kayman.schemas.event import Event
+    from kayman.schemas.transaction_event_link import TransactionEventLink
     from kayman.schemas.transaction_tag import TransactionTag
 
 
@@ -53,6 +54,9 @@ class Transaction(TransactionBase, table=True):
     )  # TODO: accept this on creation
     account: "Account" = Relationship(back_populates="transactions")
     event: Optional["Event"] = Relationship(back_populates="transactions")
+    event_links: list["TransactionEventLink"] = Relationship(
+        back_populates="transaction", cascade_delete=True
+    )
     tags: list["TransactionTag"] = Relationship(
         back_populates="transactions", link_model=TransactionTagLink
     )
