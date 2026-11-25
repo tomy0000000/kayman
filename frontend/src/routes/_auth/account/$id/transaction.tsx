@@ -202,6 +202,7 @@ function AccountTransactionPage() {
             created_at,
             currency_code: account?.currency_code ?? '',
             event: null,
+            event_links: [],
             tags: [],
             running_balance: addDecimals(previous, amount),
             status: 'PENDING'

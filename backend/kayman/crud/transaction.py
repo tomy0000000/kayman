@@ -79,7 +79,9 @@ def read_transactions(
     options = [
         selectinload(Transaction.account),  # type: ignore[arg-type]
         selectinload(Transaction.event),  # type: ignore[arg-type]
-        selectinload(Transaction.event_links),  # type: ignore[arg-type]
+        selectinload(Transaction.event_links).selectinload(  # type: ignore[arg-type]
+            TransactionEventLink.event  # type: ignore[arg-type]
+        ),
         selectinload(Transaction.tags),  # type: ignore[arg-type]
     ]
     if with_event_details:

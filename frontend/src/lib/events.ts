@@ -183,6 +183,7 @@ export function predictEvent(
     ...body,
     id,
     cleared_at: base?.cleared_at ?? null,
+    transaction_links: base?.transaction_links ?? [],
     transactions: transactions.map((payload, index) => {
       const existing = base?.transactions.find(({ id }) => id === payload.id)
       return {
@@ -193,6 +194,7 @@ export function predictEvent(
             accounts.find(({ id }) => id === payload.account_id)
               ?.currency_code ?? '',
           event: null,
+          event_links: [],
           status: 'PENDING' as const
         }),
         event_id: id,

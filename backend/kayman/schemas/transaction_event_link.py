@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
 
+from kayman.schemas.event import EventRead
+
 if TYPE_CHECKING:
     from kayman.schemas.event import Event
     from kayman.schemas.transaction import Transaction
@@ -40,6 +42,12 @@ class TransactionEventLinkCreate(TransactionEventLinkBase):
 
 class TransactionEventLinkRead(TransactionEventLinkBase):
     id: int
+
+
+class TransactionEventLinkEventRead(TransactionEventLinkRead):
+    """A link as its transaction sees it, with the event it points to."""
+
+    event: EventRead
 
 
 # A link never moves between transactions or events: delete and recreate it

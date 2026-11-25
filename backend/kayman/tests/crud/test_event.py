@@ -11,7 +11,13 @@ from kayman.crud.event import (
     read_events,
     update_events,
 )
-from kayman.schemas.event import Event, EventClear, EventType, EventUpdate
+from kayman.schemas.event import (
+    Event,
+    EventClear,
+    EventReadDetailed,
+    EventType,
+    EventUpdate,
+)
 from kayman.schemas.event_entry import EventEntry
 from kayman.tests.factories import (
     CategoryFactory,
@@ -600,3 +606,19 @@ def test_delete_events_keeps_unrelated_events_and_entries(session: Session):
     remaining_entries = session.exec(select(EventEntry)).all()
     assert len(remaining_entries) == 1
     assert remaining_entries[0].id == survivor_entry.id
+
+
+def test_read_events_serializes_transaction_links(
+    session: Session,  # noqa: ARG001 (binds factory session)
+    session_2: Session,
+):
+    link = TransactionEventLinkFactory()
+
+    read = EventReadDetailed.model_validate(
+        read_events(session_2, event_ids=[link.event_id])[0]
+    )
+
+    assert len(read.transaction_links) == 1
+    assert read.transaction_links[0].id == link.id
+    assert read.transaction_links[0].transaction_id == link.transaction_id
+    assert read.transaction_links[0].amount == link.amount

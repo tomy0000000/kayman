@@ -12,7 +12,10 @@ from kayman.schemas.event_entry import EventEntryRead
 if TYPE_CHECKING:
     from kayman.schemas.event_entry import EventEntry
     from kayman.schemas.transaction import Transaction, TransactionRead
-    from kayman.schemas.transaction_event_link import TransactionEventLink
+    from kayman.schemas.transaction_event_link import (
+        TransactionEventLink,
+        TransactionEventLinkRead,
+    )
 
 
 class EventType(enum.Enum):
@@ -81,9 +84,10 @@ class EventRead(EventBase):
 
 
 class EventReadDetailed(EventRead):
-    """Includes transactions and entries."""
+    """Includes transactions, transaction links, and entries."""
 
     transactions: list["TransactionRead"]
+    transaction_links: list["TransactionEventLinkRead"]
     entries: list[EventEntryRead]
 
 

@@ -1157,3 +1157,18 @@ def test_update_transactions_shift_into_departing_slot(session: Session, departu
     assert shifting.index == 0
     assert departing.event_id == departure["event_id"]
     assert departing.index == 0
+
+
+def test_read_transactions_serializes_event_links(session: Session):
+    event = EventFactory()
+    txn = TransactionFactory(event=event, event_id=event.id, index=2)
+
+    read = TransactionRead.model_validate(
+        read_transactions(session, transaction_ids=[txn.id])[0]
+    )
+
+    assert len(read.event_links) == 1
+    assert read.event_links[0].event_id == event.id
+    assert read.event_links[0].index == 2
+    assert read.event_links[0].amount == txn.amount
+    assert read.event_links[0].event.id == event.id

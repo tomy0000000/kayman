@@ -215,7 +215,7 @@ def test_get_transactions_with_running_balance_eager_loads_event_details(
 
     assert len(results) == 3
     # One query per relationship level, however many rows: no lazy loads.
-    assert len(statements) == 8
+    assert len(statements) == 9
 
 
 def test_update_transactions_with_balances_moves_balance_by_delta(session: Session):

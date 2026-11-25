@@ -8,6 +8,7 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, UniqueCons
 
 from kayman.schemas.event import EventRead
 from kayman.schemas.event_entry import EventEntryRead
+from kayman.schemas.transaction_event_link import TransactionEventLinkEventRead
 from kayman.schemas.transaction_tag import TransactionTagLink, TransactionTagRead
 
 if TYPE_CHECKING:
@@ -84,6 +85,7 @@ class TransactionRead(TransactionBase):
     currency_code: str
     statement_id: int | None = None
     event: EventRead | None
+    event_links: list[TransactionEventLinkEventRead]
     tags: list[TransactionTagRead] = []
 
     @computed_field
