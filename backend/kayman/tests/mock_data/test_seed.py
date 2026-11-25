@@ -21,6 +21,7 @@ from kayman.schemas.transaction import (
     TransactionRead,
     TransactionStatus,
 )
+from kayman.schemas.transaction_event_link import TransactionEventLink
 from kayman.schemas.transaction_tag import TransactionTag, TransactionTagLink
 
 LABEL_PATTERN = re.compile(r"^\[(?P<labels>[^\]]+)\] ")
@@ -139,6 +140,23 @@ def test_seeded_transaction_tag_links_reference_real_rows(session: Session) -> N
     for link in links:
         assert link.transaction_id in transaction_ids
         assert link.transaction_tag_id in tag_ids
+
+
+def test_seeded_transaction_event_links_mirror_event_ids(session: Session) -> None:
+    seed(session, logger)
+
+    linked = [
+        t for t in session.exec(select(Transaction)).all() if t.event_id is not None
+    ]
+    links = session.exec(select(TransactionEventLink)).all()
+    assert len(linked) > 0
+    assert len(links) == len(linked)
+    assert {(link.transaction_id, link.event_id) for link in links} == {
+        (t.id, t.event_id) for t in linked
+    }
+    for link in links:
+        assert link.amount == link.transaction.amount
+        assert link.index == link.transaction.index
 
 
 def test_seeded_transactions_reference_real_statements(session: Session) -> None:

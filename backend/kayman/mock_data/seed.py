@@ -21,6 +21,7 @@ from kayman.schemas.event import Event
 from kayman.schemas.event_entry import EventEntry
 from kayman.schemas.statement import Statement
 from kayman.schemas.transaction import Transaction
+from kayman.schemas.transaction_event_link import TransactionEventLink
 from kayman.schemas.transaction_tag import TransactionTag, TransactionTagLink
 
 if TYPE_CHECKING:
@@ -104,6 +105,17 @@ def seed(session: Session, logger: Logger) -> None:
     session.commit()
     _resync_id_sequence(session, "transaction")
     logger.success(f"Transactions seeded: {len(transactions)}")
+
+    transaction_event_links = load_records(
+        "transaction_event_links", TransactionEventLink
+    )
+    for transaction_event_link in sorted(
+        transaction_event_links, key=lambda link: link.id or 0
+    ):
+        session.add(transaction_event_link)
+    session.commit()
+    _resync_id_sequence(session, "transaction_event_link")
+    logger.success(f"Transaction event links seeded: {len(transaction_event_links)}")
 
     transaction_tags = load_records("transaction_tags", TransactionTag)
     for transaction_tag in sorted(transaction_tags, key=lambda t: t.id or 0):

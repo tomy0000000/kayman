@@ -1,0 +1,135 @@
+[
+  {
+    "amount": "-3000",
+    "event_id": 1,
+    "id": 1,
+    "index": 0,
+    "transaction_id": 5
+  },
+  {
+    "amount": "-200",
+    "event_id": 6,
+    "id": 2,
+    "index": 0,
+    "transaction_id": 8
+  },
+  {
+    "amount": "-650",
+    "event_id": 7,
+    "id": 3,
+    "index": 0,
+    "transaction_id": 10
+  },
+  {
+    "amount": "-5000",
+    "event_id": 2,
+    "id": 4,
+    "index": 0,
+    "transaction_id": 11
+  },
+  {
+    "amount": "-20000",
+    "event_id": 3,
+    "id": 5,
+    "index": 0,
+    "transaction_id": 13
+  },
+  {
+    "amount": "-1500",
+    "event_id": 4,
+    "id": 6,
+    "index": 0,
+    "transaction_id": 15
+  },
+  {
+    "amount": "-100",
+    "event_id": 5,
+    "id": 7,
+    "index": 0,
+    "transaction_id": 17
+  },
+  {
+    "amount": "-1000",
+    "event_id": 7,
+    "id": 8,
+    "index": 1,
+    "transaction_id": 18
+  },
+  {
+    "amount": "5",
+    "event_id": 8,
+    "id": 9,
+    "index": 0,
+    "transaction_id": 19
+  },
+  {
+    "amount": "-8",
+    "event_id": 8,
+    "id": 10,
+    "index": 1,
+    "transaction_id": 20
+  },
+  {
+    "amount": "6500",
+    "event_id": 12,
+    "id": 11,
+    "index": 0,
+    "transaction_id": 21
+  },
+  {
+    "amount": "300",
+    "event_id": 12,
+    "id": 12,
+    "index": 1,
+    "transaction_id": 22
+  },
+  {
+    "amount": "-3000",
+    "event_id": 13,
+    "id": 13,
+    "index": 0,
+    "transaction_id": 23
+  },
+  {
+    "amount": "3000",
+    "event_id": 13,
+    "id": 14,
+    "index": 1,
+    "transaction_id": 24
+  },
+  {
+    "amount": "-30000",
+    "event_id": 14,
+    "id": 15,
+    "index": 0,
+    "transaction_id": 25
+  },
+  {
+    "amount": "950",
+    "event_id": 14,
+    "id": 16,
+    "index": 1,
+    "transaction_id": 26
+  },
+  {
+    "amount": "-85",
+    "event_id": 17,
+    "id": 17,
+    "index": 0,
+    "transaction_id": 31
+  },
+  {
+    "amount": "-120",
+    "event_id": 18,
+    "id": 18,
+    "index": 0,
+    "transaction_id": 32
+  },
+  {
+    "amount": "-350",
+    "event_id": 19,
+    "id": 19,
+    "index": 0,
+    "transaction_id": 34
+  }
+]
