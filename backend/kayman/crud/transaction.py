@@ -1,10 +1,15 @@
 from collections.abc import Collection, Sequence
 from datetime import datetime
-from typing import Literal
+from typing import Literal, cast
 
 from sqlalchemy.orm import selectinload
-from sqlmodel import Session, col, select
+from sqlmodel import Session, col, func, select
 
+from kayman.crud.transaction_event_link import (
+    create_transaction_event_links,
+    delete_transaction_event_links,
+    update_transaction_event_links,
+)
 from kayman.crud.util import park_moving_indexes
 from kayman.schemas.event import Event
 from kayman.schemas.transaction import (
@@ -12,6 +17,11 @@ from kayman.schemas.transaction import (
     TransactionBase,
     TransactionCreate,
     TransactionUpdate,
+)
+from kayman.schemas.transaction_event_link import (
+    TransactionEventLink,
+    TransactionEventLinkCreate,
+    TransactionEventLinkUpdate,
 )
 from kayman.schemas.transaction_tag import TransactionTag
 
@@ -24,12 +34,19 @@ def create_transactions(
     commit: bool = True,
 ) -> Sequence[TransactionBase]:
     db_txns = [Transaction.model_validate(txn) for txn in txns]
+    filled = _fill_missing_indexes(
+        session, [(db_txn.event_id, db_txn.index) for db_txn in db_txns]
+    )
+    for db_txn, index in zip(db_txns, filled, strict=True):
+        db_txn.index = index
     for db_txn, txn in zip(db_txns, txns, strict=True):
         # getattr: callers may pass a plain TransactionBase, which lacks tag_ids
         tag_ids = getattr(txn, "tag_ids", None)
         if tag_ids:
             db_txn.tags = _resolve_tags(session, tag_ids)
     session.add_all(db_txns)
+    session.flush()
+    _sync_event_links(session, db_txns)
     if commit:
         session.commit()
         for db_txn in db_txns:
@@ -111,6 +128,15 @@ def update_transactions(
     txn_data = [
         txn.model_dump(exclude_unset=True, exclude={"id", "tag_ids"}) for txn in updates
     ]
+    slots = [
+        (data.get("event_id", db_txn.event_id), data.get("index", db_txn.index))
+        for db_txn, data in zip(previous_txns, txn_data, strict=True)
+    ]
+    for data, (_, index), filled in zip(
+        txn_data, slots, _fill_missing_indexes(session, slots), strict=True
+    ):
+        if filled != index:
+            data["index"] = filled
 
     park_moving_indexes(session, previous_txns, txn_data)
 
@@ -120,6 +146,8 @@ def update_transactions(
             db_txn.tags = tags
 
     session.add_all(previous_txns)
+    session.flush()
+    _sync_event_links(session, previous_txns)
     if commit:
         session.commit()
         for db_txn in previous_txns:
@@ -140,3 +168,71 @@ def _resolve_tags(session: Session, tag_ids: Collection[int]) -> list[Transactio
     if missing_ids:
         raise ValueError(f"Transaction tag id(s) not found: {missing_ids}")
     return list(tags)
+
+
+def _fill_missing_indexes(
+    session: Session, slots: Sequence[tuple[int | None, int | None]]
+) -> list[int | None]:
+    """Give each slot on an event without an index the event's next free one."""
+    pending = {event_id for event_id, index in slots if event_id and index is None}
+    if not pending:
+        return [index for _, index in slots]
+
+    taken = session.exec(
+        select(Transaction.event_id, func.max(Transaction.index))
+        .where(col(Transaction.event_id).in_(pending))
+        .group_by(col(Transaction.event_id))
+    ).all()
+    next_free = dict.fromkeys(pending, 0)
+    for event_id, max_index in taken:
+        if event_id is not None and max_index is not None:
+            next_free[event_id] = max_index + 1
+    for event_id, index in slots:
+        if event_id in pending and index is not None:
+            next_free[event_id] = max(next_free[event_id], index + 1)
+
+    filled: list[int | None] = []
+    for event_id, index in slots:
+        if event_id in pending and index is None:
+            index = next_free[event_id]
+            next_free[event_id] += 1
+        filled.append(index)
+    return filled
+
+
+def _sync_event_links(session: Session, txns: Sequence[Transaction]) -> None:
+    """Shim: mirror each transaction's event_id, index and amount onto one link."""
+    stale: list[TransactionEventLink] = []
+    moving: list[TransactionEventLink] = []
+    updates: list[TransactionEventLinkUpdate] = []
+    new: list[TransactionEventLinkCreate] = []
+    for txn in txns:
+        stale += [link for link in txn.event_links if link.event_id != txn.event_id]
+        if txn.event_id is None:
+            continue
+        index = cast(int, txn.index)
+        current = [link for link in txn.event_links if link.event_id == txn.event_id]
+        if not current:
+            new.append(
+                TransactionEventLinkCreate(
+                    transaction_id=cast(int, txn.id),
+                    event_id=txn.event_id,
+                    amount=txn.amount,
+                    index=index,
+                )
+            )
+        elif (current[0].index, current[0].amount) != (index, txn.amount):
+            moving.append(current[0])
+            updates.append(
+                TransactionEventLinkUpdate(
+                    id=cast(int, current[0].id), amount=txn.amount, index=index
+                )
+            )
+
+    # Delete, update, then create: each step frees the slots the next one claims
+    delete_transaction_event_links(session, stale, commit=False)
+    update_transaction_event_links(session, moving, updates, commit=False)
+    create_transaction_event_links(session, new, commit=False)
+    # Reload on next access: the collection still holds deleted links, not new ones
+    for txn in txns:
+        session.expire(txn, ["event_links"])

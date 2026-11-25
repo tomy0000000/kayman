@@ -19,6 +19,7 @@ from kayman.schemas.transaction import (
     TransactionStatusUpdate,
     TransactionUpdate,
 )
+from kayman.schemas.transaction_event_link import TransactionEventLink
 from kayman.schemas.transaction_tag import TransactionTag, TransactionTagLink
 from kayman.tests.factories import (
     AccountFactory,
@@ -700,3 +701,296 @@ def test_delete_transaction_removes_links_but_keeps_tags(session: Session):
     tags = session.exec(select(TransactionTag)).all()
     assert len(tags) == 2
     assert {tag.id for tag in tags} == {tag_1.id, tag_2.id}
+
+
+def test_create_transactions_mirrors_event_link(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
+
+    db_txn = create_transactions(
+        session,
+        [
+            TransactionCreate(
+                account_id=account.id,
+                amount=Decimal("-12.50"),
+                event_id=event.id,
+                index=3,
+            )
+        ],
+    )[0]
+
+    links = session.exec(select(TransactionEventLink)).all()
+    assert len(links) == 1
+    assert links[0].transaction_id == db_txn.id
+    assert links[0].event_id == event.id
+    assert links[0].amount == Decimal("-12.50")
+    assert links[0].index == 3
+
+
+def test_create_transactions_without_event_has_no_link(session: Session):
+    account = AccountFactory()
+
+    create_transactions(
+        session, [TransactionCreate(account_id=account.id, amount=Decimal("1.00"))]
+    )
+
+    links = session.exec(select(TransactionEventLink)).all()
+    assert len(links) == 0
+
+
+def test_create_transactions_fills_missing_index_after_existing(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
+    TransactionFactory(event=event, event_id=event.id, index=4)
+
+    db_txns = create_transactions(
+        session,
+        [
+            TransactionCreate(
+                account_id=account.id, amount=Decimal("1.00"), event_id=event.id
+            ),
+            TransactionCreate(
+                account_id=account.id,
+                amount=Decimal("2.00"),
+                event_id=event.id,
+                index=7,
+            ),
+            TransactionCreate(
+                account_id=account.id, amount=Decimal("3.00"), event_id=event.id
+            ),
+        ],
+    )
+
+    assert len(db_txns) == 3
+    assert [txn.index for txn in db_txns] == [8, 7, 9]
+    links = session.exec(
+        select(TransactionEventLink).order_by(col(TransactionEventLink.id))
+    ).all()
+    assert len(links) == 3
+    assert [link.index for link in links] == [8, 7, 9]
+
+
+def test_create_transactions_fills_missing_index_on_empty_event(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
+
+    db_txn = create_transactions(
+        session,
+        [
+            TransactionCreate(
+                account_id=account.id, amount=Decimal("1.00"), event_id=event.id
+            )
+        ],
+    )[0]
+
+    assert db_txn.index == 0
+    links = session.exec(select(TransactionEventLink)).all()
+    assert len(links) == 1
+    assert links[0].index == 0
+
+
+def test_update_transactions_moves_event_link(session: Session):
+    account = AccountFactory()
+    event_1 = EventFactory()
+    event_2 = EventFactory()
+    db_txn = create_transactions(
+        session,
+        [
+            TransactionCreate(
+                account_id=account.id,
+                amount=Decimal("5.00"),
+                event_id=event_1.id,
+                index=0,
+            )
+        ],
+    )[0]
+
+    update_transactions(
+        session, [db_txn], [TransactionUpdate(id=db_txn.id, event_id=event_2.id)]
+    )
+
+    links = session.exec(select(TransactionEventLink)).all()
+    assert len(links) == 1
+    assert links[0].transaction_id == db_txn.id
+    assert links[0].event_id == event_2.id
+    assert links[0].index == 0
+
+
+def test_update_transactions_unlinking_deletes_link(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
+    db_txn = create_transactions(
+        session,
+        [
+            TransactionCreate(
+                account_id=account.id,
+                amount=Decimal("5.00"),
+                event_id=event.id,
+                index=0,
+            )
+        ],
+    )[0]
+
+    update_transactions(
+        session, [db_txn], [TransactionUpdate(id=db_txn.id, event_id=None)]
+    )
+
+    links = session.exec(select(TransactionEventLink)).all()
+    assert len(links) == 0
+
+
+def test_update_transactions_syncs_link_amount_and_index(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
+    db_txns = create_transactions(
+        session,
+        [
+            TransactionCreate(
+                account_id=account.id,
+                amount=Decimal("1.00"),
+                event_id=event.id,
+                index=index,
+            )
+            for index in range(2)
+        ],
+    )
+
+    update_transactions(
+        session,
+        db_txns,
+        [
+            TransactionUpdate(id=db_txns[0].id, index=1, amount=Decimal("9.00")),
+            TransactionUpdate(id=db_txns[1].id, index=0),
+        ],
+    )
+
+    links = session.exec(
+        select(TransactionEventLink).order_by(col(TransactionEventLink.id))
+    ).all()
+    assert len(links) == 2
+    assert [link.index for link in links] == [1, 0]
+    assert [link.amount for link in links] == [Decimal("9.00"), Decimal("1.00")]
+
+
+def test_update_transactions_creates_missing_link(session: Session):
+    event = EventFactory()
+    txn = TransactionFactory(event=event, event_id=event.id, index=2)
+
+    update_transactions(
+        session, [txn], [TransactionUpdate(id=txn.id, description="Backfilled")]
+    )
+
+    links = session.exec(select(TransactionEventLink)).all()
+    assert len(links) == 1
+    assert links[0].transaction_id == txn.id
+    assert links[0].event_id == event.id
+    assert links[0].amount == txn.amount
+    assert links[0].index == 2
+
+
+def test_update_transactions_leaves_matching_link_alone(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
+    db_txn = create_transactions(
+        session,
+        [
+            TransactionCreate(
+                account_id=account.id,
+                amount=Decimal("1.00"),
+                event_id=event.id,
+                index=0,
+            )
+        ],
+    )[0]
+    link_id = session.exec(select(TransactionEventLink)).one().id
+
+    update_transactions(
+        session, [db_txn], [TransactionUpdate(id=db_txn.id, description="Renamed")]
+    )
+
+    links = session.exec(select(TransactionEventLink)).all()
+    assert len(links) == 1
+    assert links[0].id == link_id
+    assert links[0].index == 0
+    assert links[0].amount == Decimal("1.00")
+
+
+def test_update_transactions_fills_index_when_linking(session: Session):
+    event = EventFactory()
+    TransactionFactory(event=event, event_id=event.id, index=0)
+    txn = TransactionFactory(event=None, event_id=None, index=None)
+
+    updated = update_transactions(
+        session, [txn], [TransactionUpdate(id=txn.id, event_id=event.id)]
+    )
+
+    assert len(updated) == 1
+    assert updated[0].index == 1
+    links = session.exec(
+        select(TransactionEventLink).where(
+            TransactionEventLink.transaction_id == txn.id
+        )
+    ).all()
+    assert len(links) == 1
+    assert links[0].index == 1
+
+
+def test_update_transactions_after_uncommitted_create_keeps_one_link(
+    session: Session,
+):
+    account = AccountFactory()
+    event = EventFactory()
+    db_txn = create_transactions(
+        session,
+        [
+            TransactionCreate(
+                account_id=account.id,
+                amount=Decimal("1.00"),
+                event_id=event.id,
+                index=0,
+            )
+        ],
+        commit=False,
+    )[0]
+
+    update_transactions(
+        session, [db_txn], [TransactionUpdate(id=db_txn.id, index=1)], commit=False
+    )
+    session.commit()
+
+    links = session.exec(select(TransactionEventLink)).all()
+    assert len(links) == 1
+    assert links[0].index == 1
+
+
+def test_update_transactions_twice_after_uncommitted_unlink(session: Session):
+    account = AccountFactory()
+    event = EventFactory()
+    db_txn = create_transactions(
+        session,
+        [
+            TransactionCreate(
+                account_id=account.id,
+                amount=Decimal("1.00"),
+                event_id=event.id,
+                index=0,
+            )
+        ],
+    )[0]
+
+    update_transactions(
+        session,
+        [db_txn],
+        [TransactionUpdate(id=db_txn.id, event_id=None)],
+        commit=False,
+    )
+    update_transactions(
+        session,
+        [db_txn],
+        [TransactionUpdate(id=db_txn.id, description="Again")],
+        commit=False,
+    )
+    session.commit()
+
+    links = session.exec(select(TransactionEventLink)).all()
+    assert len(links) == 0
