@@ -2,6 +2,7 @@ import {
   type AccountRead,
   type EventCreate,
   type EventReadDetailed,
+  type TransactionEventRead,
   type TransactionRead,
   type TransactionReadWithBalance,
   createTransaction,
@@ -16,6 +17,7 @@ export interface TransactionEventSummary {
   title: string | null
   subtitle: string | null
   note: string | null
+  moreEvents: number
 }
 
 function joinUnique(values: (string | null | undefined)[]): string | null {
@@ -25,25 +27,42 @@ function joinUnique(values: (string | null | undefined)[]): string | null {
   return [...unique].join(', ') || null
 }
 
-// What a transaction's row says about its event, as seen from this account.
+// What an event is called: its description, else its entries, else its categories.
+export function eventTitle(
+  event: TransactionEventRead,
+  categoryNames: Map<number, string>
+): string | null {
+  return (
+    event.description?.trim() ||
+    joinUnique(event.entries.map((entry) => entry.description)) ||
+    eventCategories(event, categoryNames)
+  )
+}
+
+function eventCategories(
+  event: TransactionEventRead,
+  categoryNames: Map<number, string>
+): string | null {
+  return joinUnique(
+    event.entries.map(
+      (entry) => categoryNames.get(entry.category_id) ?? `#${entry.category_id}`
+    )
+  )
+}
+
+// What a transaction's row says about its first event, as seen from this account.
 export function summarizeTransactionEvent(
   transaction: TransactionReadWithBalance,
   categoryNames: Map<number, string>,
   accountNames: Map<number, string>
 ): TransactionEventSummary {
   const note = transaction.description?.trim() || null
-  const { event } = transaction
-  if (!event) return { title: note, subtitle: null, note: null }
+  const links = transaction.event_links
+  const event = links[0]?.event
+  if (!event) return { title: note, subtitle: null, note: null, moreEvents: 0 }
 
-  const categories = joinUnique(
-    event.entries.map(
-      (entry) => categoryNames.get(entry.category_id) ?? `#${entry.category_id}`
-    )
-  )
-  const title =
-    event.description?.trim() ||
-    joinUnique(event.entries.map((entry) => entry.description)) ||
-    categories
+  const categories = eventCategories(event, categoryNames)
+  const title = eventTitle(event, categoryNames)
 
   const arrow = Number(transaction.amount) < 0 ? '→' : '←'
   const others = event.transactions.filter(
@@ -65,7 +84,7 @@ export function summarizeTransactionEvent(
   } else if (title !== categories) {
     subtitle = categories
   }
-  return { title, subtitle, note }
+  return { title, subtitle, note, moreEvents: links.length - 1 }
 }
 
 interface SyncEventTransactionsOptions {

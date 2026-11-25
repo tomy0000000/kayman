@@ -185,7 +185,19 @@ function AccountTransactionPage() {
           if (id != null)
             return transactions.map((transaction) =>
               transaction.id === id
-                ? { ...transaction, ...body, amount }
+                ? {
+                    ...transaction,
+                    ...body,
+                    amount,
+                    // Unlinking drops only the link for the old event, like the backend shim
+                    ...(transaction.event_id != null &&
+                      body.event_id === null && {
+                        event: null,
+                        event_links: transaction.event_links.filter(
+                          (link) => link.event_id !== transaction.event_id
+                        )
+                      })
+                  }
                 : transaction
             )
           const created_at = body.created_at ?? new Date().toISOString()
@@ -311,18 +323,31 @@ function AccountTransactionPage() {
         cacheUpdate<TransactionReadWithBalance[], EventSubmit>(
           transactionsOptions.queryKey,
           (rows, { body, transactions, entries }) => {
-            const linked = new Set(transactions.map(({ id }) => id))
+            const linked = new Map(transactions.map((leg) => [leg.id, leg]))
             const event = predictEvent(
               body,
               transactions,
               entries,
               accounts ?? []
             )
-            return rows.map((row) =>
-              linked.has(row.id)
-                ? { ...row, event_id: PLACEHOLDER_ID, event }
-                : row
-            )
+            return rows.map((row) => {
+              const leg = linked.get(row.id)
+              if (!leg) return row
+              const link = {
+                id: PLACEHOLDER_ID,
+                transaction_id: row.id,
+                event_id: PLACEHOLDER_ID,
+                amount: leg.amount,
+                index: leg.index,
+                event
+              }
+              return {
+                ...row,
+                event_id: PLACEHOLDER_ID,
+                event,
+                event_links: [...row.event_links, link]
+              }
+            })
           }
         ),
         { queryKey: readEventsQueryKey() },
@@ -419,18 +444,11 @@ function AccountTransactionPage() {
           onTransactionPost={setPostingTransaction}
           onTransactionBill={setBillingTransaction}
           onTransactionCreateEvent={setCreatingEventTransaction}
-          onTransactionViewEvent={(transaction) => {
-            if (!transaction.event) return
-            openEventView(transaction.event.id)
-          }}
-          onTransactionGoToEvent={(transaction) => {
-            if (!transaction.event) return
+          onTransactionViewEvent={(event) => openEventView(event.id)}
+          onTransactionGoToEvent={(event) => {
             // The day view buckets events by the client timezone, so name the
             // day the event falls on there rather than in the browser zone.
-            const day = zonedCalendarDate(
-              new Date(transaction.event.timestamp),
-              timezone
-            )
+            const day = zonedCalendarDate(new Date(event.timestamp), timezone)
             navigate({
               to: '/',
               search: { date: formatCalendarDate(day) }

@@ -13,7 +13,7 @@ import {
   type TransactionClearError,
   type TransactionReadWithBalance
 } from '@/lib/client'
-import { summarizeTransactionEvent } from '@/lib/events'
+import { eventTitle, summarizeTransactionEvent } from '@/lib/events'
 import { formatDateTime } from '@/lib/utils'
 
 interface TransactionSheetProps {
@@ -89,15 +89,32 @@ export function TransactionSheet({
 
           <div className="border-t" />
 
-          <DetailRow label="Event">
-            {transaction.event
-              ? (summarizeTransactionEvent(
-                  transaction,
-                  categoryNames,
-                  accountNames
-                ).title ?? `#${transaction.event.id}`)
-              : 'None'}
-          </DetailRow>
+          {transaction.event_links.length > 1 ? (
+            <div className="flex flex-col gap-1">
+              <span className="text-muted-foreground">Events</span>
+              {transaction.event_links.map(({ id, amount, event }) => (
+                <DetailRow
+                  key={id}
+                  label={eventTitle(event, categoryNames) ?? `#${event.id}`}
+                >
+                  <Amount
+                    amount={Number(amount)}
+                    currencyCode={transaction.currency_code}
+                  />
+                </DetailRow>
+              ))}
+            </div>
+          ) : (
+            <DetailRow label="Event">
+              {transaction.event_links.length === 1
+                ? (summarizeTransactionEvent(
+                    transaction,
+                    categoryNames,
+                    accountNames
+                  ).title ?? `#${transaction.event_links[0].event.id}`)
+                : 'None'}
+            </DetailRow>
+          )}
 
           <div className="border-t" />
 

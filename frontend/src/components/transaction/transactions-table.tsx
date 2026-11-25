@@ -10,11 +10,15 @@ import { Amount } from '@/components/amount'
 import { TableEnumFilter } from '@/components/table-enum-filter'
 import { TransactionStatusBadge } from '@/components/transaction/transaction-status-badge'
 import { TransactionTagBadge } from '@/components/transaction/transaction-tag-badge'
+import { Badge } from '@/components/ui/badge'
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger
 } from '@/components/ui/context-menu'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -28,10 +32,12 @@ import {
 } from '@/components/ui/table'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import {
+  type TransactionEventLinkDetailedRead,
+  type TransactionEventRead,
   type TransactionReadWithBalance,
   type TransactionStatus
 } from '@/lib/client'
-import { summarizeTransactionEvent } from '@/lib/events'
+import { eventTitle, summarizeTransactionEvent } from '@/lib/events'
 import { cn, formatCurrency, formatDate, formatTime } from '@/lib/utils'
 
 interface TransactionsTableProps {
@@ -46,8 +52,15 @@ interface TransactionsTableProps {
   onTransactionPost?: (transaction: TransactionReadWithBalance) => void
   onTransactionBill?: (transaction: TransactionReadWithBalance) => void
   onTransactionCreateEvent?: (transaction: TransactionReadWithBalance) => void
-  onTransactionViewEvent?: (transaction: TransactionReadWithBalance) => void
-  onTransactionGoToEvent?: (transaction: TransactionReadWithBalance) => void
+  onTransactionViewEvent?: (event: TransactionEventRead) => void
+  onTransactionGoToEvent?: (event: TransactionEventRead) => void
+}
+
+interface EventMenuItemProps {
+  label: string
+  links: TransactionEventLinkDetailedRead[]
+  categoryNames: Map<number, string>
+  onSelect?: (event: TransactionEventRead) => void
 }
 
 // Stable reference for the empty state. A fresh `[]` per render makes
@@ -116,17 +129,23 @@ export function TransactionsTable({
         accessorKey: 'description',
         header: 'Description',
         cell: ({ row }) => {
-          const { title, subtitle, note } = summarizeTransactionEvent(
-            row.original,
-            categoryNames,
-            accountNames
-          )
+          const { title, subtitle, note, moreEvents } =
+            summarizeTransactionEvent(row.original, categoryNames, accountNames)
           const tags = row.original.tags ?? []
           return (
             <div className="flex items-center gap-2">
               <div className="flex min-w-0 flex-1 flex-col">
-                {title && (
-                  <span className="truncate font-semibold">{title}</span>
+                {(title || moreEvents > 0) && (
+                  <span className="flex min-w-0 items-center gap-1">
+                    {title && (
+                      <span className="truncate font-semibold">{title}</span>
+                    )}
+                    {moreEvents > 0 && (
+                      <Badge variant="secondary" className="shrink-0">
+                        +{moreEvents}
+                      </Badge>
+                    )}
+                  </span>
                 )}
                 {subtitle && (
                   <span className="truncate text-muted-foreground text-sm">
@@ -277,23 +296,23 @@ export function TransactionsTable({
                   </ContextMenuItem>
                   <ContextMenuSeparator />
                   <ContextMenuItem
-                    disabled={row.original.event_id != null}
+                    disabled={row.original.event_links.length > 0}
                     onSelect={() => onTransactionCreateEvent?.(row.original)}
                   >
                     Create Event
                   </ContextMenuItem>
-                  <ContextMenuItem
-                    disabled={row.original.event == null}
-                    onSelect={() => onTransactionViewEvent?.(row.original)}
-                  >
-                    View Event
-                  </ContextMenuItem>
-                  <ContextMenuItem
-                    disabled={row.original.event == null}
-                    onSelect={() => onTransactionGoToEvent?.(row.original)}
-                  >
-                    Go to Event
-                  </ContextMenuItem>
+                  <EventMenuItem
+                    label="View Event"
+                    links={row.original.event_links}
+                    categoryNames={categoryNames}
+                    onSelect={onTransactionViewEvent}
+                  />
+                  <EventMenuItem
+                    label="Go to Event"
+                    links={row.original.event_links}
+                    categoryNames={categoryNames}
+                    onSelect={onTransactionGoToEvent}
+                  />
                 </ContextMenuContent>
               </ContextMenu>
             ))
@@ -336,5 +355,37 @@ export function TransactionsTable({
         </TableBody>
       </Table>
     </div>
+  )
+}
+
+// A single event acts directly; several open a submenu to pick one.
+function EventMenuItem({
+  label,
+  links,
+  categoryNames,
+  onSelect
+}: EventMenuItemProps) {
+  if (links.length <= 1) {
+    const event = links[0]?.event
+    return (
+      <ContextMenuItem
+        disabled={!event}
+        onSelect={() => event && onSelect?.(event)}
+      >
+        {label}
+      </ContextMenuItem>
+    )
+  }
+  return (
+    <ContextMenuSub>
+      <ContextMenuSubTrigger>{label}</ContextMenuSubTrigger>
+      <ContextMenuSubContent>
+        {links.map(({ id, event }) => (
+          <ContextMenuItem key={id} onSelect={() => onSelect?.(event)}>
+            {eventTitle(event, categoryNames) ?? `#${event.id}`}
+          </ContextMenuItem>
+        ))}
+      </ContextMenuSubContent>
+    </ContextMenuSub>
   )
 }
