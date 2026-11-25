@@ -3,7 +3,7 @@ import { type DateRange } from 'react-day-picker'
 import { twMerge } from 'tailwind-merge'
 import { Temporal } from 'temporal-polyfill'
 
-import { type TransactionRead } from '@/lib/client'
+import { type EventReadDetailed } from '@/lib/client'
 
 const browserLocale =
   typeof navigator !== 'undefined' ? navigator.language : undefined
@@ -18,21 +18,13 @@ export function isAmount(value: string): boolean {
   return value !== '' && !Number.isNaN(Number(value))
 }
 
-// Next free `index` slot on an event's transactions. The DB enforces
-// (event_id, index) uniqueness, so a row linked to an event must take a slot no
-// sibling holds. `exceptId` skips the row being edited so its own slot isn't
-// counted against it.
-export function nextTransactionIndex(
-  transactions: TransactionRead[],
-  exceptId?: number
-): number {
+// Next free position on an event, past every link it already holds.
+export function nextLinkIndex(event: EventReadDetailed): number {
   return (
-    transactions
-      .filter((transaction) => transaction.id !== exceptId)
-      .reduce(
-        (max, transaction) => Math.max(max, transaction.index ?? -1),
-        -1
-      ) + 1
+    event.transaction_links.reduce(
+      (max, link) => Math.max(max, link.index),
+      -1
+    ) + 1
   )
 }
 

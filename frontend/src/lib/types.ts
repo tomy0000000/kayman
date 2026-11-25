@@ -2,7 +2,9 @@ import type {
   CategoryRead,
   CategoryReadWithChildren,
   EventCreate,
-  EventEntryRead
+  EventEntryRead,
+  EventRead,
+  TransactionCreate
 } from '@/lib/client'
 
 export type TreeItem = {
@@ -158,4 +160,24 @@ export function buildCategoryGroups(
     return options
   }
   return roots.map((root) => ({ value: root.name, items: walk(root) }))
+}
+
+// A transaction's link as the form edits it, `id` null until saved.
+export type EventLinkDraft = {
+  id: number | null
+  event: EventRead
+  amount: string
+}
+
+// A submitted link, `index` set only for a new one.
+export type EventLinkPayload = {
+  id: number | null
+  event_id: number
+  amount: string
+  index: number | null
+}
+
+export type TransactionSubmit = {
+  body: TransactionCreate
+  links: EventLinkPayload[]
 }

@@ -2,6 +2,7 @@ import {
   type AccountRead,
   type EventCreate,
   type EventReadDetailed,
+  type TransactionEventLinkDetailedRead,
   type TransactionEventLinkRead,
   type TransactionEventRead,
   type TransactionRead,
@@ -14,7 +15,11 @@ import {
 } from '@/lib/client'
 import { type Client } from '@/lib/client/client'
 import { PLACEHOLDER_ID } from '@/lib/optimistic'
-import { type EventEntryPayload, type TransactionPayload } from '@/lib/types'
+import {
+  type EventEntryPayload,
+  type EventLinkPayload,
+  type TransactionPayload
+} from '@/lib/types'
 import { formatCurrency, sameDecimal } from '@/lib/utils'
 
 export interface TransactionEventSummary {
@@ -329,4 +334,29 @@ export function predictEvent(
       index: payload.index
     }))
   }
+}
+
+// A transaction's links once a form submit succeeds; events missing from the list drop out.
+export function predictTransactionLinks(
+  links: EventLinkPayload[],
+  transactionId: number,
+  previous: TransactionEventLinkDetailedRead[],
+  events: EventReadDetailed[] | undefined
+): TransactionEventLinkDetailedRead[] {
+  return links.flatMap((link, index) => {
+    const before = previous.find(({ id }) => id === link.id)
+    const event =
+      before?.event ?? events?.find(({ id }) => id === link.event_id)
+    if (!event) return []
+    return [
+      {
+        id: link.id ?? PLACEHOLDER_ID - index,
+        transaction_id: transactionId,
+        event_id: link.event_id,
+        amount: link.amount,
+        index: link.index ?? before?.index ?? 0,
+        event
+      }
+    ]
+  })
 }

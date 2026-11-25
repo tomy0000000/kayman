@@ -20,10 +20,13 @@ import {
   type ClearTransactionsData,
   type Options,
   type PostTransactionsData,
-  type TransactionCreate,
+  type TransactionEventLinkDetailedRead,
   type TransactionReadWithBalance,
   createEvent,
   createTransaction,
+  createTransactionEventLinks,
+  deleteTransactionEventLinks,
+  updateTransactionEventLinks,
   updateTransactions
 } from '@/lib/client'
 import {
@@ -43,23 +46,29 @@ import {
 } from '@/lib/client/@tanstack/react-query.gen'
 import { REFERENCE_STALE_TIME } from '@/lib/constants'
 import { syncEventEntries } from '@/lib/event-entries'
-import { predictEvent, syncEventTransactions } from '@/lib/events'
+import {
+  predictEvent,
+  predictTransactionLinks,
+  syncEventTransactions
+} from '@/lib/events'
 import {
   PLACEHOLDER_ID,
   cacheUpdate,
   useOptimisticMutation
 } from '@/lib/optimistic'
-import { type EventSubmit } from '@/lib/types'
+import { type EventSubmit, type TransactionSubmit } from '@/lib/types'
 import {
   addDecimals,
   formatCalendarDate,
+  sameDecimal,
   zonedCalendarDate,
   zonedDayRange
 } from '@/lib/utils'
 
-interface TransactionSave {
-  body: TransactionCreate
+interface TransactionSave extends TransactionSubmit {
   id?: number
+  // The links the row had before this submit, so dropped ones can be deleted
+  previousLinks: TransactionEventLinkDetailedRead[]
 }
 
 export const Route = createFileRoute('/_auth/account/$id/transaction')({
@@ -157,16 +166,67 @@ function AccountTransactionPage() {
   // balance until the refetch. An edit patches its row in place.
   const { mutate, isPending } = useOptimisticMutation(
     {
-      mutationFn: async ({ body, id }: TransactionSave) => {
-        const { data } =
-          id != null
-            ? await updateTransactions({
-                client,
-                body: [{ ...body, id }],
-                throwOnError: true
-              })
-            : await createTransaction({ client, body, throwOnError: true })
-        return data
+      mutationFn: async ({
+        body,
+        links,
+        id,
+        previousLinks
+      }: TransactionSave) => {
+        const created = links.filter((link) => link.id == null)
+        // Checked before any write, so a missing position can't leave a half save
+        if (created.some(({ index }) => index == null))
+          throw new Error('A new event link has no position')
+        const createLinks = (transactionId: number) =>
+          createTransactionEventLinks({
+            client,
+            body: created.map(({ event_id, amount, index }) => ({
+              transaction_id: transactionId,
+              event_id,
+              amount,
+              index: index as number
+            })),
+            throwOnError: true
+          })
+
+        const kept = new Map(
+          links.flatMap((link) => (link.id != null ? [[link.id, link]] : []))
+        )
+        const removed = previousLinks.filter(({ id }) => !kept.has(id))
+        if (removed.length > 0)
+          await deleteTransactionEventLinks({
+            client,
+            query: { ids: removed.map(({ id }) => id) },
+            throwOnError: true
+          })
+        const reshared = previousLinks.flatMap((link) => {
+          const next = kept.get(link.id)
+          return next && !sameDecimal(next.amount, link.amount)
+            ? [{ id: link.id, amount: next.amount }]
+            : []
+        })
+        if (reshared.length > 0)
+          await updateTransactionEventLinks({
+            client,
+            body: reshared,
+            throwOnError: true
+          })
+
+        if (id == null) {
+          const { data } = await createTransaction({
+            client,
+            body,
+            throwOnError: true
+          })
+          if (created.length > 0) await createLinks(data.id)
+          return
+        }
+        // Every link is in place first, so the amount follow never fires on a split
+        if (created.length > 0) await createLinks(id)
+        await updateTransactions({
+          client,
+          body: [{ ...body, id }],
+          throwOnError: true
+        })
       },
       onSuccess: (_data, { id }) =>
         toast.add({
@@ -180,7 +240,7 @@ function AccountTransactionPage() {
     [
       cacheUpdate<TransactionReadWithBalance[], TransactionSave>(
         transactionsOptions.queryKey,
-        (transactions, { body, id }) => {
+        (transactions, { body, links, id, previousLinks }) => {
           const amount = String(body.amount)
           if (id != null)
             return transactions.map((transaction) =>
@@ -189,14 +249,12 @@ function AccountTransactionPage() {
                     ...transaction,
                     ...body,
                     amount,
-                    // Unlinking drops only the link for the old event, like the backend shim
-                    ...(transaction.event_id != null &&
-                      body.event_id === null && {
-                        event: null,
-                        event_links: transaction.event_links.filter(
-                          (link) => link.event_id !== transaction.event_id
-                        )
-                      })
+                    event_links: predictTransactionLinks(
+                      links,
+                      id,
+                      previousLinks,
+                      events
+                    )
                   }
                 : transaction
             )
@@ -214,7 +272,12 @@ function AccountTransactionPage() {
             created_at,
             currency_code: account?.currency_code ?? '',
             event: null,
-            event_links: [],
+            event_links: predictTransactionLinks(
+              links,
+              PLACEHOLDER_ID,
+              [],
+              events
+            ),
             tags: [],
             running_balance: addDecimals(previous, amount),
             status: 'PENDING'
@@ -230,9 +293,13 @@ function AccountTransactionPage() {
     ]
   )
 
-  const saveTransaction = (body: TransactionCreate) => {
+  const saveTransaction = (submit: TransactionSubmit) => {
     setFabOpen(false)
-    mutate({ body, id: editingTransaction?.id })
+    mutate({
+      ...submit,
+      id: editingTransaction?.id,
+      previousLinks: editingTransaction?.event_links ?? []
+    })
   }
 
   const { mutate: postTransactions, isPending: isPosting } =

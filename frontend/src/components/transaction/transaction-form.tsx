@@ -12,11 +12,11 @@ import {
   type AccountRead,
   type CurrencyRead,
   type EventReadDetailed,
-  type TransactionCreate,
   type TransactionRead,
   type TransactionTagRead
 } from '@/lib/client'
-import { isAmount, nextTransactionIndex, toZonedISOString } from '@/lib/utils'
+import { type EventLinkDraft, type TransactionSubmit } from '@/lib/types'
+import { isAmount, nextLinkIndex, toZonedISOString } from '@/lib/utils'
 
 interface TransactionFormProps {
   accounts: AccountRead[]
@@ -26,7 +26,7 @@ interface TransactionFormProps {
   events: EventReadDetailed[] | undefined
   editingTransaction: TransactionRead | null
   seedTransaction?: TransactionRead | null
-  onSubmit: (body: TransactionCreate) => void
+  onSubmit: (submit: TransactionSubmit) => void
   isPending: boolean
 }
 
@@ -51,9 +51,15 @@ export function TransactionForm({
       ? editingTransaction.created_at
       : toZonedISOString(new Date(), clientTimezone)
   )
-  // A cleared transaction's event is cleared too, so its duplicate can't join it.
-  const [eventId, setEventId] = useState<number | null>(
-    seedTransaction?.cleared_at ? null : (source?.event_id ?? null)
+  // A cleared transaction's events are cleared too, so its duplicate can't join them.
+  const [links, setLinks] = useState<EventLinkDraft[]>(() =>
+    seedTransaction?.cleared_at
+      ? []
+      : (source?.event_links ?? []).map(({ id, event, amount }) => ({
+          id: isEditing ? id : null,
+          event,
+          amount
+        }))
   )
   const [tagIds, setTagIds] = useState<number[]>(
     () => source?.tags?.map((tag) => tag.id) ?? []
@@ -65,28 +71,27 @@ export function TransactionForm({
     (c) => c.code === selectedAccount?.currency_code
   )
 
-  // (event_id, index) is unique in the DB, so linking to an event must claim a
-  // free slot and unlinking must clear it. Staying on the same event keeps the
-  // row's current index, so `index` is left unset.
-  const indexPatch = (): Pick<TransactionCreate, 'index'> => {
-    if (eventId == null) return { index: null }
-    if (editingTransaction?.event_id === eventId) return {}
-    const event = events?.find((e) => e.id === eventId)
-    if (event == null) return {}
-    return {
-      index: nextTransactionIndex(event.transactions, editingTransaction?.id)
-    }
-  }
+  const isSplit = links.length > 1
 
   const handleSubmit = () => {
     if (selectedAccount == null) return
     onSubmit({
-      account_id: selectedAccount.id,
-      amount,
-      created_at: createdAt,
-      event_id: eventId,
-      tag_ids: tagIds,
-      ...indexPatch()
+      body: {
+        account_id: selectedAccount.id,
+        amount,
+        created_at: createdAt,
+        tag_ids: tagIds
+      },
+      links: links.map((link) => {
+        const event = events?.find(({ id }) => id === link.event.id)
+        return {
+          id: link.id,
+          event_id: link.event.id,
+          // A single link takes the whole amount, a split link its own share
+          amount: isSplit ? link.amount : amount,
+          index: link.id == null && event ? nextLinkIndex(event) : null
+        }
+      })
     })
   }
 
@@ -94,7 +99,16 @@ export function TransactionForm({
     <KbdForm
       onSubmit={handleSubmit}
       isPending={isPending}
-      disabled={selectedAccount == null || !isAmount(amount)}
+      disabled={
+        selectedAccount == null ||
+        !isAmount(amount) ||
+        (isSplit && links.some((link) => !isAmount(link.amount))) ||
+        // A new link's position comes from its event in the list
+        links.some(
+          (link) =>
+            link.id == null && !events?.some(({ id }) => id === link.event.id)
+        )
+      }
       isEditing={isEditing}
     >
       <Field>
@@ -141,11 +155,13 @@ export function TransactionForm({
       </Field>
 
       <Field>
-        <FieldLabel>Event</FieldLabel>
+        <FieldLabel>Events</FieldLabel>
         <LinkEventField
           events={events}
-          eventId={eventId}
-          onChange={setEventId}
+          links={links}
+          amount={amount}
+          currency={currency}
+          onChange={setLinks}
         />
       </Field>
     </KbdForm>

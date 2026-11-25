@@ -1,4 +1,5 @@
 import type { EventReadDetailed } from '@/lib/client'
+import { legAmount } from '@/lib/events'
 
 const EVENT_CSV_HEADER = [
   'Event ID',
@@ -50,8 +51,8 @@ export function eventToCsv(
     accountNames.get(transaction.account_id) ?? `#${transaction.account_id}`,
     transaction.description ?? '',
     '1',
-    transaction.amount,
-    transaction.amount,
+    legAmount(event, transaction),
+    legAmount(event, transaction),
     transaction.currency_code,
     transaction.status,
     (transaction.tags ?? []).map((tag) => tag.name).join(' ')

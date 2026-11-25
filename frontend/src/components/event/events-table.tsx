@@ -27,6 +27,7 @@ import {
 import { useClientTimezone } from '@/hooks/use-client-timezone'
 import { useIsMobile } from '@/hooks/use-mobile'
 import type { EventReadDetailed, TransactionRead } from '@/lib/client'
+import { legAmount } from '@/lib/events'
 import { cn, formatCurrency, formatMonthDayTime, formatTime } from '@/lib/utils'
 
 interface EventsTableProps {
@@ -65,9 +66,12 @@ export function EventsTable({
   const columns = useMemo<ColumnDef<EventReadDetailed>[]>(() => {
     // A transaction's currency is its account's currency, already denormalized
     // onto the row as `currency_code` by the backend.
-    const formatTransaction = (transaction: TransactionRead) =>
+    const formatTransaction = (
+      event: EventReadDetailed,
+      transaction: TransactionRead
+    ) =>
       formatCurrency(
-        Math.abs(Number(transaction.amount)),
+        Math.abs(Number(legAmount(event, transaction))),
         transaction.currency_code
       )
 
@@ -87,11 +91,11 @@ export function EventsTable({
       }
       if (event.type === 'TRANSFER') {
         const [transaction] = event.transactions
-        return transaction ? formatTransaction(transaction) : '—'
+        return transaction ? formatTransaction(event, transaction) : '—'
       }
       // Exchange: each leg in its own account's currency.
       return event.transactions
-        .map((transaction) => formatTransaction(transaction))
+        .map((transaction) => formatTransaction(event, transaction))
         .join(' / ')
     }
 

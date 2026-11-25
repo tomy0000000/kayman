@@ -93,15 +93,20 @@ export function TransactionSheet({
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground">Events</span>
               {transaction.event_links.map(({ id, amount, event }) => (
-                <DetailRow
+                // The share never truncates, so a long title wraps instead
+                <div
                   key={id}
-                  label={eventTitle(event, categoryNames) ?? `#${event.id}`}
+                  className="flex items-baseline justify-between gap-4"
                 >
+                  <span className="min-w-0 break-words text-muted-foreground">
+                    {eventTitle(event, categoryNames) ?? `#${event.id}`}
+                  </span>
                   <Amount
+                    className="shrink-0"
                     amount={Number(amount)}
                     currencyCode={transaction.currency_code}
                   />
-                </DetailRow>
+                </div>
               ))}
             </div>
           ) : (

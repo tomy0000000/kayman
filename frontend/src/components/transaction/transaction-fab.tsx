@@ -4,10 +4,10 @@ import {
   type AccountRead,
   type CurrencyRead,
   type EventReadDetailed,
-  type TransactionCreate,
   type TransactionRead,
   type TransactionTagRead
 } from '@/lib/client'
+import { type TransactionSubmit } from '@/lib/types'
 
 interface TransactionFabProps {
   accounts: AccountRead[]
@@ -19,7 +19,7 @@ interface TransactionFabProps {
   onOpenChange: (open: boolean) => void
   editingTransaction: TransactionRead | null
   seedTransaction?: TransactionRead | null
-  onSubmit: (body: TransactionCreate) => void
+  onSubmit: (submit: TransactionSubmit) => void
   isPending: boolean
 }
 

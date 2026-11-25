@@ -15,6 +15,7 @@ import type {
   EventReadDetailed
 } from '@/lib/client'
 import { downloadCsv, eventToCsv } from '@/lib/csv'
+import { legAmount } from '@/lib/events'
 import {
   formatCurrency,
   formatDateTime,
@@ -69,7 +70,7 @@ export function EventReceipt({
   )
   const transactionTotals = sumByCurrency(
     event.transactions.map((transaction) => ({
-      amount: Number(transaction.amount),
+      amount: Number(legAmount(event, transaction)),
       currencyCode: transaction.currency_code
     }))
   )
@@ -152,7 +153,7 @@ export function EventReceipt({
               }
             >
               <Amount
-                amount={Number(transaction.amount)}
+                amount={Number(legAmount(event, transaction))}
                 currencyCode={transaction.currency_code}
               />
             </ReceiptLine>

@@ -1,6 +1,7 @@
 import { Link2, X } from 'lucide-react'
 import { useState } from 'react'
 
+import { CurrencyAmountInput } from '@/components/currency-amount-input'
 import { EventTypeBadge } from '@/components/event/event-type-badge'
 import { FieldEmpty } from '@/components/field-empty'
 import { Button } from '@/components/ui/button'
@@ -31,14 +32,25 @@ import {
   TableRow
 } from '@/components/ui/table'
 import { useClientTimezone } from '@/hooks/use-client-timezone'
-import type { EventReadDetailed } from '@/lib/client'
-import { formatDateTime } from '@/lib/utils'
+import type { CurrencyRead, EventReadDetailed } from '@/lib/client'
+import { type EventLinkDraft } from '@/lib/types'
+import {
+  addDecimals,
+  formatCurrency,
+  formatDateTime,
+  isAmount,
+  negateDecimal,
+  sameDecimal
+} from '@/lib/utils'
 
 interface LinkEventFieldProps {
   /** undefined while the events list is loading */
   events: EventReadDetailed[] | undefined
-  eventId: number | null
-  onChange: (eventId: number | null) => void
+  links: EventLinkDraft[]
+  // The transaction's amount, which a single link takes whole
+  amount: string
+  currency: CurrencyRead | undefined
+  onChange: (links: EventLinkDraft[]) => void
 }
 
 interface LinkEventTableProps {
@@ -49,16 +61,34 @@ interface LinkEventTableProps {
 
 export function LinkEventField({
   events,
-  eventId,
+  links,
+  amount,
+  currency,
   onChange
 }: LinkEventFieldProps) {
   const { timezone } = useClientTimezone()
   const [selection, setSelection] = useState<EventReadDetailed | null>(null)
 
-  const linkedEvent = events?.find((event) => event.id === eventId) ?? null
+  const linkedIds = new Set(links.map(({ event }) => event.id))
+  const isSplit = links.length > 1
+  const unallocated = isSplit
+    ? links.reduce(
+        (rest, link) =>
+          isAmount(link.amount)
+            ? addDecimals(rest, negateDecimal(link.amount))
+            : rest,
+        isAmount(amount) ? amount : '0'
+      )
+    : '0'
 
   const handleLink = () => {
-    if (selection) onChange(selection.id)
+    if (!selection) return
+    // The new share starts as whatever the others leave unclaimed
+    const share = links.length === 0 ? amount : unallocated
+    onChange([
+      ...links.map((link) => (links.length === 1 ? { ...link, amount } : link)),
+      { id: null, event: selection, amount: share }
+    ])
   }
 
   return (
@@ -67,46 +97,67 @@ export function LinkEventField({
         if (!dialogOpen) setSelection(null)
       }}
     >
-      {linkedEvent ? (
+      {links.length > 0 ? (
         <div className="space-y-3">
-          <Item variant="outline" size="sm" className="bg-background">
-            <EventTypeBadge type={linkedEvent.type} />
-            <ItemContent>
-              <ItemTitle>
-                {linkedEvent.description || 'No description'}
-              </ItemTitle>
-              <ItemDescription>
-                {formatDateTime(linkedEvent.timestamp, timezone)}
-              </ItemDescription>
-            </ItemContent>
-            <ItemActions>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Unlink event"
-                onClick={() => onChange(null)}
-              >
-                <X />
-              </Button>
-            </ItemActions>
-          </Item>
+          {links.map((link, index) => (
+            <Item
+              key={link.id ?? `new-${link.event.id}`}
+              variant="outline"
+              size="sm"
+              className="bg-background"
+            >
+              <EventTypeBadge type={link.event.type} />
+              <ItemContent>
+                <ItemTitle>
+                  {link.event.description || 'No description'}
+                </ItemTitle>
+                <ItemDescription>
+                  {formatDateTime(link.event.timestamp, timezone)}
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                {isSplit && (
+                  <CurrencyAmountInput
+                    amount={link.amount}
+                    onAmountChange={(share) =>
+                      onChange(
+                        links.map((other, at) =>
+                          at === index ? { ...other, amount: share } : other
+                        )
+                      )
+                    }
+                    currency={currency}
+                    required
+                  />
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Unlink event"
+                  onClick={() =>
+                    onChange(links.filter((_, at) => at !== index))
+                  }
+                >
+                  <X />
+                </Button>
+              </ItemActions>
+            </Item>
+          ))}
+          {isSplit && !sameDecimal(unallocated, '0') && (
+            <p className="text-muted-foreground text-sm">
+              Unallocated:{' '}
+              {currency
+                ? formatCurrency(Number(unallocated), currency.code)
+                : unallocated}
+            </p>
+          )}
           <DialogTrigger asChild>
             <Button type="button" variant="outline" size="sm">
-              Change event
+              Link another event
             </Button>
           </DialogTrigger>
         </div>
-      ) : eventId != null && events === undefined ? (
-        <Item variant="outline" size="sm" className="bg-background">
-          <Skeleton className="h-5 w-14" />
-          <ItemContent>
-            <div className="flex flex-col gap-1.5">
-              <Skeleton className="h-4 w-40 max-w-full" />
-              <Skeleton className="h-3.5 w-28 max-w-full" />
-            </div>
-          </ItemContent>
-        </Item>
       ) : (
         <FieldEmpty
           icon={Link2}
@@ -129,7 +180,7 @@ export function LinkEventField({
           </DialogDescription>
         </DialogHeader>
         <LinkEventTable
-          events={events}
+          events={events?.filter(({ id }) => !linkedIds.has(id))}
           selection={selection}
           onSelectionChange={setSelection}
         />
