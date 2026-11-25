@@ -19,6 +19,10 @@ import { type AccountRead } from '@/lib/client'
 
 interface TransactionsLinkDialogProps {
   accounts: AccountRead[]
+  // Transactions already on the event, left out of the list
+  excludeIds: number[]
+  // The event being edited, whose own links the list doesn't count
+  eventId: number | null
   onLink: (selection: SelectedTransaction[]) => void
   // The element that opens the dialog, rendered as the trigger.
   children: ReactNode
@@ -26,6 +30,8 @@ interface TransactionsLinkDialogProps {
 
 export function TransactionsLinkDialog({
   accounts,
+  excludeIds,
+  eventId,
   onLink,
   children
 }: TransactionsLinkDialogProps) {
@@ -48,6 +54,8 @@ export function TransactionsLinkDialog({
         </DialogHeader>
         <LinkTransactionsTable
           accounts={accounts}
+          excludeIds={excludeIds}
+          eventId={eventId}
           selection={selection}
           onSelectionChange={setSelection}
         />

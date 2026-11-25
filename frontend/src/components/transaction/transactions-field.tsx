@@ -1,6 +1,6 @@
 import { ArrowLeftRight, X } from 'lucide-react'
 import { Reorder, useDragControls } from 'motion/react'
-import { type RefObject, useRef } from 'react'
+import { type RefObject, useMemo, useRef } from 'react'
 
 import { AccountSelect } from '@/components/account/account-select'
 import { CurrencyAmountInput } from '@/components/currency-amount-input'
@@ -23,14 +23,17 @@ import {
   type CurrencyRead,
   type TransactionTagRead
 } from '@/lib/client'
+import { unallocatedAmount } from '@/lib/events'
 import {
   type TransactionDraft,
   componentKey,
   toTransactionDraft
 } from '@/lib/types'
-import { sumByCurrency } from '@/lib/utils'
+import { sameDecimal, sumByCurrency } from '@/lib/utils'
 
 interface TransactionsFieldProps {
+  // The event being edited, null for a new one
+  eventId: number | null
   accounts: AccountRead[]
   currencies: CurrencyRead[]
   transactionTags: TransactionTagRead[]
@@ -49,6 +52,7 @@ interface TransactionRowProps {
 }
 
 export function TransactionsField({
+  eventId,
   accounts,
   currencies,
   transactionTags,
@@ -59,17 +63,39 @@ export function TransactionsField({
   // wraps it in, so keep the drag inside the body.
   const body = useRef<HTMLTableSectionElement>(null)
 
+  // Memoized: the picker's table must not see a new list on every render
+  const linkedIds = useMemo(
+    () => value.flatMap(({ id }) => (id != null ? [id] : [])),
+    [value]
+  )
+
   const addTransaction = () =>
     onChange([
       ...value,
-      { key: componentKey(), id: null, accountId: null, amount: '', tagIds: [] }
+      {
+        key: componentKey(),
+        id: null,
+        accountId: null,
+        amount: '',
+        tagIds: [],
+        wholeAmount: null
+      }
     ])
 
   const linkTransactions = (selection: SelectedTransaction[]) => {
     const existing = new Set(value.map((item) => item.id))
     const additions = selection
       .filter((item) => !existing.has(item.transaction.id))
-      .map((item) => toTransactionDraft(item.transaction))
+      .map((item) => {
+        // Links to this event itself don't count, so a re-picked leg gets its share back
+        const rest = unallocatedAmount(item.transaction, eventId)
+        const shared = !sameDecimal(rest, item.transaction.amount)
+        return {
+          ...toTransactionDraft(item.transaction),
+          amount: rest,
+          wholeAmount: shared ? item.transaction.amount : null
+        }
+      })
     if (additions.length > 0) onChange([...value, ...additions])
   }
 
@@ -106,7 +132,12 @@ export function TransactionsField({
       >
         Add transaction
       </Button>
-      <TransactionsLinkDialog accounts={accounts} onLink={linkTransactions}>
+      <TransactionsLinkDialog
+        accounts={accounts}
+        excludeIds={linkedIds}
+        eventId={eventId}
+        onLink={linkTransactions}
+      >
         <Button type="button" variant="outline" size="sm">
           Link existing
         </Button>

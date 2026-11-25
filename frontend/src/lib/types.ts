@@ -38,6 +38,8 @@ export type TransactionDraft = {
   accountId: number | null
   amount: string
   tagIds: number[]
+  // The transaction's whole amount when `amount` is only its share on this event
+  wholeAmount: string | null
 }
 
 // What the event form hands back per transaction row, once the row is complete.
@@ -47,6 +49,7 @@ export type TransactionPayload = {
   amount: string
   tag_ids: number[]
   index: number
+  wholeAmount: string | null
 }
 
 // What the event form hands back per entry row, once the row is complete. `id`
@@ -93,7 +96,8 @@ export function toTransactionDraft(transaction: {
     id: transaction.id,
     accountId: transaction.account_id,
     amount: transaction.amount,
-    tagIds: (transaction.tags ?? []).map(({ id }) => id)
+    tagIds: (transaction.tags ?? []).map(({ id }) => id),
+    wholeAmount: null
   }
 }
 

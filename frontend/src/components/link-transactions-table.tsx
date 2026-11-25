@@ -39,7 +39,8 @@ import {
   type TransactionStatus
 } from '@/lib/client'
 import { readTransactionsOptions } from '@/lib/client/@tanstack/react-query.gen'
-import { cn, formatDateTime } from '@/lib/utils'
+import { unallocatedAmount } from '@/lib/events'
+import { cn, formatDateTime, pluralize } from '@/lib/utils'
 
 type StatusFilter = TransactionStatus | 'ALL'
 
@@ -76,6 +77,8 @@ interface StatusFilterHeaderProps {
 
 interface LinkTransactionsTableProps {
   accounts: AccountRead[]
+  excludeIds: number[]
+  eventId: number | null
   selection: SelectedTransaction[]
   onSelectionChange: (selection: SelectedTransaction[]) => void
 }
@@ -118,6 +121,8 @@ function StatusFilterHeader({ table }: StatusFilterHeaderProps) {
 
 export function LinkTransactionsTable({
   accounts,
+  excludeIds,
+  eventId,
   selection,
   onSelectionChange
 }: LinkTransactionsTableProps) {
@@ -153,12 +158,29 @@ export function LinkTransactionsTable({
       {
         accessorKey: 'amount',
         header: 'Amount',
-        cell: ({ row }) => (
-          <Amount
-            amount={parseFloat(row.original.amount)}
-            currencyCode={currencyCode}
-          />
-        )
+        cell: ({ row }) => {
+          const linked = row.original.event_links.filter(
+            (link) => link.event_id !== eventId
+          ).length
+          return (
+            <div className="flex flex-col">
+              <Amount
+                amount={parseFloat(row.original.amount)}
+                currencyCode={currencyCode}
+              />
+              {linked > 0 && (
+                <span className="text-muted-foreground text-xs">
+                  {pluralize(linked, 'event', 'events')}, unallocated{' '}
+                  <Amount
+                    className="text-muted-foreground"
+                    amount={Number(unallocatedAmount(row.original, eventId))}
+                    currencyCode={currencyCode}
+                  />
+                </span>
+              )}
+            </div>
+          )
+        }
       },
       {
         accessorKey: 'status',
@@ -169,7 +191,7 @@ export function LinkTransactionsTable({
         )
       }
     ],
-    [currencyCode, timezone]
+    [currencyCode, eventId, timezone]
   )
 
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -203,16 +225,23 @@ export function LinkTransactionsTable({
   // empty table before any account is selected.
   const { isLoading, data } = useQuery({
     ...readTransactionsOptions({
-      query: { account_id: selectedAccount?.id, event_id: 'empty' }
+      query: { account_id: selectedAccount?.id }
     }),
     enabled: selectedAccount !== null
   })
+
+  // Rows already on the event can't join it twice
+  const rows = useMemo(
+    () =>
+      data?.filter(({ id }) => !excludeIds.includes(id)) ?? EMPTY_TRANSACTIONS,
+    [data, excludeIds]
+  )
 
   // TanStack Table manages its own memoization; the React Compiler bail-out
   // for `useReactTable` is expected and safe here.
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: data ?? EMPTY_TRANSACTIONS,
+    data: rows,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),

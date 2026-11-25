@@ -20,7 +20,12 @@ import {
   type EventLinkPayload,
   type TransactionPayload
 } from '@/lib/types'
-import { formatCurrency, sameDecimal } from '@/lib/utils'
+import {
+  addDecimals,
+  formatCurrency,
+  negateDecimal,
+  sameDecimal
+} from '@/lib/utils'
 
 export interface TransactionEventSummary {
   title: string | null
@@ -125,6 +130,19 @@ function sameTagIds(next: number[], previous: { id: number }[]) {
   return previous.every(({ id }) => nextIds.has(id))
 }
 
+// What a transaction's links leave unclaimed of its amount, optionally ignoring one event.
+export function unallocatedAmount(
+  transaction: TransactionRead,
+  ignoreEventId: number | null = null
+): string {
+  return transaction.event_links
+    .filter((link) => link.event_id !== ignoreEventId)
+    .reduce(
+      (rest, link) => addDecimals(rest, negateDecimal(link.amount)),
+      transaction.amount
+    )
+}
+
 // A leg's amount on this event: its link's share, else the whole transaction.
 export function legAmount(
   event: EventReadDetailed,
@@ -198,7 +216,7 @@ export async function syncEventTransactions({
     })
   }
 
-  // Existing rows new to this event carry no links yet, so they are unsplit
+  // Existing rows new to this event, possibly already shared with other events
   const attached = transactions.filter(
     ({ id }) => id != null && !linkByTransaction.has(id)
   )
@@ -221,11 +239,12 @@ export async function syncEventTransactions({
         }
       ]
     }),
-    ...attached.map(({ id, account_id, amount, tag_ids }) => ({
+    ...attached.map(({ id, account_id, amount, tag_ids, wholeAmount }) => ({
       id: id as number,
       account_id,
-      amount,
-      tag_ids
+      tag_ids,
+      // A shared transaction's amount stays, its row is only this event's share
+      ...(wholeAmount == null && { amount })
     }))
   ]
   if (transactionUpdates.length > 0) {
@@ -304,7 +323,7 @@ export function predictEvent(
       amount:
         existing && !isUnsplit(existing, previousLink)
           ? existing.amount
-          : payload.amount,
+          : (payload.wholeAmount ?? payload.amount),
       event_links: [
         ...(existing?.event_links ?? []).filter(
           (other) => other.event_id !== id

@@ -171,7 +171,8 @@ export function EventForm({
         account_id: transaction.accountId as number,
         amount: transaction.amount,
         tag_ids: transaction.tagIds,
-        index
+        index,
+        wholeAmount: transaction.wholeAmount
       })),
       entries.map((entry, index) => ({
         id: entry.id,
@@ -219,6 +220,7 @@ export function EventForm({
       <Field>
         <FieldLabel>Transactions</FieldLabel>
         <TransactionsField
+          eventId={editingEvent?.id ?? null}
           accounts={accounts}
           currencies={currencies}
           transactionTags={transactionTags}

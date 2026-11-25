@@ -76,7 +76,7 @@ Components in `frontend/src/components/` default to presentational: data and mut
 - Page-level data (lists a route loads once and shares, e.g. accounts, categories, currencies) is fetched in route files under `frontend/src/routes/`, or in a component colocated with its route, then passed down as props.
 - Mutations always stay route-owned. The route decides what happens after success (invalidation, navigation, closing a sheet), so components receive submit callbacks and pending flags via props. No `useMutation` or `useQueryClient` in `components/`.
 
-Exception: a component may own a `useQuery` when the query key depends on the component's own internal state (a search input, a selection, pagination inside the widget). Hoisting such a query would force the route to track the widget's internal state, which is worse than the hook. Example: `link-transactions-table.tsx` fetching unlinked transactions keyed on its own selected account.
+Exception: a component may own a `useQuery` when the query key depends on the component's own internal state (a search input, a selection, pagination inside the widget). Hoisting such a query would force the route to track the widget's internal state, which is worse than the hook. Example: `link-transactions-table.tsx` fetching transactions keyed on its own selected account.
 
 - These queries use a shared `queryOptions` factory from `frontend/src/lib/` rather than an inline key, so each key is defined in one place and dedupes with any other caller.
 
