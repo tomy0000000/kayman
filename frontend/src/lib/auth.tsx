@@ -12,11 +12,16 @@ import {
   type AuthContextValue,
   type AuthState
 } from '@/lib/auth-context'
-import { login as apiLogin } from '@/lib/client'
+import {
+  login as apiLogin,
+  refreshToken as apiRefreshToken
+} from '@/lib/client'
 import { type Client } from '@/lib/client/client'
 import { client } from '@/lib/client/client.gen'
 
 const LOCAL_STORAGE_KEY = 'credential'
+const REFRESH_LEAD_MS = 5 * 60 * 1000
+const REFRESH_RETRY_MS = 30 * 1000
 
 type StoredCredential = {
   host: string
@@ -44,6 +49,16 @@ function loadCredential(): StoredCredential | null {
     // fall through
   }
   return null
+}
+
+function tokenExpiresAt(token: string): number | null {
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const { exp } = JSON.parse(atob(payload)) as { exp?: unknown }
+    return typeof exp === 'number' ? exp * 1000 : null
+  } catch {
+    return null
+  }
 }
 
 function clientFromCredential({ host, accessToken }: StoredCredential): Client {
@@ -89,6 +104,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       client.instance.interceptors.response.eject(id)
     }
   }, [state.client])
+
+  useEffect(() => {
+    const { host, username, accessToken, client } = state
+    if (!client) return
+    const expiresAt = tokenExpiresAt(accessToken)
+    if (expiresAt === null) return
+    let cancelled = false
+    let timer: number | undefined
+    const schedule = (delay: number) => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(refresh, delay)
+    }
+    const refresh = async () => {
+      const result = await apiRefreshToken({ client })
+      if (cancelled) return
+      const { data } = result
+      if (!data) {
+        // A 401 already logged out via the interceptor, so retry only other failures.
+        const status = 'response' in result ? result.response?.status : null
+        if (status !== 401 && Date.now() < expiresAt) {
+          schedule(REFRESH_RETRY_MS)
+        }
+        return
+      }
+      const next = { host, username, accessToken: data.access_token }
+      client.setConfig({ baseURL: host, auth: () => next.accessToken })
+      window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(next))
+      setState({ ...next, client })
+    }
+    // Timers stall while the machine sleeps, so recheck on wake.
+    const onVisible = () => {
+      if (
+        document.visibilityState === 'visible' &&
+        expiresAt - Date.now() < REFRESH_LEAD_MS
+      ) {
+        schedule(0)
+      }
+    }
+    schedule(Math.max(expiresAt - REFRESH_LEAD_MS - Date.now(), 0))
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [state])
 
   const login = useCallback(
     async (host: string, username: string, password: string) => {
