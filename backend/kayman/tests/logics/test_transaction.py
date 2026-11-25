@@ -190,6 +190,33 @@ def test_get_transactions_with_running_balance_includes_event_details(
     ]
 
 
+def test_get_transactions_with_running_balance_details_every_linked_event(
+    session: Session,
+):
+    account = AccountFactory()
+    event_1 = EventFactory()
+    event_2 = EventFactory()
+    EventEntryFactory(event=event_2, description="Taxi", index=0)
+    txn = TransactionFactory(
+        account=account, event=event_1, amount=Decimal("-100"), index=0
+    )
+    TransactionEventLinkFactory(
+        transaction=txn, event=event_2, amount=Decimal("-40"), index=0
+    )
+
+    results = get_transactions_with_running_balance(session, account.id)
+
+    assert len(results) == 1
+    links = results[0].event_links
+    assert len(links) == 2
+    assert [link.event.id for link in links] == [event_1.id, event_2.id]
+    assert [link.amount for link in links] == [Decimal("-100"), Decimal("-40")]
+    assert len(links[1].event.entries) == 1
+    assert [e.description for e in links[1].event.entries] == ["Taxi"]
+    assert len(links[1].event.transactions) == 1
+    assert links[1].event.transactions[0].id == txn.id
+
+
 def test_get_transactions_with_running_balance_eager_loads_event_details(
     session: Session,
 ):
@@ -197,8 +224,13 @@ def test_get_transactions_with_running_balance_eager_loads_event_details(
     for _ in range(3):
         event = EventFactory()
         EventEntryFactory(event=event)
-        TransactionFactory(account=account, event=event)
+        txn = TransactionFactory(account=account, event=event)
         TransactionFactory(event=event)
+        # A second event reachable only through a link exercises that loader path
+        split_event = EventFactory()
+        EventEntryFactory(event=split_event)
+        TransactionEventLinkFactory(transaction=txn, event=split_event, index=0)
+        TransactionFactory(event=split_event, index=1)
     account_id = account.id
     session.expunge_all()
     statements: list[str] = []
@@ -215,7 +247,7 @@ def test_get_transactions_with_running_balance_eager_loads_event_details(
 
     assert len(results) == 3
     # One query per relationship level, however many rows: no lazy loads.
-    assert len(statements) == 9
+    assert len(statements) == 12
 
 
 def test_update_transactions_with_balances_moves_balance_by_delta(session: Session):

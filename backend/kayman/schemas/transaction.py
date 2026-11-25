@@ -57,7 +57,9 @@ class Transaction(TransactionBase, table=True):
     account: "Account" = Relationship(back_populates="transactions")
     event: Optional["Event"] = Relationship()
     event_links: list["TransactionEventLink"] = Relationship(
-        back_populates="transaction", cascade_delete=True
+        back_populates="transaction",
+        cascade_delete=True,
+        sa_relationship_kwargs={"order_by": "TransactionEventLink.id"},
     )
     tags: list["TransactionTag"] = Relationship(
         back_populates="transactions", link_model=TransactionTagLink
@@ -115,8 +117,16 @@ class TransactionEventRead(EventRead):
     entries: list[EventEntryRead]
 
 
+class TransactionEventLinkDetailedRead(TransactionEventLinkEventRead):
+    """A link on the account view, with its event's entries and every leg."""
+
+    event: TransactionEventRead
+
+
 class TransactionReadWithBalance(TransactionRead):
     event: TransactionEventRead | None
+    # list is invariant, but each item narrows the base field's item type
+    event_links: list[TransactionEventLinkDetailedRead]  # type: ignore[assignment]
     running_balance: Decimal
 
 

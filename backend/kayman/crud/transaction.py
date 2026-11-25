@@ -92,6 +92,15 @@ def read_transactions(
                 Transaction.account  # type: ignore[arg-type]
             ),
         ]
+        links = selectinload(Transaction.event_links).selectinload(  # type: ignore[arg-type]
+            TransactionEventLink.event  # type: ignore[arg-type]
+        )
+        options += [
+            links.selectinload(Event.entries),  # type: ignore[arg-type]
+            links.selectinload(Event.transactions).selectinload(  # type: ignore[arg-type]
+                Transaction.account  # type: ignore[arg-type]
+            ),
+        ]
     scalar = select(Transaction).options(*options)
     if transaction_ids:
         scalar = scalar.where(col(Transaction.id).in_(transaction_ids))
