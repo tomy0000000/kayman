@@ -17,6 +17,7 @@ from kayman.tests.factories import (
     CategoryFactory,
     EventEntryFactory,
     EventFactory,
+    TransactionEventLinkFactory,
     TransactionFactory,
 )
 
@@ -95,6 +96,20 @@ def test_read_events_by_ids(session: Session):
     assert {event.id for event in multiple} == {event_1.id, event_2.id}
 
 
+def test_read_events_transactions_read_links(
+    session: Session,  # noqa: ARG001 (binds factory session)
+    session_2: Session,
+):
+    link = TransactionEventLinkFactory()
+
+    events = read_events(session_2, event_ids=[link.event_id])
+
+    assert len(events) == 1
+    assert len(events[0].transactions) == 1
+    assert events[0].transactions[0].id == link.transaction_id
+    assert events[0].transactions[0].event_id is None
+
+
 def test_read_events_details_ordered_by_index(
     session: Session,  # noqa: ARG001 (binds factory session)
     session_2: Session,
@@ -121,7 +136,7 @@ def test_read_events_details_ordered_by_index(
         "event_entry.index"
     ]
     assert [str(column) for column in relationships["transactions"].order_by] == [
-        "transaction.index"
+        "transaction_event_link.index"
     ]
 
 

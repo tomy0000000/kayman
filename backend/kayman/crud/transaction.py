@@ -73,6 +73,7 @@ def read_transactions(
     options = [
         selectinload(Transaction.account),  # type: ignore[arg-type]
         selectinload(Transaction.event),  # type: ignore[arg-type]
+        selectinload(Transaction.event_links),  # type: ignore[arg-type]
         selectinload(Transaction.tags),  # type: ignore[arg-type]
     ]
     if with_event_details:
@@ -88,10 +89,15 @@ def read_transactions(
         scalar = scalar.where(col(Transaction.id).in_(transaction_ids))
     if account_id:
         scalar = scalar.where(Transaction.account_id == account_id)
+    linked = select(TransactionEventLink.transaction_id)
     if event_id == "empty":
-        scalar = scalar.where(col(Transaction.event_id).is_(None))
+        scalar = scalar.where(col(Transaction.id).not_in(linked))
     elif event_id is not None:
-        scalar = scalar.where(Transaction.event_id == event_id)
+        scalar = scalar.where(
+            col(Transaction.id).in_(
+                linked.where(TransactionEventLink.event_id == event_id)
+            )
+        )
     if start is not None:
         scalar = scalar.where(Transaction.created_at >= start)
     if end is not None:

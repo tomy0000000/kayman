@@ -31,6 +31,7 @@ from kayman.tests.factories import (
     EventEntryFactory,
     EventFactory,
     StatementFactory,
+    TransactionEventLinkFactory,
     TransactionFactory,
 )
 
@@ -214,7 +215,7 @@ def test_get_transactions_with_running_balance_eager_loads_event_details(
 
     assert len(results) == 3
     # One query per relationship level, however many rows: no lazy loads.
-    assert len(statements) == 7
+    assert len(statements) == 8
 
 
 def test_update_transactions_with_balances_moves_balance_by_delta(session: Session):
@@ -504,6 +505,24 @@ def test_validate_transactions_clearable_passes(session: Session):
 
     assert len(errors) == 3
     assert errors == {t.id: [] for t in txns}
+
+
+def test_validate_transactions_clearable_reads_event_from_links(session: Session):
+    statement = StatementFactory()
+    txn = TransactionFactory(
+        account=statement.account,
+        statement_id=statement.id,
+        cleared_at=None,
+        event=None,
+        event_id=None,
+        index=None,
+    )
+    TransactionEventLinkFactory(transaction=txn)
+
+    errors = validate_transactions_clearable(session, [txn.id])
+
+    assert len(errors) == 1
+    assert errors == {txn.id: []}
 
 
 def test_validate_transactions_clearable_for_update(session: Session):

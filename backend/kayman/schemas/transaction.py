@@ -53,7 +53,7 @@ class Transaction(TransactionBase, table=True):
         foreign_key="statement.id", default=None
     )  # TODO: accept this on creation
     account: "Account" = Relationship(back_populates="transactions")
-    event: Optional["Event"] = Relationship(back_populates="transactions")
+    event: Optional["Event"] = Relationship()
     event_links: list["TransactionEventLink"] = Relationship(
         back_populates="transaction", cascade_delete=True
     )

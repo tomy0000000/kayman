@@ -24,6 +24,7 @@ from kayman.schemas.transaction_tag import TransactionTag, TransactionTagLink
 from kayman.tests.factories import (
     AccountFactory,
     EventFactory,
+    TransactionEventLinkFactory,
     TransactionFactory,
     TransactionTagFactory,
 )
@@ -188,6 +189,18 @@ def test_read_transactions_by_empty_event(session: Session):
 
     assert len(results) == 1
     assert {txn.id for txn in results} == {without_event.id}
+
+
+def test_read_transactions_by_event_reads_links(session: Session):
+    link = TransactionEventLinkFactory()
+
+    by_event = read_transactions(session, event_id=link.event_id)
+    empty = read_transactions(session, event_id="empty")
+
+    assert len(by_event) == 1
+    assert by_event[0].id == link.transaction_id
+    assert by_event[0].event_id is None
+    assert len(empty) == 0
 
 
 def test_read_transactions_start_is_inclusive(session: Session):
@@ -764,7 +777,9 @@ def test_create_transactions_fills_missing_index_after_existing(session: Session
     assert len(db_txns) == 3
     assert [txn.index for txn in db_txns] == [8, 7, 9]
     links = session.exec(
-        select(TransactionEventLink).order_by(col(TransactionEventLink.id))
+        select(TransactionEventLink)
+        .where(col(TransactionEventLink.transaction_id).in_(t.id for t in db_txns))
+        .order_by(col(TransactionEventLink.id))
     ).all()
     assert len(links) == 3
     assert [link.index for link in links] == [8, 7, 9]

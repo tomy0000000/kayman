@@ -119,7 +119,7 @@ def validate_transactions_clearable(
                 "is not on a statement",
             ),
             (
-                txn.event_id is None,
+                not txn.event_links,
                 TransactionClearErrorType.NO_EVENT,
                 "has no associated event",
             ),

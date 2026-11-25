@@ -52,9 +52,13 @@ class Event(EventBase, table=True):
     )
     # Auto calculated for Expense or Income
     # Manually logged for Transfer or Exchange
+    # Leg membership comes from the links, not transaction.event_id
     transactions: list["Transaction"] = Relationship(
-        back_populates="event",
-        sa_relationship_kwargs={"order_by": "Transaction.index"},
+        sa_relationship_kwargs={
+            "secondary": "transaction_event_link",
+            "order_by": "TransactionEventLink.index",
+            "viewonly": True,
+        },
     )
     entries: list["EventEntry"] = Relationship(
         back_populates="event",
