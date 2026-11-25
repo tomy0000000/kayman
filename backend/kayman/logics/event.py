@@ -25,7 +25,7 @@ def validate_totals_match(event: Event) -> list[EventClearError]:
 
     # A multi-currency event has no single total to compare
     currency_codes = {entry.currency_code for entry in event.entries} | {
-        transaction.currency_code for transaction in event.transactions
+        link.transaction.currency_code for link in event.transaction_links
     }
     if len(currency_codes) > 1:
         return []
@@ -33,9 +33,8 @@ def validate_totals_match(event: Event) -> list[EventClearError]:
     entries_total = Decimal(
         sum([entry.amount * entry.quantity for entry in event.entries])
     )
-    transactions_total = Decimal(
-        sum([transaction.amount for transaction in event.transactions])
-    )
+    # Each leg counts only the share of its transaction this event claims
+    transactions_total = Decimal(sum([link.amount for link in event.transaction_links]))
     # Expense drains the accounts, so its transactions mirror the entries
     if event.type is EventType.EXPENSE:
         transactions_total = -transactions_total

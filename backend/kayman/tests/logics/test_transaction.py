@@ -525,6 +525,40 @@ def test_validate_transactions_clearable_reads_event_from_links(session: Session
     assert errors == {txn.id: []}
 
 
+@pytest.mark.parametrize(
+    ("link_amounts", "expected_types"),
+    [
+        ([Decimal("-60.00"), Decimal("-40.00")], []),
+        ([Decimal("-60.00")], [TransactionClearErrorType.ALLOCATION_MISMATCH]),
+        (
+            [Decimal("-60.00"), Decimal("-60.00")],
+            [TransactionClearErrorType.ALLOCATION_MISMATCH],
+        ),
+    ],
+    ids=["split_sums_to_amount", "under_allocated", "over_allocated"],
+)
+def test_validate_transactions_clearable_checks_allocation(
+    session: Session, link_amounts, expected_types
+):
+    statement = StatementFactory()
+    txn = TransactionFactory(
+        account=statement.account,
+        statement_id=statement.id,
+        cleared_at=None,
+        amount=Decimal("-100.00"),
+        event=None,
+        event_id=None,
+        index=None,
+    )
+    for amount in link_amounts:
+        TransactionEventLinkFactory(transaction=txn, amount=amount)
+
+    errors = validate_transactions_clearable(session, [txn.id])
+
+    assert len(errors[txn.id]) == len(expected_types)
+    assert [error.type for error in errors[txn.id]] == expected_types
+
+
 def test_validate_transactions_clearable_for_update(session: Session):
     statement = StatementFactory()
     txn = TransactionFactory(

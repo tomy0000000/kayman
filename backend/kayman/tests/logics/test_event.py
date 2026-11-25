@@ -27,6 +27,7 @@ from kayman.schemas.event import (
     EventType,
 )
 from kayman.schemas.event_entry import EventEntry
+from kayman.schemas.transaction_event_link import TransactionEventLink
 from kayman.tests.factories import (
     AccountFactory,
     CategoryFactory,
@@ -355,6 +356,10 @@ def _totals_event(
         currency=CurrencyFactory.build(code=transaction_currency_code)
     )
     entry_currency = CurrencyFactory.build(code=entry_currency_code)
+    transactions = [
+        TransactionFactory.build(amount=amount, account=account)
+        for amount in transaction_amounts
+    ]
 
     return EventFactory.build(
         type=event_type,
@@ -364,9 +369,10 @@ def _totals_event(
             )
             for amount in entry_amounts
         ],
-        transactions=[
-            TransactionFactory.build(amount=amount, account=account)
-            for amount in transaction_amounts
+        transactions=transactions,
+        transaction_links=[
+            TransactionEventLink(transaction=txn, amount=txn.amount, index=index)
+            for index, txn in enumerate(transactions)
         ],
     )
 
@@ -474,14 +480,34 @@ def test_validate_totals_match_multi_currency_transactions():
         entry_amounts=[Decimal("100.00")],
         transaction_amounts=[Decimal("-1.00")],
     )
-    event.transactions.append(
-        TransactionFactory.build(
-            amount=Decimal("-50.00"),
-            account=AccountFactory.build(currency=CurrencyFactory.build(code="USD")),
-        )
+    txn = TransactionFactory.build(
+        amount=Decimal("-50.00"),
+        account=AccountFactory.build(currency=CurrencyFactory.build(code="USD")),
+    )
+    event.transactions.append(txn)
+    event.transaction_links.append(
+        TransactionEventLink(transaction=txn, amount=txn.amount, index=1)
     )
 
     assert len(validate_totals_match(event)) == 0
+
+
+@pytest.mark.parametrize(
+    ("link_amount", "expected_errors"),
+    [(Decimal("-60.00"), 0), (Decimal("-100.00"), 1)],
+    ids=["share_matches", "full_amount_mismatches"],
+)
+def test_validate_totals_match_uses_link_amounts(
+    link_amount: Decimal, expected_errors: int
+):
+    """A leg counts its link's share, not the whole transaction amount"""
+    event = _totals_event(
+        entry_amounts=[Decimal("60.00")],
+        transaction_amounts=[Decimal("-100.00")],
+    )
+    event.transaction_links[0].amount = link_amount
+
+    assert len(validate_totals_match(event)) == expected_errors
 
 
 def test_validate_totals_match_currency_differs_across_sides():

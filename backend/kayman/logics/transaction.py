@@ -107,6 +107,7 @@ def validate_transactions_clearable(
     txns = _require_transactions(session, transaction_ids, "clear", for_update)
     errors: dict[int, list[TransactionClearError]] = {}
     for txn_id, txn in txns.items():
+        allocated = Decimal(sum([link.amount for link in txn.event_links]))
         checks = (
             (
                 txn.posted_at is None,
@@ -122,6 +123,11 @@ def validate_transactions_clearable(
                 not txn.event_links,
                 TransactionClearErrorType.NO_EVENT,
                 "has no associated event",
+            ),
+            (
+                bool(txn.event_links) and allocated != txn.amount,
+                TransactionClearErrorType.ALLOCATION_MISMATCH,
+                f"has {allocated} allocated to events, not its amount {txn.amount}",
             ),
             (
                 txn.cleared_at is not None,

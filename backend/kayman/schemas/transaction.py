@@ -22,6 +22,7 @@ class TransactionClearErrorType(enum.Enum):
     NOT_POSTED = "NOT_POSTED"
     NO_STATEMENT = "NO_STATEMENT"
     NO_EVENT = "NO_EVENT"
+    ALLOCATION_MISMATCH = "ALLOCATION_MISMATCH"
 
 
 class TransactionBase(SQLModel):
