@@ -12,12 +12,12 @@ from kayman.logics.account import update_balances_with_transactions
 from kayman.logics.event import validate_events_editable
 from kayman.logics.transaction import (
     update_transactions_with_balances,
-    validate_event_slots_free,
     validate_transactions_billable,
     validate_transactions_clearable,
     validate_transactions_editable,
     validate_transactions_postable,
 )
+from kayman.logics.transaction_event_link import validate_event_slots_free
 from kayman.schemas.transaction import (
     TransactionBase,
     TransactionBill,

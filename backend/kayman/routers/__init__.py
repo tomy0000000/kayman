@@ -11,6 +11,7 @@ from kayman.routers import (
     root,
     statement,
     transaction,
+    transaction_event_link,
     transaction_tag,
     tw_invoice,
 )
@@ -28,6 +29,7 @@ routers = [
     event_entry.event_entry_router,
     statement.statement_router,
     transaction.txn_router,
+    transaction_event_link.transaction_event_link_router,
     transaction_tag.transaction_tag_router,
     tw_invoice.invoice_router,
 ]
@@ -42,6 +44,7 @@ tags: list[dict[str, Any]] = [
     event_entry.tag,
     statement.tag,
     transaction.tag,
+    transaction_event_link.tag,
     transaction_tag.tag,
     tw_invoice.tag,
 ]

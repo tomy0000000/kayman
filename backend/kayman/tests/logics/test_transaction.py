@@ -13,7 +13,6 @@ from kayman.logics.transaction import (
     _require_transactions,
     get_transactions_with_running_balance,
     update_transactions_with_balances,
-    validate_event_slots_free,
     validate_transactions_billable,
     validate_transactions_clearable,
     validate_transactions_editable,
@@ -1023,12 +1022,6 @@ def test_validate_transactions_editable_allows_swap_within_batch(session: Sessio
     )
 
 
-def test_validate_event_slots_free_empty(session: Session):
-    TransactionEventLinkFactory(index=0)
-
-    assert validate_event_slots_free(session, []) is None
-
-
 def test_validate_transactions_editable_allows_unlink_and_shift(session: Session):
     event = EventFactory(cleared_at=None)
     txn_a = TransactionFactory(cleared_at=None, event=event, event_id=event.id, index=0)
@@ -1062,18 +1055,6 @@ def test_validate_transactions_editable_rejects_duplicate_targets(session: Sessi
                 TransactionUpdate(id=txn_c.id, event_id=event.id, index=0),
             ],
         )
-
-
-def test_validate_event_slots_free_locks_target_events(session: Session):
-    event = EventFactory()
-
-    with patch.object(session, "exec", wraps=session.exec) as mock_exec:
-        validate_event_slots_free(session, [(None, event.id, 0)])
-        statements = [str(call.args[0]) for call in mock_exec.call_args_list]
-
-    locking = [s for s in statements if "FROM event" in s and "FOR UPDATE" in s]
-    assert len(locking) == 1
-    assert "ORDER BY event.id" in locking[0]
 
 
 def test_validate_transactions_editable_target_event_link_is_own(session: Session):

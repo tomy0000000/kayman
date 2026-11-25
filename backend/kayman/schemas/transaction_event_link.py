@@ -38,6 +38,10 @@ class TransactionEventLinkCreate(TransactionEventLinkBase):
     pass
 
 
+class TransactionEventLinkRead(TransactionEventLinkBase):
+    id: int
+
+
 # A link never moves between transactions or events: delete and recreate it
 class TransactionEventLinkUpdate(SQLModel):
     id: int

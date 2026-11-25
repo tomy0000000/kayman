@@ -1,5 +1,5 @@
 from collections import Counter, defaultdict
-from collections.abc import Collection, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
 from typing import cast
@@ -7,11 +7,10 @@ from typing import cast
 from sqlmodel import Session
 
 from kayman.crud.account import read_account_balance, update_account_balances
-from kayman.crud.event import read_events
 from kayman.crud.statement import read_statements
 from kayman.crud.transaction import read_transactions, update_transactions
-from kayman.crud.transaction_event_link import read_transaction_event_links
 from kayman.logics.event import validate_events_editable
+from kayman.logics.transaction_event_link import validate_event_slots_free
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBill,
@@ -232,39 +231,6 @@ def validate_transactions_editable(
         | {event_id for _, event_id, _ in slots},
     )
     validate_event_slots_free(session, slots, vacating)
-
-
-def validate_event_slots_free(
-    session: Session,
-    slots: Sequence[tuple[int | None, int, int]],
-    vacating: Collection[tuple[int, int]] = (),
-) -> None:
-    """Raise if slots collide, or one lands on a link the write doesn't vacate."""
-    if not slots:
-        return
-    counts = Counter((event_id, index) for _, event_id, index in slots)
-    # Lock the events, in id order, so a concurrent write can't claim a slot found free
-    read_events(
-        session,
-        event_ids={event_id for event_id, _ in counts},
-        order_by="id",
-        for_update=True,
-    )
-    taken = {slot for slot, count in counts.items() if count > 1}
-    links = read_transaction_event_links(
-        session, event_ids={event_id for event_id, _ in counts}
-    )
-    taken |= {
-        (link.event_id, link.index)
-        for link in links
-        if (link.event_id, link.index) in counts
-        and (link.transaction_id, link.event_id) not in vacating
-    }
-    if taken:
-        positions = ", ".join(
-            f"{index} on event {event}" for event, index in sorted(taken)
-        )
-        raise ValueError(f"Event position(s) already taken: {positions}")
 
 
 def update_transactions_with_balances(
