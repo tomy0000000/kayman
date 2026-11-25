@@ -23,7 +23,7 @@ docker run \
     --name "${CONTAINER_NAME}" \
     --env-file "${ENV_FILE}" \
     -p 5432:5432 \
-    postgres:17
+    postgres:18
 
 # Wait until the db is ready before script terminate
 until docker exec "${CONTAINER_NAME}" pg_isready -U postgres >/dev/null 2>&1; do
