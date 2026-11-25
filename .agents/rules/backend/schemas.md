@@ -28,6 +28,8 @@ Use plain Python types and `Field(default=..., default_factory=...)`. For callab
 The SQLAlchemy table. Add here:
 
 - `id: int | None = Field(primary_key=True, default=None)`
+  - No table uses a composite primary key, link tables included. Give it this auto-increment `id` and enforce the column combination with a named `UniqueConstraint`.
+  - **Why:** a single `id` gives every row one handle for API paths, batch updates, and `read_*(ids=...)` helpers, the same as any other aggregate.
 - Relationships (`Relationship(...)`)
 - Server-derived columns excluded from `Base` (e.g. `Account.balance`)
 - `__table_args__` (constraints, indexes)
@@ -142,3 +144,5 @@ These predate the rule. New work should follow the rule above; touch these when 
 
 - `schemas/event_entry.py:12-21`: `EventEntryBase` includes server-derived `event_id` and `index`, and `EventEntryRead` redeclares the inherited `event_id`. Move both fields to the `EventEntry` table class.
 - `schemas/transaction.py:19-36`: `TransactionBase` declares `created_at`, `posted_at`, `cleared_at` with `sa_column=Column(...)`, and `TransactionRead` redeclares the inherited `created_at`. Move those `sa_column` overrides to the `Transaction` table class; keep `TransactionBase` data-only.
+- `schemas/transaction_tag.py`: `TransactionTagLink` uses the composite primary key `(transaction_id, transaction_tag_id)`. Give it an `id` and a unique constraint on the pair.
+- `schemas/tw_invoice.py:117-119`: `InvoiceDetail` uses the composite primary key `(invoice_number, row_number)`. Give it an `id` and a unique constraint on the pair.
