@@ -8,6 +8,7 @@ class Indexed(Protocol):
     # Any, not int | None: the attribute is read-write, so a Protocol declaring
     # int | None would reject EventEntry, whose index is a plain int.
     index: Any
+    event_id: Any
 
 
 def park_moving_indexes(
@@ -25,11 +26,13 @@ def park_moving_indexes(
     Nothing that can raise may run between this call and writing the real
     indexes, or a swallowed error strands rows here. Validate first, then park.
     """
-    moving = [
-        row
-        for row, data in zip(rows, updates, strict=True)
-        if "index" in data and data["index"] != row.index
-    ]
+    moving = []
+    for row, data in zip(rows, updates, strict=True):
+        # A row leaving its event vacates its slot too, even when its index stays
+        leaves = "event_id" in data and data["event_id"] != row.event_id
+        if leaves or ("index" in data and data["index"] != row.index):
+            data.setdefault("index", row.index)
+            moving.append(row)
     if not moving:
         return
 

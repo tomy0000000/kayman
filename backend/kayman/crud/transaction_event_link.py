@@ -29,11 +29,14 @@ def create_transaction_event_links(
 def read_transaction_event_links(
     session: Session,
     link_ids: Collection[int] | None = None,
+    event_ids: Collection[int] | None = None,
     for_update: bool = False,
 ) -> Sequence[TransactionEventLink]:
     scalar = select(TransactionEventLink)
     if link_ids:
         scalar = scalar.where(col(TransactionEventLink.id).in_(link_ids))
+    if event_ids:
+        scalar = scalar.where(col(TransactionEventLink.event_id).in_(event_ids))
     # Always id-ordered: callers pair the rows with id-sorted updates positionally
     scalar = scalar.order_by(col(TransactionEventLink.id))
     if for_update:

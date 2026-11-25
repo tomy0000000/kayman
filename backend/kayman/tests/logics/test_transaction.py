@@ -13,6 +13,7 @@ from kayman.logics.transaction import (
     _require_transactions,
     get_transactions_with_running_balance,
     update_transactions_with_balances,
+    validate_event_slots_free,
     validate_transactions_billable,
     validate_transactions_clearable,
     validate_transactions_editable,
@@ -955,3 +956,150 @@ def test_validate_transactions_editable_move_into_cleared_event(session: Session
         validate_transactions_editable(
             session, [TransactionUpdate(id=txn.id, event_id=target.id)]
         )
+
+
+@pytest.mark.parametrize(
+    "update", [{"event_id": None}, {"index": 3}], ids=["event_id", "index"]
+)
+def test_validate_transactions_editable_rejects_event_writes_on_split(
+    session: Session, update
+):
+    event = EventFactory(cleared_at=None)
+    txn = TransactionFactory(cleared_at=None, event=event, event_id=event.id, index=0)
+    TransactionEventLinkFactory(transaction=txn, event=EventFactory(cleared_at=None))
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Transaction id(s) linked to several events: {{{txn.id}}}"),
+    ):
+        validate_transactions_editable(
+            session, [TransactionUpdate(id=txn.id, **update)]
+        )
+
+
+def test_validate_transactions_editable_allows_other_writes_on_split(
+    session: Session,
+):
+    event = EventFactory(cleared_at=None)
+    txn = TransactionFactory(cleared_at=None, event=event, event_id=event.id, index=0)
+    TransactionEventLinkFactory(transaction=txn, event=EventFactory(cleared_at=None))
+
+    assert (
+        validate_transactions_editable(
+            session, [TransactionUpdate(id=txn.id, description="edited")]
+        )
+        is None
+    )
+
+
+def test_validate_transactions_editable_rejects_taken_position(session: Session):
+    event = EventFactory(cleared_at=None)
+    TransactionEventLinkFactory(event=event, index=2)
+    txn = TransactionFactory(cleared_at=None, event=None, event_id=None, index=None)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Event position(s) already taken: 2 on event {event.id}"),
+    ):
+        validate_transactions_editable(
+            session, [TransactionUpdate(id=txn.id, event_id=event.id, index=2)]
+        )
+
+
+def test_validate_transactions_editable_allows_swap_within_batch(session: Session):
+    event = EventFactory(cleared_at=None)
+    txn_1 = TransactionFactory(cleared_at=None, event=event, event_id=event.id, index=0)
+    txn_2 = TransactionFactory(cleared_at=None, event=event, event_id=event.id, index=1)
+
+    assert (
+        validate_transactions_editable(
+            session,
+            [
+                TransactionUpdate(id=txn_1.id, index=1),
+                TransactionUpdate(id=txn_2.id, index=0),
+            ],
+        )
+        is None
+    )
+
+
+def test_validate_event_slots_free_empty(session: Session):
+    TransactionEventLinkFactory(index=0)
+
+    assert validate_event_slots_free(session, []) is None
+
+
+def test_validate_transactions_editable_allows_unlink_and_shift(session: Session):
+    event = EventFactory(cleared_at=None)
+    txn_a = TransactionFactory(cleared_at=None, event=event, event_id=event.id, index=0)
+    txn_b = TransactionFactory(cleared_at=None, event=event, event_id=event.id, index=1)
+
+    assert (
+        validate_transactions_editable(
+            session,
+            [
+                TransactionUpdate(id=txn_b.id, event_id=event.id, index=0),
+                TransactionUpdate(id=txn_a.id, event_id=None),
+            ],
+        )
+        is None
+    )
+
+
+def test_validate_transactions_editable_rejects_duplicate_targets(session: Session):
+    event = EventFactory(cleared_at=None)
+    txn_a = TransactionFactory(cleared_at=None, event=event, event_id=event.id, index=0)
+    txn_c = TransactionFactory(cleared_at=None, event=None, event_id=None, index=None)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Event position(s) already taken: 0 on event {event.id}"),
+    ):
+        validate_transactions_editable(
+            session,
+            [
+                TransactionUpdate(id=txn_a.id, event_id=event.id, index=0),
+                TransactionUpdate(id=txn_c.id, event_id=event.id, index=0),
+            ],
+        )
+
+
+def test_validate_event_slots_free_locks_target_events(session: Session):
+    event = EventFactory()
+
+    with patch.object(session, "exec", wraps=session.exec) as mock_exec:
+        validate_event_slots_free(session, [(None, event.id, 0)])
+        statements = [str(call.args[0]) for call in mock_exec.call_args_list]
+
+    locking = [s for s in statements if "FROM event" in s and "FOR UPDATE" in s]
+    assert len(locking) == 1
+    assert "ORDER BY event.id" in locking[0]
+
+
+def test_validate_transactions_editable_target_event_link_is_own(session: Session):
+    event = EventFactory(cleared_at=None)
+    link = TransactionEventLinkFactory(event=event, index=3)
+    link.transaction.cleared_at = None
+    session.add(link.transaction)
+    session.commit()
+
+    assert (
+        validate_transactions_editable(
+            session,
+            [TransactionUpdate(id=link.transaction_id, event_id=event.id, index=3)],
+        )
+        is None
+    )
+
+
+def test_validate_transactions_editable_locks_events_in_id_order(session: Session):
+    event = EventFactory(cleared_at=None)
+    txn = TransactionFactory(cleared_at=None, event=event, event_id=event.id, index=0)
+
+    with patch.object(session, "exec", wraps=session.exec) as mock_exec:
+        validate_transactions_editable(session, [TransactionUpdate(id=txn.id, index=1)])
+        statements = [str(call.args[0]) for call in mock_exec.call_args_list]
+
+    locking = [s for s in statements if "FROM event" in s and "FOR UPDATE" in s]
+    assert len(locking) == 2
+    assert all("ORDER BY event.id" in s for s in locking)

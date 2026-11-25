@@ -12,6 +12,7 @@ from kayman.logics.account import update_balances_with_transactions
 from kayman.logics.event import validate_events_editable
 from kayman.logics.transaction import (
     update_transactions_with_balances,
+    validate_event_slots_free,
     validate_transactions_billable,
     validate_transactions_clearable,
     validate_transactions_editable,
@@ -48,7 +49,7 @@ txn_router = APIRouter(
     "",
     name="Create Transaction",
     response_model=TransactionRead,
-    responses={409: {"description": "Event is cleared"}},
+    responses={409: {"description": "Event is cleared or the position is taken"}},
 )
 def create(
     *, session: Session = Depends(get_session), transaction: TransactionCreate
@@ -56,6 +57,10 @@ def create(
     if transaction.event_id is not None:
         try:
             validate_events_editable(session, [transaction.event_id])
+            if transaction.index is not None:
+                validate_event_slots_free(
+                    session, [(None, transaction.event_id, transaction.index)]
+                )
         except ValueError as err:
             raise HTTPException(status_code=409, detail=err.args[0]) from err
     try:
@@ -208,7 +213,14 @@ def clears(
     "",
     name="Update Transactions",
     response_model=list[TransactionRead],
-    responses={409: {"description": "Transaction or event is cleared"}},
+    responses={
+        409: {
+            "description": (
+                "Transaction or event is cleared, the transaction is split, or "
+                "the position is taken"
+            )
+        }
+    },
 )
 def updates(
     *,

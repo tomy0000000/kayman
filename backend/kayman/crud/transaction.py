@@ -1,6 +1,7 @@
 from collections.abc import Collection, Sequence
 from datetime import datetime
-from typing import Literal, cast
+from decimal import Decimal
+from typing import Any, Literal, cast
 
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, col, func, select
@@ -46,7 +47,12 @@ def create_transactions(
             db_txn.tags = _resolve_tags(session, tag_ids)
     session.add_all(db_txns)
     session.flush()
-    _sync_event_links(session, db_txns)
+    _sync_event_links(
+        session,
+        db_txns,
+        [{"event_id": db_txn.event_id, "index": db_txn.index} for db_txn in db_txns],
+        [(None, db_txn.amount) for db_txn in db_txns],
+    )
     if commit:
         session.commit()
         for db_txn in db_txns:
@@ -144,6 +150,8 @@ def update_transactions(
         if filled != index:
             data["index"] = filled
 
+    previous = [(db_txn.event_id, db_txn.amount) for db_txn in previous_txns]
+
     park_moving_indexes(session, previous_txns, txn_data)
 
     for db_txn, data, tags in zip(previous_txns, txn_data, resolved_tags, strict=True):
@@ -153,7 +161,7 @@ def update_transactions(
 
     session.add_all(previous_txns)
     session.flush()
-    _sync_event_links(session, previous_txns)
+    _sync_event_links(session, previous_txns, txn_data, previous)
     if commit:
         session.commit()
         for db_txn in previous_txns:
@@ -184,15 +192,23 @@ def _fill_missing_indexes(
     if not pending:
         return [index for _, index in slots]
 
-    taken = session.exec(
-        select(Transaction.event_id, func.max(Transaction.index))
-        .where(col(Transaction.event_id).in_(pending))
-        .group_by(col(Transaction.event_id))
-    ).all()
+    # Links made through the link endpoints hold positions no transaction mirrors
+    taken = [
+        *session.exec(
+            select(Transaction.event_id, func.max(Transaction.index))
+            .where(col(Transaction.event_id).in_(pending))
+            .group_by(col(Transaction.event_id))
+        ).all(),
+        *session.exec(
+            select(TransactionEventLink.event_id, func.max(TransactionEventLink.index))
+            .where(col(TransactionEventLink.event_id).in_(pending))
+            .group_by(col(TransactionEventLink.event_id))
+        ).all(),
+    ]
     next_free = dict.fromkeys(pending, 0)
     for event_id, max_index in taken:
         if event_id is not None and max_index is not None:
-            next_free[event_id] = max_index + 1
+            next_free[event_id] = max(next_free[event_id], max_index + 1)
     for event_id, index in slots:
         if event_id in pending and index is not None:
             next_free[event_id] = max(next_free[event_id], index + 1)
@@ -206,32 +222,54 @@ def _fill_missing_indexes(
     return filled
 
 
-def _sync_event_links(session: Session, txns: Sequence[Transaction]) -> None:
-    """Shim: mirror each transaction's event_id, index and amount onto one link."""
+def _sync_event_links(
+    session: Session,
+    txns: Sequence[Transaction],
+    written: Sequence[dict[str, Any]],
+    previous: Sequence[tuple[int | None, Decimal]],
+) -> None:
+    """Shim: carry event_id/index writes onto the link for transaction.event_id."""
     stale: list[TransactionEventLink] = []
     moving: list[TransactionEventLink] = []
     updates: list[TransactionEventLinkUpdate] = []
     new: list[TransactionEventLinkCreate] = []
-    for txn in txns:
-        stale += [link for link in txn.event_links if link.event_id != txn.event_id]
+    for txn, data, (old_event_id, old_amount) in zip(
+        txns, written, previous, strict=True
+    ):
+        links = {link.event_id: link for link in txn.event_links}
+        moved_amount = txn.amount
+        if old_event_id != txn.event_id and old_event_id in links:
+            stale.append(links.pop(old_event_id))
+            # A moved share keeps its amount, unless it was the whole transaction
+            if links or stale[-1].amount != old_amount:
+                moved_amount = stale[-1].amount
         if txn.event_id is None:
             continue
+
         index = cast(int, txn.index)
-        current = [link for link in txn.event_links if link.event_id == txn.event_id]
-        if not current:
-            new.append(
-                TransactionEventLinkCreate(
-                    transaction_id=cast(int, txn.id),
-                    event_id=txn.event_id,
-                    amount=txn.amount,
-                    index=index,
+        touched = "event_id" in data or "index" in data
+        link = links.get(txn.event_id)
+        if link is None:
+            if touched:
+                new.append(
+                    TransactionEventLinkCreate(
+                        transaction_id=cast(int, txn.id),
+                        event_id=txn.event_id,
+                        amount=moved_amount,
+                        index=index,
+                    )
                 )
-            )
-        elif (current[0].index, current[0].amount) != (index, txn.amount):
-            moving.append(current[0])
+            continue
+
+        # The amount follows only an unsplit link that held the whole amount
+        follows = len(links) == 1 and link.amount == old_amount
+        amount = txn.amount if follows else link.amount
+        target = index if touched else link.index
+        if (link.index, link.amount) != (target, amount):
+            moving.append(link)
             updates.append(
                 TransactionEventLinkUpdate(
-                    id=cast(int, current[0].id), amount=txn.amount, index=index
+                    id=cast(int, link.id), amount=amount, index=target
                 )
             )
 

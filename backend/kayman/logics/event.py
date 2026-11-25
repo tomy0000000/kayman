@@ -147,7 +147,9 @@ def validate_events_editable(session: Session, event_ids: Collection[int]) -> No
     # Must precede the read: read_events treats an empty id list as "all"
     if not event_ids:
         return
-    events = read_events(session, event_ids=set(event_ids), for_update=True)
+    events = read_events(
+        session, event_ids=set(event_ids), order_by="id", for_update=True
+    )
     cleared = {cast(int, event.id) for event in events if event.cleared_at is not None}
     if cleared:
         raise ValueError(f"Event id(s) already cleared: {format_ids(cleared)}")

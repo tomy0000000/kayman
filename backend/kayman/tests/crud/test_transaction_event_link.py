@@ -155,6 +155,17 @@ def test_read_transaction_event_links_by_ids(session: Session):
     assert [db_link.id for db_link in db_links] == [links[0].id, links[2].id]
 
 
+def test_read_transaction_event_links_by_event_ids(session: Session):
+    links = TransactionEventLinkFactory.create_batch(3)
+
+    db_links = read_transaction_event_links(
+        session, event_ids=[links[1].event_id, links[2].event_id]
+    )
+
+    assert len(db_links) == 2
+    assert [db_link.id for db_link in db_links] == [links[1].id, links[2].id]
+
+
 def test_read_transaction_event_links_unknown_id(session: Session):
     TransactionEventLinkFactory()
 

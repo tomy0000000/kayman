@@ -887,20 +887,142 @@ def test_update_transactions_syncs_link_amount_and_index(session: Session):
     assert [link.amount for link in links] == [Decimal("9.00"), Decimal("1.00")]
 
 
-def test_update_transactions_creates_missing_link(session: Session):
+@pytest.mark.parametrize(
+    ("update", "expected_links"),
+    [({"description": "Renamed"}, 0), ({"index": 3}, 1)],
+    ids=["unrelated_edit", "index_write"],
+)
+def test_update_transactions_creates_missing_link_only_on_event_writes(
+    session: Session, update, expected_links
+):
     event = EventFactory()
     txn = TransactionFactory(event=event, event_id=event.id, index=2)
+    session.delete(session.exec(select(TransactionEventLink)).one())
+    session.commit()
+
+    update_transactions(session, [txn], [TransactionUpdate(id=txn.id, **update)])
+
+    links = session.exec(select(TransactionEventLink)).all()
+    assert len(links) == expected_links
+    for link in links:
+        assert link.event_id == event.id
+        assert link.amount == txn.amount
+        assert link.index == 3
+
+
+def test_update_transactions_keeps_split_on_unrelated_edit_and_amount(
+    session: Session,
+):
+    event_1 = EventFactory()
+    event_2 = EventFactory()
+    txn = TransactionFactory(
+        event=event_1, event_id=event_1.id, index=0, amount=Decimal("-100.00")
+    )
+    primary = session.exec(select(TransactionEventLink)).one()
+    primary.amount = Decimal("-60.00")
+    session.add(primary)
+    session.commit()
+    TransactionEventLinkFactory(
+        transaction=txn, event=event_2, amount=Decimal("-40.00"), index=0
+    )
 
     update_transactions(
-        session, [txn], [TransactionUpdate(id=txn.id, description="Backfilled")]
+        session,
+        [txn],
+        [
+            TransactionUpdate(
+                id=txn.id, description="Renamed", amount=Decimal("-120.00")
+            )
+        ],
+    )
+
+    links = session.exec(
+        select(TransactionEventLink).order_by(col(TransactionEventLink.id))
+    ).all()
+    assert len(links) == 2
+    assert [link.event_id for link in links] == [event_1.id, event_2.id]
+    assert [link.amount for link in links] == [Decimal("-60.00"), Decimal("-40.00")]
+
+
+def test_update_transactions_moving_event_keeps_other_links(session: Session):
+    event_1 = EventFactory()
+    event_2 = EventFactory()
+    event_3 = EventFactory()
+    txn = TransactionFactory(
+        event=event_1, event_id=event_1.id, index=0, amount=Decimal("-100.00")
+    )
+    primary = session.exec(select(TransactionEventLink)).one()
+    primary.amount = Decimal("-60.00")
+    session.add(primary)
+    session.commit()
+    TransactionEventLinkFactory(
+        transaction=txn, event=event_2, amount=Decimal("-40.00"), index=0
+    )
+
+    update_transactions(
+        session, [txn], [TransactionUpdate(id=txn.id, event_id=event_3.id)]
+    )
+
+    links = session.exec(
+        select(TransactionEventLink).order_by(col(TransactionEventLink.event_id))
+    ).all()
+    assert len(links) == 2
+    assert [link.event_id for link in links] == [event_2.id, event_3.id]
+    assert [link.amount for link in links] == [Decimal("-40.00"), Decimal("-60.00")]
+
+
+def test_update_transactions_moving_unsplit_takes_new_amount(session: Session):
+    event_1 = EventFactory()
+    event_2 = EventFactory()
+    txn = TransactionFactory(
+        event=event_1, event_id=event_1.id, index=0, amount=Decimal("-100.00")
+    )
+
+    update_transactions(
+        session,
+        [txn],
+        [TransactionUpdate(id=txn.id, event_id=event_2.id, amount=Decimal("-120.00"))],
     )
 
     links = session.exec(select(TransactionEventLink)).all()
     assert len(links) == 1
-    assert links[0].transaction_id == txn.id
-    assert links[0].event_id == event.id
-    assert links[0].amount == txn.amount
-    assert links[0].index == 2
+    assert links[0].event_id == event_2.id
+    assert links[0].amount == Decimal("-120.00")
+
+
+def test_update_transactions_amount_skips_partial_link(session: Session):
+    event = EventFactory()
+    txn = TransactionFactory(
+        event=event, event_id=event.id, index=0, amount=Decimal("-100.00")
+    )
+    link = session.exec(select(TransactionEventLink)).one()
+    link.amount = Decimal("-60.00")
+    session.add(link)
+    session.commit()
+
+    update_transactions(
+        session, [txn], [TransactionUpdate(id=txn.id, amount=Decimal("-120.00"))]
+    )
+
+    links = session.exec(select(TransactionEventLink)).all()
+    assert len(links) == 1
+    assert links[0].amount == Decimal("-60.00")
+
+
+def test_create_transactions_fill_skips_link_only_indexes(session: Session):
+    account = AccountFactory()
+    link = TransactionEventLinkFactory(index=5)
+
+    db_txn = create_transactions(
+        session,
+        [
+            TransactionCreate(
+                account_id=account.id, amount=Decimal("1.00"), event_id=link.event_id
+            )
+        ],
+    )[0]
+
+    assert db_txn.index == 6
 
 
 def test_update_transactions_leaves_matching_link_alone(session: Session):
@@ -1009,3 +1131,29 @@ def test_update_transactions_twice_after_uncommitted_unlink(session: Session):
 
     links = session.exec(select(TransactionEventLink)).all()
     assert len(links) == 0
+
+
+@pytest.mark.parametrize(
+    "departure", [{"event_id": None}, {"event_id": "other"}], ids=["unlink", "move"]
+)
+def test_update_transactions_shift_into_departing_slot(session: Session, departure):
+    event = EventFactory()
+    other = EventFactory()
+    # The shifting leg gets the lower id, so its UPDATE is written first
+    shifting = TransactionFactory(event=event, event_id=event.id, index=1)
+    departing = TransactionFactory(event=event, event_id=event.id, index=0)
+    if departure["event_id"] == "other":
+        departure = {"event_id": other.id}
+
+    update_transactions(
+        session,
+        [shifting, departing],
+        [
+            TransactionUpdate(id=shifting.id, index=0),
+            TransactionUpdate(id=departing.id, **departure),
+        ],
+    )
+
+    assert shifting.index == 0
+    assert departing.event_id == departure["event_id"]
+    assert departing.index == 0
