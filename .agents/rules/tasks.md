@@ -75,6 +75,16 @@ All tasks available in this repo are listed below, all managed by `mise`. Run an
 | `preview:frontend` | Preview production build locally                            | Depends on `build:frontend`, then `vite preview`.          |
 | `preview:docker`   | Preview docker run by connecting to the development environment | Runs the image with `instance/development.env` on `:8000`. |
 
+## Release
+
+Hidden from `mise tasks ls` (`#MISE hide=true`). The release workflow calls them by path. Don't run them locally.
+
+| Task                   | Description                                        | Usage / Notes                                                                 |
+| ---------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `release:next-version` | Print the next release version and commit          | `[version]` overrides the minor bump. Prints nothing when there is nothing to release. |
+| `release:draft`        | Replace old draft releases with a new draft        | `<version> <sha> <notes-file>`.                                               |
+| `release:bump`         | Commit the version bump and fast-forward `main`    | `<version> <sha>`. Refuses if `develop` moved past `<sha>`.                   |
+
 ## Other
 
 | Task              | Description                                                             | Notes                                                                                                 |
