@@ -9,8 +9,6 @@ from sqlmodel import Session
 from kayman.crud.account import read_account_balance, update_account_balances
 from kayman.crud.statement import read_statements
 from kayman.crud.transaction import read_transactions, update_transactions
-from kayman.logics.event import validate_events_editable
-from kayman.logics.transaction_event_link import validate_event_slots_free
 from kayman.schemas.transaction import (
     Transaction,
     TransactionBill,
@@ -190,7 +188,7 @@ def validate_transactions_billable(
 def validate_transactions_editable(
     session: Session, updates: Sequence[TransactionUpdate]
 ) -> None:
-    """Raise if a transaction is cleared, or would move into a cleared event."""
+    """Raise if a transaction is cleared."""
     # Must precede the read: read_transactions treats an empty id list as "all"
     if not updates:
         return
@@ -200,37 +198,6 @@ def validate_transactions_editable(
     cleared = {cast(int, txn.id) for txn in txns if txn.cleared_at is not None}
     if cleared:
         raise ValueError(f"Transaction id(s) already cleared: {format_ids(cleared)}")
-    # event_id and index name one event, so they can't address a split's links
-    by_id = {cast(int, txn.id): txn for txn in txns}
-    event_writes = [
-        update for update in updates if {"event_id", "index"} & update.model_fields_set
-    ]
-    split = {
-        update.id for update in event_writes if len(by_id[update.id].event_links) > 1
-    }
-    if split:
-        raise ValueError(
-            f"Transaction id(s) linked to several events: {format_ids(split)}. "
-            "Edit their event links instead."
-        )
-    slots = []
-    vacating = set()
-    for update in event_writes:
-        txn = by_id[update.id]
-        fields = update.model_fields_set
-        event_id = update.event_id if "event_id" in fields else txn.event_id
-        index = update.index if "index" in fields else txn.index
-        # The write rewrites both the FK event's link and the target event's link
-        vacating |= {(update.id, e) for e in (txn.event_id, event_id) if e is not None}
-        if event_id is not None and index is not None:
-            slots.append((update.id, event_id, index))
-    # One lock statement, in id order, for every event this write touches
-    validate_events_editable(
-        session,
-        {update.event_id for update in updates if update.event_id is not None}
-        | {event_id for _, event_id, _ in slots},
-    )
-    validate_event_slots_free(session, slots, vacating)
 
 
 def update_transactions_with_balances(

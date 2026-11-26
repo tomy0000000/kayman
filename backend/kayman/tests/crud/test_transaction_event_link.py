@@ -58,7 +58,7 @@ def test_create_transaction_event_links_empty(session: Session):
 
 def test_create_transaction_event_links_no_commit(session: Session, session_2: Session):
     event = EventFactory()
-    transaction = TransactionFactory(event=None, event_id=None, index=None)
+    transaction = TransactionFactory(event=None)
     link = TransactionEventLinkCreate(
         transaction_id=transaction.id,
         event_id=event.id,
@@ -97,9 +97,7 @@ def test_create_transaction_event_links_duplicate(
 ):
     existing = TransactionEventLinkFactory(index=0)
     transaction = (
-        TransactionFactory(event=None, event_id=None, index=None)
-        if other_transaction
-        else existing.transaction
+        TransactionFactory(event=None) if other_transaction else existing.transaction
     )
     link = TransactionEventLinkCreate(
         transaction_id=transaction.id,
@@ -119,7 +117,7 @@ def test_create_transaction_event_links_duplicate(
 )
 def test_create_transaction_event_links_fk_not_found(session: Session, missing_field):
     event = EventFactory()
-    transaction = TransactionFactory(event=None, event_id=None, index=None)
+    transaction = TransactionFactory(event=None)
     data = {
         "transaction_id": transaction.id,
         "event_id": event.id,

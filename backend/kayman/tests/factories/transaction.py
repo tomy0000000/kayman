@@ -1,8 +1,7 @@
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
-from sqlmodel import Session
 
-from kayman.schemas import Transaction, TransactionEventLink
+from kayman.schemas import Transaction
 
 
 class TransactionFactory(SQLAlchemyModelFactory):
@@ -14,25 +13,22 @@ class TransactionFactory(SQLAlchemyModelFactory):
     account_id = factory.SelfAttribute("account.id")
     amount = factory.Faker("pydecimal", left_digits=4, right_digits=2)
     description = factory.Faker("sentence")
-    index = factory.Sequence(lambda n: n)
-    event = factory.SubFactory("kayman.tests.factories.event.EventFactory")
-    event_id = factory.SelfAttribute("event.id")
     created_at = factory.Faker("date_time")
     posted_at = factory.Faker("date_time")
     cleared_at = factory.Faker("date_time")
 
-    # Mirror create_transactions: a leg on an event with a position carries its link
-    @factory.post_generation
-    def event_link(obj, create, extracted, **kwargs):
-        if not create or obj.event_id is None or obj.index is None:
-            return
-        session = Session.object_session(obj)
-        session.add(
-            TransactionEventLink(
-                transaction_id=obj.id,
-                event_id=obj.event_id,
-                amount=obj.amount,
-                index=obj.index,
-            )
-        )
-        session.commit()
+    class Params:
+        event = factory.SubFactory("kayman.tests.factories.event.EventFactory")
+        index = factory.Sequence(lambda n: n)
+
+    # A transaction built with an event carries the link for it
+    event_link = factory.Maybe(
+        "event",
+        factory.RelatedFactory(
+            "kayman.tests.factories.transaction_event_link.TransactionEventLinkFactory",
+            factory_related_name="transaction",
+            event=factory.SelfAttribute("..event"),
+            amount=factory.SelfAttribute("..amount"),
+            index=factory.SelfAttribute("..index"),
+        ),
+    )

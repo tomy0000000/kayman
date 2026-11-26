@@ -271,7 +271,6 @@ function AccountTransactionPage() {
             amount,
             created_at,
             currency_code: account?.currency_code ?? '',
-            event: null,
             event_links: predictTransactionLinks(
               links,
               PLACEHOLDER_ID,

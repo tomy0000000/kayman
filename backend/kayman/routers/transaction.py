@@ -9,7 +9,6 @@ from kayman.auth import get_client
 from kayman.core.db import get_session
 from kayman.crud.transaction import create_transactions, read_transactions
 from kayman.logics.account import update_balances_with_transactions
-from kayman.logics.event import validate_events_editable
 from kayman.logics.transaction import (
     update_transactions_with_balances,
     validate_transactions_billable,
@@ -17,7 +16,6 @@ from kayman.logics.transaction import (
     validate_transactions_editable,
     validate_transactions_postable,
 )
-from kayman.logics.transaction_event_link import validate_event_slots_free
 from kayman.schemas.transaction import (
     TransactionBase,
     TransactionBill,
@@ -49,20 +47,10 @@ txn_router = APIRouter(
     "",
     name="Create Transaction",
     response_model=TransactionRead,
-    responses={409: {"description": "Event is cleared or the position is taken"}},
 )
 def create(
     *, session: Session = Depends(get_session), transaction: TransactionCreate
 ) -> TransactionBase:
-    if transaction.event_id is not None:
-        try:
-            validate_events_editable(session, [transaction.event_id])
-            if transaction.index is not None:
-                validate_event_slots_free(
-                    session, [(None, transaction.event_id, transaction.index)]
-                )
-        except ValueError as err:
-            raise HTTPException(status_code=409, detail=err.args[0]) from err
     try:
         db_txns = create_transactions(session, [transaction], commit=False)
     except ValueError as err:
@@ -213,14 +201,7 @@ def clears(
     "",
     name="Update Transactions",
     response_model=list[TransactionRead],
-    responses={
-        409: {
-            "description": (
-                "Transaction or event is cleared, the transaction is split, or "
-                "the position is taken"
-            )
-        }
-    },
+    responses={409: {"description": "Transaction is cleared"}},
 )
 def updates(
     *,

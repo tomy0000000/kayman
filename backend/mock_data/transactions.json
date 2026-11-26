@@ -45,9 +45,7 @@
     "cleared_at": "2026-02-09T10:00:00-05:00",
     "created_at": "2026-02-06T10:00:00-05:00",
     "description": "[cleared] February rent",
-    "event_id": 1,
     "id": 5,
-    "index": 0,
     "posted_at": "2026-02-07T10:00:00-05:00",
     "statement_id": 3
   },
@@ -76,9 +74,7 @@
     "cleared_at": "2026-02-11T12:30:00+08:00",
     "created_at": "2026-02-08T12:30:00+08:00",
     "description": "Lunch at the noodle place",
-    "event_id": 6,
     "id": 8,
-    "index": 0,
     "posted_at": "2026-02-09T12:30:00+08:00"
   },
   {
@@ -96,9 +92,7 @@
     "cleared_at": "2026-02-14T18:00:00+08:00",
     "created_at": "2026-02-11T18:00:00+08:00",
     "description": "Weekly groceries",
-    "event_id": 7,
     "id": 10,
-    "index": 0,
     "posted_at": "2026-02-12T18:00:00+08:00"
   },
   {
@@ -107,9 +101,7 @@
     "cleared_at": "2026-02-16T19:30:00+08:00",
     "created_at": "2026-02-13T19:30:00+08:00",
     "description": "[cleared] Dinner with friends",
-    "event_id": 2,
     "id": 11,
-    "index": 0,
     "posted_at": "2026-02-14T19:30:00+08:00",
     "statement_id": 2
   },
@@ -129,9 +121,7 @@
     "cleared_at": "2026-02-18T15:00:00+08:00",
     "created_at": "2026-02-15T15:00:00+08:00",
     "description": "AirPods Pro",
-    "event_id": 3,
     "id": 13,
-    "index": 0,
     "posted_at": "2026-02-16T15:00:00+08:00"
   },
   {
@@ -150,9 +140,7 @@
     "cleared_at": "2026-02-23T10:00:00-05:00",
     "created_at": "2026-02-20T10:00:00-05:00",
     "description": "[cleared] Apple One annual",
-    "event_id": 4,
     "id": 15,
-    "index": 0,
     "posted_at": "2026-02-21T10:00:00-05:00",
     "statement_id": 4
   },
@@ -171,9 +159,7 @@
     "cleared_at": null,
     "created_at": "2026-02-27T09:00:00-08:00",
     "description": "[posted] Specialty coffee",
-    "event_id": 5,
     "id": 17,
-    "index": 0,
     "posted_at": "2026-02-28T09:00:00-08:00"
   },
   {
@@ -182,9 +168,7 @@
     "cleared_at": "2026-02-14T18:00:00+08:00",
     "created_at": "2026-02-11T18:00:00+08:00",
     "description": "[cleared] Weekly groceries",
-    "event_id": 7,
     "id": 18,
-    "index": 1,
     "posted_at": "2026-02-12T18:00:00+08:00",
     "statement_id": 2
   },
@@ -194,9 +178,7 @@
     "cleared_at": "2026-02-24T09:00:00-08:00",
     "created_at": "2026-02-22T09:00:00-08:00",
     "description": "Clipper card load",
-    "event_id": 8,
     "id": 19,
-    "index": 0,
     "posted_at": "2026-02-23T09:00:00-08:00"
   },
   {
@@ -205,9 +187,7 @@
     "cleared_at": "2026-02-24T09:00:00-08:00",
     "created_at": "2026-02-22T09:00:00-08:00",
     "description": "Clipper card ($5 value + $3 fee)",
-    "event_id": 8,
     "id": 20,
-    "index": 1,
     "posted_at": "2026-02-23T09:00:00-08:00"
   },
   {
@@ -216,9 +196,7 @@
     "cleared_at": null,
     "created_at": "2026-02-25T10:00:00-05:00",
     "description": "[posted] Payroll deposit (salary + bonus)",
-    "event_id": 12,
     "id": 21,
-    "index": 0,
     "posted_at": "2026-02-26T10:00:00-05:00"
   },
   {
@@ -227,9 +205,7 @@
     "cleared_at": null,
     "created_at": "2026-02-25T10:00:00-05:00",
     "description": "[posted] Expense reimbursement",
-    "event_id": 12,
     "id": 22,
-    "index": 1,
     "posted_at": "2026-02-26T10:00:00-05:00"
   },
   {
@@ -238,9 +214,7 @@
     "cleared_at": null,
     "created_at": "2026-02-27T10:00:00-05:00",
     "description": "[posted] Payment to Amex Gold",
-    "event_id": 13,
     "id": 23,
-    "index": 0,
     "posted_at": "2026-02-28T10:00:00-05:00"
   },
   {
@@ -249,9 +223,7 @@
     "cleared_at": null,
     "created_at": "2026-02-27T10:00:00-05:00",
     "description": "[pending] Card payment received",
-    "event_id": 13,
     "id": 24,
-    "index": 1,
     "posted_at": null
   },
   {
@@ -260,9 +232,7 @@
     "cleared_at": null,
     "created_at": "2026-02-24T14:00:00+08:00",
     "description": "[posted] TWD sold",
-    "event_id": 14,
     "id": 25,
-    "index": 0,
     "posted_at": "2026-02-25T14:00:00+08:00"
   },
   {
@@ -271,9 +241,7 @@
     "cleared_at": null,
     "created_at": "2026-02-24T14:00:00+08:00",
     "description": "[posted] USD bought",
-    "event_id": 14,
     "id": 26,
-    "index": 1,
     "posted_at": "2026-02-25T14:00:00+08:00"
   },
   {
@@ -318,9 +286,7 @@
     "cleared_at": "2026-02-22T19:00:00-05:00",
     "created_at": "2026-02-10T19:00:00-05:00",
     "description": "[cleared] Dinner at the steakhouse",
-    "event_id": 17,
     "id": 31,
-    "index": 0,
     "posted_at": "2026-02-11T19:00:00-05:00",
     "statement_id": 4
   },
@@ -330,9 +296,7 @@
     "cleared_at": null,
     "created_at": "2026-02-17T19:00:00+08:00",
     "description": "[posted] Night market snacks",
-    "event_id": 18,
     "id": 32,
-    "index": 0,
     "posted_at": "2026-02-18T19:00:00+08:00"
   },
   {
@@ -350,9 +314,7 @@
     "cleared_at": null,
     "created_at": "2026-02-12T13:00:00+08:00",
     "description": "[billed, clearable] Hot pot lunch",
-    "event_id": 19,
     "id": 34,
-    "index": 0,
     "posted_at": "2026-02-13T13:00:00+08:00",
     "statement_id": 2
   },

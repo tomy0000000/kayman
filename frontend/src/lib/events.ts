@@ -313,8 +313,6 @@ export function predictEvent(
         currency_code:
           accounts.find(({ id }) => id === payload.account_id)?.currency_code ??
           '',
-        event: null,
-        event_id: null,
         event_links: [],
         status: 'PENDING' as const
       }),

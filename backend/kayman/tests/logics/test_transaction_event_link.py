@@ -14,7 +14,6 @@ from kayman.logics.transaction_event_link import (
     validate_transaction_event_links_creatable,
     validate_transaction_event_links_editable,
 )
-from kayman.schemas.transaction import Transaction
 from kayman.schemas.transaction_event_link import (
     TransactionEventLink,
     TransactionEventLinkCreate,
@@ -28,7 +27,7 @@ from kayman.tests.factories import (
 
 
 def test_require_link_targets_passes(session: Session):
-    txn = TransactionFactory(event=None, event_id=None, index=None)
+    txn = TransactionFactory(event=None)
     event = EventFactory()
 
     assert (
@@ -53,7 +52,7 @@ def test_require_link_targets_empty(session: Session):
 
 @pytest.mark.parametrize("missing", ["transaction_id", "event_id"])
 def test_require_link_targets_missing(session: Session, missing: str):
-    txn = TransactionFactory(event=None, event_id=None, index=None)
+    txn = TransactionFactory(event=None)
     event = EventFactory()
     ids = {"transaction_id": txn.id, "event_id": event.id, missing: 999999}
 
@@ -68,7 +67,7 @@ def test_validate_transaction_event_links_creatable_passes(session: Session):
     event = EventFactory(cleared_at=None)
     other_event = EventFactory(cleared_at=None)
     TransactionEventLinkFactory(event=event, index=0)
-    txn = TransactionFactory(cleared_at=None, event=None, event_id=None, index=None)
+    txn = TransactionFactory(cleared_at=None, event=None)
 
     # One transaction across two events, next to an existing leg
     assert (
@@ -104,7 +103,7 @@ def test_validate_transaction_event_links_creatable_duplicate_in_batch(
     session: Session,
 ):
     event = EventFactory(cleared_at=None)
-    txn = TransactionFactory(cleared_at=None, event=None, event_id=None, index=None)
+    txn = TransactionFactory(cleared_at=None, event=None)
 
     # Distinct indexes: only the repeated pair can trip the check
     with pytest.raises(ValueError):
@@ -152,7 +151,7 @@ def test_validate_transaction_event_links_creatable_duplicate_of_existing(
 def test_validate_transaction_event_links_creatable_cleared(
     session: Session, cleared: str
 ):
-    txn = TransactionFactory(cleared_at=None, event=None, event_id=None, index=None)
+    txn = TransactionFactory(cleared_at=None, event=None)
     event = EventFactory(cleared_at=None)
     row = txn if cleared == "transaction" else event
     row.cleared_at = datetime(2024, 1, 1, tzinfo=UTC)
@@ -176,7 +175,7 @@ def test_validate_transaction_event_links_creatable_cleared(
 def test_validate_transaction_event_links_creatable_position_taken(session: Session):
     event = EventFactory(cleared_at=None)
     TransactionEventLinkFactory(event=event, index=2)
-    txn = TransactionFactory(cleared_at=None, event=None, event_id=None, index=None)
+    txn = TransactionFactory(cleared_at=None, event=None)
 
     with pytest.raises(
         ValueError,
@@ -199,8 +198,8 @@ def test_validate_transaction_event_links_creatable_position_taken_in_batch(
     session: Session,
 ):
     event = EventFactory(cleared_at=None)
-    txn_a = TransactionFactory(cleared_at=None, event=None, event_id=None, index=None)
-    txn_b = TransactionFactory(cleared_at=None, event=None, event_id=None, index=None)
+    txn_a = TransactionFactory(cleared_at=None, event=None)
+    txn_b = TransactionFactory(cleared_at=None, event=None)
 
     with pytest.raises(
         ValueError,
@@ -377,26 +376,10 @@ def test_update_transaction_event_links_by_ids_no_commit(
     assert session_2.get(TransactionEventLink, link.id).amount == Decimal("40.00")
 
 
-def test_update_transaction_event_links_by_ids_mirrors_fk_index(session: Session):
-    event = EventFactory()
-    txn = TransactionFactory(event=event, event_id=event.id, index=0)
-    link = txn.event_links[0]
-
-    update_transaction_event_links_by_ids(
-        session, [TransactionEventLinkUpdate(id=link.id, index=5)]
-    )
-
-    session.refresh(txn)
-    assert txn.index == 5
-
-
 def test_update_transaction_event_links_by_ids_amount_skips_transaction(
     session: Session,
 ):
-    event = EventFactory()
-    txn = TransactionFactory(
-        event=event, event_id=event.id, index=0, amount=Decimal("100.00")
-    )
+    txn = TransactionFactory(amount=Decimal("100.00"))
     link = txn.event_links[0]
 
     update_transaction_event_links_by_ids(
@@ -407,36 +390,16 @@ def test_update_transaction_event_links_by_ids_amount_skips_transaction(
     session.refresh(link)
     assert link.amount == Decimal("60.00")
     assert txn.amount == Decimal("100.00")
-    assert txn.index == 0
-
-
-def test_update_transaction_event_links_by_ids_non_fk_index_skips_transaction(
-    session: Session,
-):
-    event = EventFactory()
-    txn = TransactionFactory(event=event, event_id=event.id, index=0)
-    other = TransactionEventLinkFactory(transaction=txn, event=EventFactory(), index=3)
-
-    update_transaction_event_links_by_ids(
-        session, [TransactionEventLinkUpdate(id=other.id, index=7)]
-    )
-
-    session.refresh(txn)
-    session.refresh(other)
-    assert other.index == 7
-    assert txn.index == 0
 
 
 @pytest.mark.parametrize("targets", [[1, 0], [1, 2, 0]], ids=["swap", "rotate"])
-def test_update_transaction_event_links_by_ids_reorders_fk_links(
+def test_update_transaction_event_links_by_ids_reorders(
     session: Session, targets: list[int]
 ):
     event = EventFactory()
-    txns = [
-        TransactionFactory(event=event, event_id=event.id, index=i)
-        for i in range(len(targets))
+    links = [
+        TransactionEventLinkFactory(event=event, index=i) for i in range(len(targets))
     ]
-    links = [txn.event_links[0] for txn in txns]
 
     update_transaction_event_links_by_ids(
         session,
@@ -446,70 +409,26 @@ def test_update_transaction_event_links_by_ids_reorders_fk_links(
         ],
     )
 
-    for txn, link in zip(txns, links, strict=True):
-        session.refresh(txn)
+    for link in links:
         session.refresh(link)
-    assert len(txns) == len(targets)
+    assert len(links) == len(targets)
     assert [link.index for link in links] == targets
-    assert [txn.index for txn in txns] == targets
 
 
-def test_delete_transaction_event_links_by_ids_non_fk(session: Session):
-    event = EventFactory()
-    txn = TransactionFactory(event=event, event_id=event.id, index=0)
-    fk_link = txn.event_links[0]
-    other = TransactionEventLinkFactory(transaction=txn, event=EventFactory())
-
-    delete_transaction_event_links_by_ids(session, [other.id])
-
-    remaining = session.exec(
-        select(TransactionEventLink).order_by(col(TransactionEventLink.id))
-    ).all()
-    assert len(remaining) == 1
-    assert remaining[0].id == fk_link.id
-    session.refresh(txn)
-    assert txn.event_id == event.id
-    assert txn.index == 0
-
-
-def test_delete_transaction_event_links_by_ids_fk_unlinks_transaction(
-    session: Session,
-):
-    event = EventFactory()
-    txn = TransactionFactory(event=event, event_id=event.id, index=2)
-    fk_link = txn.event_links[0]
-    other = TransactionEventLinkFactory(transaction=txn, event=EventFactory())
-
-    delete_transaction_event_links_by_ids(session, [fk_link.id])
-
-    remaining = session.exec(
-        select(TransactionEventLink).order_by(col(TransactionEventLink.id))
-    ).all()
-    assert len(remaining) == 1
-    assert remaining[0].id == other.id
-    session.refresh(txn)
-    assert txn.event_id is None
-    assert txn.index == 2
-
-
-def test_delete_transaction_event_links_by_ids_mixed(session: Session):
-    event = EventFactory()
-    txn = TransactionFactory(event=event, event_id=event.id, index=0)
-    fk_link = txn.event_links[0]
-    other = TransactionEventLinkFactory(transaction=txn, event=EventFactory())
-    kept = TransactionEventLinkFactory()
+def test_delete_transaction_event_links_by_ids(session: Session):
+    txn = TransactionFactory()
+    first = txn.event_links[0]
+    second = TransactionEventLinkFactory(transaction=txn, event=EventFactory())
+    kept = TransactionEventLinkFactory(transaction=txn, event=EventFactory())
 
     # Ids out of insertion order
-    delete_transaction_event_links_by_ids(session, [other.id, fk_link.id])
+    delete_transaction_event_links_by_ids(session, [second.id, first.id])
 
     remaining = session.exec(
         select(TransactionEventLink).order_by(col(TransactionEventLink.id))
     ).all()
     assert len(remaining) == 1
     assert remaining[0].id == kept.id
-    session.refresh(txn)
-    assert txn.event_id is None
-    assert txn.index == 0
 
 
 def test_delete_transaction_event_links_by_ids_empty(session: Session):
@@ -543,23 +462,19 @@ def test_delete_transaction_event_links_by_ids_missing_id(session: Session):
 def test_delete_transaction_event_links_by_ids_no_commit(
     session: Session, session_2: Session
 ):
-    event = EventFactory()
-    txn = TransactionFactory(event=event, event_id=event.id, index=0)
-    link_id = txn.event_links[0].id
+    link_id = TransactionEventLinkFactory().id
 
     delete_transaction_event_links_by_ids(session, [link_id], commit=False)
 
-    # Not committed: other sessions still see the link and the FK event
+    # Not committed: other sessions still see the link
     session_2_links = session_2.exec(select(TransactionEventLink)).all()
     assert len(session_2_links) == 1
     assert session_2_links[0].id == link_id
-    assert session_2.get(Transaction, txn.id).event_id == event.id
 
     session.commit()
     session_2.expire_all()
 
     assert len(session_2.exec(select(TransactionEventLink)).all()) == 0
-    assert session_2.get(Transaction, txn.id).event_id is None
 
 
 def test_validate_event_slots_free_empty(session: Session):
@@ -596,7 +511,7 @@ def test_validate_transaction_event_links_editable_rejects_repeated_ids(
 
 
 def test_require_link_targets_locks_transactions_then_events(session: Session):
-    txn = TransactionFactory(event=None, event_id=None, index=None)
+    txn = TransactionFactory(event=None)
     event = EventFactory()
 
     with patch.object(session, "exec", wraps=session.exec) as mock_exec:

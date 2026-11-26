@@ -113,7 +113,6 @@ def test_read_events_transactions_read_links(
     assert len(events) == 1
     assert len(events[0].transactions) == 1
     assert events[0].transactions[0].id == link.transaction_id
-    assert events[0].transactions[0].event_id is None
 
 
 def test_read_events_details_ordered_by_index(
@@ -121,9 +120,10 @@ def test_read_events_details_ordered_by_index(
     session_2: Session,
 ):
     event = EventFactory()
+    txn_ids = {}
     for index in (2, 0, 1):
         EventEntryFactory(event=event, index=index)
-        TransactionFactory(event=event, index=index)
+        txn_ids[index] = TransactionFactory(event=event, index=index).id
 
     events = read_events(session_2, event_ids=[event.id])
 
@@ -131,7 +131,7 @@ def test_read_events_details_ordered_by_index(
     assert len(events[0].entries) == 3
     assert [entry.index for entry in events[0].entries] == [0, 1, 2]
     assert len(events[0].transactions) == 3
-    assert [transaction.index for transaction in events[0].transactions] == [0, 1, 2]
+    assert [txn.id for txn in events[0].transactions] == [txn_ids[i] for i in range(3)]
 
     # The assertions above cannot fail on SQLite: it answers both lazy loads
     # from the (event_id, index) unique index, so rows come back in index order

@@ -1,10 +1,10 @@
 import enum
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from pydantic import computed_field
-from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, UniqueConstraint
+from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 
 from kayman.schemas.event import EventRead
 from kayman.schemas.event_entry import EventEntryRead
@@ -13,7 +13,6 @@ from kayman.schemas.transaction_tag import TransactionTagLink, TransactionTagRea
 
 if TYPE_CHECKING:
     from kayman.schemas.account import Account
-    from kayman.schemas.event import Event
     from kayman.schemas.transaction_event_link import TransactionEventLink
     from kayman.schemas.transaction_tag import TransactionTag
 
@@ -28,7 +27,6 @@ class TransactionClearErrorType(enum.Enum):
 
 class TransactionBase(SQLModel):
     account_id: int = Field(foreign_key="account.id")
-    event_id: int | None = Field(foreign_key="event.id", default=None)
     amount: Decimal
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
@@ -41,21 +39,14 @@ class TransactionBase(SQLModel):
     cleared_at: datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
     )
-    # Negatives are reserved for park_moving_indexes in crud/util.py. Not a DB
-    # check: parking flushes negatives, and PG checks cannot be deferred.
-    index: int | None = Field(default=None, ge=0)
 
 
 class Transaction(TransactionBase, table=True):
-    __table_args__ = (
-        UniqueConstraint("event_id", "index", name="transaction_event_id_index_key"),
-    )
     id: int | None = Field(primary_key=True, default=None)
     statement_id: int | None = Field(
         foreign_key="statement.id", default=None
     )  # TODO: accept this on creation
     account: "Account" = Relationship(back_populates="transactions")
-    event: Optional["Event"] = Relationship()
     event_links: list["TransactionEventLink"] = Relationship(
         back_populates="transaction",
         cascade_delete=True,
@@ -86,7 +77,6 @@ class TransactionRead(TransactionBase):
     created_at: datetime
     currency_code: str
     statement_id: int | None = None
-    event: EventRead | None
     event_links: list[TransactionEventLinkEventRead]
     tags: list[TransactionTagRead] = []
 
@@ -124,7 +114,6 @@ class TransactionEventLinkDetailedRead(TransactionEventLinkEventRead):
 
 
 class TransactionReadWithBalance(TransactionRead):
-    event: TransactionEventRead | None
     # list is invariant, but each item narrows the base field's item type
     event_links: list[TransactionEventLinkDetailedRead]  # type: ignore[assignment]
     running_balance: Decimal
@@ -168,11 +157,9 @@ class TransactionClearConflict(SQLModel):
 class TransactionUpdate(SQLModel):
     id: int
     account_id: int | None = None
-    event_id: int | None = None
     amount: Decimal | None = None
     created_at: datetime | None = None
     description: str | None = None
-    index: int | None = Field(default=None, ge=0)
     tag_ids: list[int] | None = None
 
 

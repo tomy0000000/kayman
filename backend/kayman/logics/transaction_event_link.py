@@ -5,14 +5,13 @@ from typing import cast
 from sqlmodel import Session
 
 from kayman.crud.event import read_events
-from kayman.crud.transaction import read_transactions, update_transactions
+from kayman.crud.transaction import read_transactions
 from kayman.crud.transaction_event_link import (
     delete_transaction_event_links,
     read_transaction_event_links,
     update_transaction_event_links,
 )
 from kayman.logics.event import validate_events_editable
-from kayman.schemas.transaction import TransactionUpdate
 from kayman.schemas.transaction_event_link import (
     TransactionEventLink,
     TransactionEventLinkCreate,
@@ -121,23 +120,7 @@ def update_transaction_event_links_by_ids(
     # Sort a copy: rows come back id-ordered and pair with updates positionally
     updates = sorted(updates, key=lambda update: update.id)
     links = _require_links(session, {update.id for update in updates})
-
-    # The transaction row mirrors its FK link, so a moved FK link moves the row too
-    mirrored = {
-        link.transaction_id: update.index
-        for link, update in zip(links, updates, strict=True)
-        if update.index is not None
-        and update.index != link.index
-        and link.event_id == link.transaction.event_id
-    }
     update_transaction_event_links(session, links, updates, commit=False)
-    _update_transaction_rows(
-        session,
-        {
-            txn_id: TransactionUpdate(id=txn_id, index=index)
-            for txn_id, index in mirrored.items()
-        },
-    )
 
     if commit:
         session.commit()
@@ -157,20 +140,7 @@ def delete_transaction_event_links_by_ids(
         return
 
     links = _require_links(session, set(link_ids))
-    # Deleting a transaction's FK link unlinks the row, and the shim drops the link
-    fk_links = [link for link in links if link.event_id == link.transaction.event_id]
-    delete_transaction_event_links(
-        session, [link for link in links if link not in fk_links], commit=False
-    )
-    _update_transaction_rows(
-        session,
-        {
-            link.transaction_id: TransactionUpdate(
-                id=link.transaction_id, event_id=None
-            )
-            for link in fk_links
-        },
-    )
+    delete_transaction_event_links(session, links, commit=False)
 
     if commit:
         session.commit()
@@ -235,16 +205,3 @@ def _validate_rows_editable(
     if cleared:
         raise ValueError(f"Transaction id(s) already cleared: {format_ids(cleared)}")
     validate_events_editable(session, event_ids)
-
-
-def _update_transaction_rows(
-    session: Session, updates: Mapping[int, TransactionUpdate]
-) -> None:
-    if not updates:
-        return
-    txns = read_transactions(
-        session, transaction_ids=updates.keys(), order_by="id", for_update=True
-    )
-    update_transactions(
-        session, txns, [updates[cast(int, txn.id)] for txn in txns], commit=False
-    )

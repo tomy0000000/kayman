@@ -97,7 +97,7 @@ TRANSACTION_LABEL_CHECKS: dict[str, Callable[[Session, Transaction], bool]] = {
     "billable": lambda s, t: _status(t) is TransactionStatus.POSTED and _billable(s, t),
     "billed": lambda _, t: _status(t) is TransactionStatus.BILLED,
     "clearable": _clearable,
-    "not clearable: no event": lambda s, t: t.event_id is None and not _clearable(s, t),
+    "not clearable: no event": lambda s, t: not t.event_links and not _clearable(s, t),
     "cleared": lambda _, t: _status(t) is TransactionStatus.CLEARED,
 }
 
@@ -142,21 +142,16 @@ def test_seeded_transaction_tag_links_reference_real_rows(session: Session) -> N
         assert link.transaction_tag_id in tag_ids
 
 
-def test_seeded_transaction_event_links_mirror_event_ids(session: Session) -> None:
+def test_seeded_transaction_event_links_reference_real_rows(session: Session) -> None:
     seed(session, logger)
 
-    linked = [
-        t for t in session.exec(select(Transaction)).all() if t.event_id is not None
-    ]
+    transaction_ids = {t.id for t in session.exec(select(Transaction)).all()}
+    event_ids = {e.id for e in session.exec(select(Event)).all()}
     links = session.exec(select(TransactionEventLink)).all()
-    assert len(linked) > 0
-    assert len(links) == len(linked)
-    assert {(link.transaction_id, link.event_id) for link in links} == {
-        (t.id, t.event_id) for t in linked
-    }
+    assert len(links) > 0
     for link in links:
-        assert link.amount == link.transaction.amount
-        assert link.index == link.transaction.index
+        assert link.transaction_id in transaction_ids
+        assert link.event_id in event_ids
 
 
 def test_seeded_transactions_reference_real_statements(session: Session) -> None:

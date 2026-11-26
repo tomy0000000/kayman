@@ -9,12 +9,8 @@ class TransactionEventLinkFactory(SQLAlchemyModelFactory):
         model = TransactionEventLink
         sqlalchemy_session_persistence = "commit"
 
-    # No FK event: the link is the transaction's only event membership
     transaction = factory.SubFactory(
-        "kayman.tests.factories.transaction.TransactionFactory",
-        event=None,
-        event_id=None,
-        index=None,
+        "kayman.tests.factories.transaction.TransactionFactory", event=None
     )
     transaction_id = factory.SelfAttribute("transaction.id")
     event = factory.SubFactory("kayman.tests.factories.event.EventFactory")
