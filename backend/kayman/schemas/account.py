@@ -48,9 +48,9 @@ class Account(AccountBase, table=True):
         default_factory=lambda: datetime.now(UTC),
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-    currency: "Currency" = Relationship(back_populates="accounts")
-    statements: list["Statement"] = Relationship(back_populates="account")
-    transactions: list["Transaction"] = Relationship(back_populates="account")
+    currency: Currency = Relationship(back_populates="accounts")
+    statements: list[Statement] = Relationship(back_populates="account")
+    transactions: list[Transaction] = Relationship(back_populates="account")
 
 
 class AccountCreate(AccountBase):

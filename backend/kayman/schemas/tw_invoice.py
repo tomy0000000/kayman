@@ -63,7 +63,7 @@ class InvoiceBaseStrict(InvoiceBaseWithId):
 
 
 class Invoice(InvoiceBaseStrict, table=True):
-    details: list["InvoiceDetail"] = Relationship(back_populates="invoice")
+    details: list[InvoiceDetail] = Relationship(back_populates="invoice")
 
 
 class InvoiceWrite(InvoiceBase):
@@ -128,7 +128,7 @@ class InvoiceDetailBaseStrict(InvoiceDetailBaseWithId):
 
 class InvoiceDetail(InvoiceDetailBaseStrict, table=True):
     __tablename__ = "invoice_detail"
-    invoice: "Invoice" = Relationship(back_populates="details")
+    invoice: Invoice = Relationship(back_populates="details")
 
 
 class InvoiceDetailWrite(InvoiceDetailBase):

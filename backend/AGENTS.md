@@ -4,7 +4,7 @@ Guidance for the Kayman backend. See the repo-root `CLAUDE.md` for cross-cutting
 
 ## Stack
 
-- Python 3.13
+- Python 3.14
 - FastAPI
 - SQLModel / SQLAlchemy
 - Alembic

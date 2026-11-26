@@ -46,13 +46,13 @@ class Transaction(TransactionBase, table=True):
     statement_id: int | None = Field(
         foreign_key="statement.id", default=None
     )  # TODO: accept this on creation
-    account: "Account" = Relationship(back_populates="transactions")
-    event_links: list["TransactionEventLink"] = Relationship(
+    account: Account = Relationship(back_populates="transactions")
+    event_links: list[TransactionEventLink] = Relationship(
         back_populates="transaction",
         cascade_delete=True,
         sa_relationship_kwargs={"order_by": "TransactionEventLink.id"},
     )
-    tags: list["TransactionTag"] = Relationship(
+    tags: list[TransactionTag] = Relationship(
         back_populates="transactions", link_model=TransactionTagLink
     )
 

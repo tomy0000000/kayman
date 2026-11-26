@@ -31,7 +31,7 @@ class TransactionTag(TransactionTagBase, table=True):
     __tablename__ = "transaction_tag"
     __table_args__ = (UniqueConstraint("name", name="transaction_tag_name_key"),)
     id: int | None = Field(primary_key=True, default=None)
-    transactions: list["Transaction"] = Relationship(
+    transactions: list[Transaction] = Relationship(
         back_populates="tags", link_model=TransactionTagLink
     )
 

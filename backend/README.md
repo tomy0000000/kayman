@@ -1,7 +1,7 @@
 # Kayman Backend
 
 <p align="left">
-    <img src="https://img.shields.io/badge/python-3.13-blue.svg?logo=python" alt="Python 3.13" />
+    <img src="https://img.shields.io/badge/python-3.14-blue.svg?logo=python" alt="Python 3.14" />
     <a href="https://codecov.io/gh/tomy0000000/kayman">
         <img src="https://codecov.io/gh/tomy0000000/kayman/graph/badge.svg?token=ng4W7JDOn8"/>
     </a>

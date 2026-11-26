@@ -34,7 +34,7 @@ class Statement(StatementBase, table=True):
         CheckConstraint("due_on >= period_end_on", name="statement_due_on_check"),
     )
     id: int | None = Field(primary_key=True, default=None)
-    account: "Account" = Relationship(back_populates="statements")
+    account: Account = Relationship(back_populates="statements")
 
 
 class StatementCreate(StatementBase):

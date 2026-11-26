@@ -56,19 +56,19 @@ class Event(EventBase, table=True):
     # Auto calculated for Expense or Income
     # Manually logged for Transfer or Exchange
     # Leg membership comes from the links, not transaction.event_id
-    transactions: list["Transaction"] = Relationship(
+    transactions: list[Transaction] = Relationship(
         sa_relationship_kwargs={
             "secondary": "transaction_event_link",
             "order_by": "TransactionEventLink.index",
             "viewonly": True,
         },
     )
-    entries: list["EventEntry"] = Relationship(
+    entries: list[EventEntry] = Relationship(
         back_populates="event",
         cascade_delete=True,
         sa_relationship_kwargs={"order_by": "EventEntry.index"},
     )
-    transaction_links: list["TransactionEventLink"] = Relationship(
+    transaction_links: list[TransactionEventLink] = Relationship(
         back_populates="event",
         cascade_delete=True,
         sa_relationship_kwargs={"order_by": "TransactionEventLink.index"},
@@ -86,8 +86,8 @@ class EventRead(EventBase):
 class EventReadDetailed(EventRead):
     """Includes transactions, transaction links, and entries."""
 
-    transactions: list["TransactionRead"]
-    transaction_links: list["TransactionEventLinkRead"]
+    transactions: list[TransactionRead]
+    transaction_links: list[TransactionEventLinkRead]
     entries: list[EventEntryRead]
 
 

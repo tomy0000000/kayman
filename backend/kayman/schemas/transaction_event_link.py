@@ -32,8 +32,8 @@ class TransactionEventLink(TransactionEventLinkBase, table=True):
         ),
     )
     id: int | None = Field(primary_key=True, default=None)
-    transaction: "Transaction" = Relationship(back_populates="event_links")
-    event: "Event" = Relationship(back_populates="transaction_links")
+    transaction: Transaction = Relationship(back_populates="event_links")
+    event: Event = Relationship(back_populates="transaction_links")
 
 
 class TransactionEventLinkCreate(TransactionEventLinkBase):

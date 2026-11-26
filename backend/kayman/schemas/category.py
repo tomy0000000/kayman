@@ -19,12 +19,12 @@ class CategoryBase(SQLModel):
 
 class Category(CategoryBase, table=True):
     id: int | None = Field(primary_key=True, default=None)
-    entries: list["EventEntry"] = Relationship(back_populates="category")
-    parent_category: Optional["Category"] = Relationship(
+    entries: list[EventEntry] = Relationship(back_populates="category")
+    parent_category: Optional["Category"] = Relationship(  # noqa: UP037, UP045
         back_populates="sub_categories",
         sa_relationship_kwargs={"remote_side": "Category.id"},
     )
-    sub_categories: list["Category"] = Relationship(
+    sub_categories: list[Category] = Relationship(
         back_populates="parent_category",
         sa_relationship_kwargs={"order_by": "Category.index, Category.name"},
     )
@@ -39,7 +39,7 @@ class CategoryRead(CategoryBase):
 
 
 class CategoryReadWithChildren(CategoryRead):
-    sub_categories: list["CategoryReadWithChildren"] | None = None
+    sub_categories: list[CategoryReadWithChildren] | None = None
 
 
 class CategoryUpdate(SQLModel):

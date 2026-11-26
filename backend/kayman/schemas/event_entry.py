@@ -27,9 +27,9 @@ class EventEntry(EventEntryBase, table=True):
         UniqueConstraint("event_id", "index", name="event_entry_event_id_index_key"),
     )
     id: int | None = Field(primary_key=True, default=None)
-    event: "Event" = Relationship(back_populates="entries")
-    category: "Category" = Relationship(back_populates="entries")
-    currency: "Currency" = Relationship(back_populates="entries")
+    event: Event = Relationship(back_populates="entries")
+    category: Category = Relationship(back_populates="entries")
+    currency: Currency = Relationship(back_populates="entries")
 
 
 class EventEntryCreate(EventEntryBase):

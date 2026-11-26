@@ -15,8 +15,8 @@ class CurrencyBase(SQLModel):
 
 class Currency(CurrencyBase, table=True):
     code: str = Field(primary_key=True)
-    accounts: list["Account"] = Relationship(back_populates="currency")
-    entries: list["EventEntry"] = Relationship(back_populates="currency")
+    accounts: list[Account] = Relationship(back_populates="currency")
+    entries: list[EventEntry] = Relationship(back_populates="currency")
 
 
 class CurrencyCreate(CurrencyBase):
